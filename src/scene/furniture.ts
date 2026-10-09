@@ -130,6 +130,7 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
     const L = alongX ? x1 - x0 : z1 - z0; // along the back
     const D = alongX ? z1 - z0 : x1 - x0; // from the back to the front
     const H = Math.min(f.height ?? DEFAULT_HEIGHT[f.type] ?? 0.8, maxHeight);
+    const zb = f.z ?? 0; // standing on something (a terrace slab)
 
     /** a box in the piece's own frame: u along the back, v away from it, h up */
     const box = (
@@ -145,17 +146,17 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
       else [ax0, ax1, az0, az1] = [x1 - v1, x1 - v0, z0 + u0, z0 + u1];
       const material = typeof color === 'number' ? mat(color, emissive) : color;
       const m = new THREE.Mesh(new THREE.BoxGeometry(ax1 - ax0, h1 - h0, az1 - az0), material);
-      m.position.set((ax0 + ax1) / 2, (h0 + h1) / 2, (az0 + az1) / 2);
+      m.position.set((ax0 + ax1) / 2, (h0 + h1) / 2 + zb, (az0 + az1) / 2);
       m.castShadow = m.receiveShadow = true;
       group.add(m);
-      if (outline) boxEdges(edges, ax0, ax1, h0, h1, az0, az1);
+      if (outline) boxEdges(edges, ax0, ax1, h0 + zb, h1 + zb, az0, az1);
     };
     /** a point in the piece's own frame */
     const P = (u: number, v: number, h: number) => {
-      if (back === 'up') return new THREE.Vector3(x0 + u, h, z0 + v);
-      if (back === 'down') return new THREE.Vector3(x0 + u, h, z1 - v);
-      if (back === 'left') return new THREE.Vector3(x0 + v, h, z0 + u);
-      return new THREE.Vector3(x1 - v, h, z0 + u);
+      if (back === 'up') return new THREE.Vector3(x0 + u, h + zb, z0 + v);
+      if (back === 'down') return new THREE.Vector3(x0 + u, h + zb, z1 - v);
+      if (back === 'left') return new THREE.Vector3(x0 + v, h + zb, z0 + u);
+      return new THREE.Vector3(x1 - v, h + zb, z0 + u);
     };
     /** a line on a front face (at depth v) between two (u, h) points */
     const frontLine = (u0: number, h0: number, u1: number, h1: number, v = D) => {
@@ -300,7 +301,7 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
             h1 = Math.min(h1, maxHeight);
             if (h1 - h0 < 0.005) return;
             const m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, h1 - h0, 36), mat(color));
-            m.position.set(c.x, (h0 + h1) / 2, c.z);
+            m.position.set(c.x, (h0 + h1) / 2 + zb, c.z);
             m.castShadow = m.receiveShadow = true;
             group.add(m);
           };
@@ -311,7 +312,7 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
             const ring: THREE.Vector3[] = [];
             for (let i = 0; i < 36; i++) {
               const a = (i / 36) * Math.PI * 2;
-              ring.push(new THREE.Vector3(c.x + Math.cos(a) * r, H, c.z + Math.sin(a) * r));
+              ring.push(new THREE.Vector3(c.x + Math.cos(a) * r, H + zb, c.z + Math.sin(a) * r));
             }
             edges.loop(ring);
           }

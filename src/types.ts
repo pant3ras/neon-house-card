@@ -64,6 +64,8 @@ export interface Furniture {
   round?: boolean;
   /** desks: a monitor on top (default true) */
   monitor?: boolean;
+  /** raise the piece off the floor (furniture on a terrace slab) */
+  z?: number;
   name?: string;
 }
 
@@ -172,7 +174,18 @@ export interface CarDevice extends DeviceBase {
   width?: number;
 }
 
+export interface SprinklerDevice extends DeviceBase {
+  type: 'sprinkler';
+  /** a valve (or switch) that waters this spot */
+  entity: string;
+  /** reach of the spray in metres */
+  radius?: number;
+  /** degrees of the circle it waters (default 360), centred on `rot` */
+  arc?: number;
+}
+
 export type Device =
+  | SprinklerDevice
   | LightDevice
   | CameraDevice
   | TvDevice
@@ -221,12 +234,13 @@ export interface HassEntityRegistryDisplayEntry {
   area_id?: string;
   hidden?: boolean;
   entity_category?: 'config' | 'diagnostic';
+  labels?: string[];
 }
 
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
   entities?: Record<string, HassEntityRegistryDisplayEntry>;
-  devices?: Record<string, { id: string; area_id?: string | null; name?: string | null }>;
+  devices?: Record<string, { id: string; area_id?: string | null; name?: string | null; name_by_user?: string | null }>;
   areas?: Record<string, { area_id: string; name: string }>;
   language?: string;
   callService(domain: string, service: string, data?: Record<string, any>): Promise<unknown>;
@@ -251,6 +265,12 @@ export interface CardConfig {
   heatmap?: 'none' | 'temperature' | 'humidity';
   /** editing aid: show plan coordinates under the pointer */
   coords?: boolean;
+  /** the "needs attention" chip: low/dead batteries, problems, unavailable devices (default on) */
+  attention?: boolean;
+  /** entities with this label are left out of battery warnings (default no_battery_alerts) */
+  attention_exclude_label?: string;
+  /** battery percentage counted as low (default 20) */
+  battery_low?: number;
   /** show the frame rate */
   stats?: boolean;
 }

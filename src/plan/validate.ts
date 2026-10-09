@@ -5,7 +5,7 @@ import type { HomeAssistant, Plan, Vec2 } from '../types';
 import { layoutWalls, projectOnSegment } from './walls';
 
 const OPENING_TYPES = ['door', 'window', 'garage', 'gap'];
-const DEVICE_TYPES = ['light', 'camera', 'tv', 'climate', 'appliance', 'vacuum', 'sensor', 'car'];
+const DEVICE_TYPES = ['light', 'camera', 'tv', 'climate', 'appliance', 'vacuum', 'sensor', 'car', 'sprinkler'];
 const OUTDOOR_KINDS = ['grass', 'paving', 'terrace', 'parking', 'water'];
 const FURNITURE_TYPES = [
   'bed', 'wardrobe', 'dresser', 'desk', 'sofa', 'bookshelf', 'counter', 'cabinet', 'fridge', 'table', 'chair', 'bathtub', 'shower', 'box',

@@ -67,6 +67,9 @@ function guess(id: string, role: string, n: number): HassEntity {
       return entity(id, 'docked', { ...a, battery_level: 100 });
     case 'person':
       return entity(id, 'home', a);
+    case 'valve':
+    case 'cover':
+      return entity(id, 'closed', a);
     case 'binary_sensor':
       return entity(id, 'off', { ...a, device_class: /door|window|contact/.test(obj) ? 'door' : 'motion' });
     case 'sensor':
@@ -84,6 +87,7 @@ export interface MockHass {
   subscribe(fn: (h: HomeAssistant) => void): void;
   cameras: { entity: string; name: string; motion: string[] }[];
   vacuum?: string;
+  valves: string[];
 }
 
 export function createMockHass(plan: Plan): MockHass {
@@ -97,10 +101,17 @@ export function createMockHass(plan: Plan): MockHass {
   };
 
   states['sun.sun'] = entity('sun.sun', 'above_horizon', { friendly_name: 'Sun', elevation: 28, azimuth: 205 });
+  // something for the "needs attention" chip to find
+  states['sensor.preview_thermometer_battery'] = entity('sensor.preview_thermometer_battery', '12', {
+    friendly_name: 'Preview thermometer Battery',
+    device_class: 'battery',
+    unit_of_measurement: '%',
+  });
   if (plan.weather_entity)
     states[plan.weather_entity] = entity(plan.weather_entity, 'rainy', { friendly_name: 'Weather', temperature: 14, wind_speed: 22, wind_bearing: 250 });
 
   const cameras: MockHass['cameras'] = [];
+  const valves: string[] = [];
   let vacuum: string | undefined;
   for (const f of plan.floors ?? []) {
     const roomArea = (p: Vec2) => f.rooms?.find((r) => r.area && Array.isArray(r.polygon) && inside(p, r.polygon))?.area;
@@ -111,6 +122,7 @@ export function createMockHass(plan: Plan): MockHass {
       for (const m of (d as any).motion ?? []) add(m, 'motion', area);
       if (d.type === 'camera') cameras.push({ entity: d.entity, name: d.name ?? titleOf(d.entity), motion: d.motion ?? [] });
       if (d.type === 'vacuum') vacuum = d.entity;
+      if (d.type === 'sprinkler' && !valves.includes(d.entity)) valves.push(d.entity);
     }
     for (const o of f.openings ?? []) add(o.entity, 'contact');
     for (const r of f.rooms ?? []) {
@@ -146,7 +158,10 @@ export function createMockHass(plan: Plan): MockHass {
       if (!s) continue;
       const d = id.split('.')[0];
       let next = s.state;
-      if (service === 'toggle') next = s.state === 'on' ? 'off' : 'on';
+      const openable = d === 'valve' || d === 'cover';
+      if (service === 'toggle') next = openable ? (s.state === 'open' ? 'closed' : 'open') : s.state === 'on' ? 'off' : 'on';
+      else if (service === 'open_valve' || service === 'open_cover') next = 'open';
+      else if (service === 'close_valve' || service === 'close_cover') next = 'closed';
       else if (service === 'turn_on') next = d === 'climate' ? 'cool' : 'on';
       else if (service === 'turn_off') next = 'off';
       else if (service === 'start') next = 'cleaning';
@@ -190,6 +205,6 @@ export function createMockHass(plan: Plan): MockHass {
     callWS,
     hassUrl: (p = '') => p,
   };
-  const api: MockHass = { hass, set, subscribe: (fn) => subs.push(fn), cameras, vacuum };
+  const api: MockHass = { hass, set, subscribe: (fn) => subs.push(fn), cameras, vacuum, valves };
   return api;
 }

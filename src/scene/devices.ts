@@ -10,6 +10,7 @@ import type {
   HomeAssistant,
   LightDevice,
   SensorDevice,
+  SprinklerDevice,
   TvDevice,
   VacuumDevice,
 } from '../types';
@@ -94,9 +95,106 @@ export function createDevice(device: Device, floor: Floor, ctx: DeviceCtx): Devi
       return sensorView(device, floor, ctx);
     case 'car':
       return carView(device, floor, ctx);
+    case 'sprinkler':
+      return sprinklerView(device, floor, ctx);
     default:
       return null;
   }
+}
+
+// ---------- sprinklers ----------
+
+function sprinklerView(d: SprinklerDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
+  const t = ctx.theme;
+  const radius = d.radius ?? 4;
+  const arc = Math.min(360, Math.max(10, d.arc ?? 360)) * DEG;
+  const g = new THREE.Group();
+  g.position.copy(w3(d.pos, d.z ?? 0.02));
+
+  const head = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.06, 0.1, 14),
+    new THREE.MeshStandardMaterial({ color: t.name === 'day' ? 0x3d4a5c : 0x1a2c4c, emissive: 0x000000 }),
+  );
+  head.position.y = 0.05;
+  g.add(head);
+
+  // the patch it waters: a faint disc or sector, brighter while running
+  const areaGeo = new THREE.CircleGeometry(radius, 48, 0, arc);
+  areaGeo.rotateX(-Math.PI / 2);
+  const areaMat = new THREE.MeshBasicMaterial({ color: 0x3fa9ff, transparent: true, opacity: 0.04, depthWrite: false, side: THREE.DoubleSide });
+  const area = new THREE.Mesh(areaGeo, areaMat);
+  // the flat sector spans plan angles 90° … 90° − arc; turn its middle onto `rot`
+  area.rotation.y = Math.PI / 2 - arc / 2 - (d.rot ?? 0) * DEG;
+  area.position.y = 0.01;
+  g.add(area);
+
+  // spray: droplets flying out on little arcs
+  const count = ctx.high ? 220 : 120;
+  const pos = new Float32Array(count * 3);
+  const seeds = Array.from({ length: count }, () => [Math.random(), Math.random(), 0.6 + Math.random() * 0.4]);
+  const sprayGeo = new THREE.BufferGeometry();
+  sprayGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const sprayMat = new THREE.PointsMaterial({
+    size: 0.06,
+    color: t.name === 'day' ? 0x3a8fd8 : 0x8fd8ff,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    blending: t.name === 'day' ? THREE.NormalBlending : THREE.AdditiveBlending,
+  });
+  const spray = new THREE.Points(sprayGeo, sprayMat);
+  spray.frustumCulled = false;
+  g.add(spray);
+
+  const badge = makeBadge('nh-water', false);
+  badge.obj.position.set(0, 0.6, 0);
+  g.add(badge.obj);
+
+  let open = false;
+  let level = 0;
+  let time = 0;
+  const centre = (d.rot ?? 0) * DEG; // plan angle of the arc's middle
+
+  const view: DeviceView = {
+    device: d,
+    floor,
+    object: g,
+    entities: [d.entity],
+    badge,
+    update(c) {
+      const s = stateOf(c.hass, d.entity);
+      open = isOn(s);
+      badge.important = open;
+      badge.el.classList.toggle('active', open);
+      badge.el.classList.toggle('off', isUnavailable(s));
+      badge.el.innerHTML = `<span class="ico">💧</span>${escape(d.name ?? s?.attributes.friendly_name ?? d.entity)}${open ? ' · watering' : ''}`;
+    },
+    tick(dt) {
+      const target = open ? 1 : 0;
+      level += (target - level) * Math.min(1, dt * 3);
+      if (Math.abs(level - target) < 0.01) level = target;
+      time += dt;
+      areaMat.opacity = 0.04 + 0.12 * level;
+      sprayMat.opacity = 0.85 * level;
+      if (level > 0) {
+        for (let i = 0; i < count; i++) {
+          const [a, ph, reach] = seeds[i];
+          const k = (ph + time * 0.7) % 1;
+          // plan angle within the arc, then plan → world (x = sin, z = −cos)
+          const ang = centre + (a - 0.5) * arc;
+          const r = k * radius * reach;
+          pos[i * 3] = Math.sin(ang) * r;
+          pos[i * 3 + 1] = 0.1 + 4 * radius * 0.18 * k * (1 - k);
+          pos[i * 3 + 2] = -Math.cos(ang) * r;
+        }
+        sprayGeo.attributes.position.needsUpdate = true;
+      }
+      return open || level > 0;
+    },
+    focus: () => g.getWorldPosition(new THREE.Vector3()),
+  };
+  pickable(head, view);
+  return view;
 }
 
 // ---------- lights ----------
@@ -132,7 +230,8 @@ function lightView(d: LightDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
   const halo = new THREE.Sprite(
     new THREE.SpriteMaterial({ map: haloTexture(), color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }),
   );
-  halo.scale.setScalar(kind === 'strip' ? (d.length ?? 1.2) * 0.9 : 0.7);
+  // long strips (a string of fairy lights) would get a halo the size of a room: cap it
+  halo.scale.setScalar(kind === 'strip' ? Math.min(1.4, (d.length ?? 1.2) * 0.9) : 0.7);
   g.add(halo);
 
   let color = new THREE.Color(0xffd9a0);

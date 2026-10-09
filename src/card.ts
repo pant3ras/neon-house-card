@@ -8,6 +8,7 @@ import { WeatherFx } from './scene/weather';
 import { MotionTrail } from './scene/trail';
 import { STYLES } from './ui/styles';
 import { missingEntities, validatePlan } from './plan/validate';
+import { findIssues, type Issue } from './attention';
 import { TOGGLEABLE, cameraUrl, isOn, isUnavailable, moreInfo, nameOf, num, stateOf, toggle } from './ha';
 import type { CameraDevice, CardConfig, HassEntity, HomeAssistant, Plan, ThemeName } from './types';
 
@@ -71,7 +72,9 @@ export class NeonHouseCard extends HTMLElement {
   private houseCenter = new THREE.Vector3();
   private houseRadius = 10;
   private selectedFloor: string | null = null;
-  private panelArea?: { title: string; area?: string; room?: RoomInfo };
+  private panelArea?: { title: string; area?: string; room?: RoomInfo; attention?: boolean };
+  private issues: Issue[] = [];
+  private attentionTimer = 0;
   private cockpit?: DeviceView;
   private cockpitTimer = 0;
   private seen = new Map<string, HassEntity | undefined>();
@@ -434,6 +437,8 @@ export class NeonHouseCard extends HTMLElement {
       this.autoRoomSensors();
       this.showWarnings();
     }
+    // batteries anywhere in the house count, not only the plan's entities
+    this.scheduleAttention(full);
     const changed = new Set<string>();
     for (const id of this.watched()) {
       const s = hass.states[id];
@@ -695,6 +700,7 @@ export class NeonHouseCard extends HTMLElement {
     for (const fv of [...this.floors].reverse())
       chips.push(`<button class="nh-chip ${this.selectedFloor === fv.floor.id ? 'on' : ''}" data-floor="${fv.floor.id}">${escapeHtml(fv.floor.name)}</button>`);
     chips.push(`<span class="nh-spacer"></span>`);
+    if (this.config?.attention !== false) chips.push(this.attentionChip());
     chips.push(
       `<span class="nh-seg">${(['neon', 'blueprint', 'day'] as const)
         .map((t) => `<button class="nh-chip ${this.prefs.theme === t ? 'on' : ''}" data-theme="${t}">${t[0].toUpperCase() + t.slice(1)}</button>`)
@@ -726,6 +732,67 @@ export class NeonHouseCard extends HTMLElement {
           this.engine?.requestRender();
         }),
     );
+    this.bindAttentionChip();
+  }
+
+  // ---------- needs attention ----------
+
+  private attentionChip(): string {
+    const n = this.issues.length;
+    const urgent = this.issues.some((i) => i.severity >= 3);
+    return `<button class="nh-chip nh-attn ${n ? (urgent ? 'urgent' : 'warn') : 'ok'}" data-attn title="Needs attention">${n ? `⚠ ${n}` : '✓'}</button>`;
+  }
+
+  private bindAttentionChip() {
+    const b = this.els.floors.querySelector<HTMLElement>('[data-attn]');
+    if (b) b.onclick = () => (this.panelArea?.attention ? this.closePanel() : this.openPanel({ title: 'Needs attention', attention: true }));
+  }
+
+  /** recount at most every 1.5 s – hass updates arrive many times a second */
+  private scheduleAttention(now = false) {
+    if (this.config?.attention === false || !this._hass) return;
+    if (this.attentionTimer && !now) return;
+    clearTimeout(this.attentionTimer);
+    this.attentionTimer = window.setTimeout(() => {
+      this.attentionTimer = 0;
+      if (!this._hass) return;
+      this.issues = findIssues(this._hass, this.plan, {
+        excludeLabel: this.config?.attention_exclude_label ?? 'no_battery_alerts',
+        batteryLow: this.config?.battery_low ?? 20,
+      });
+      const chip = this.els.floors.querySelector('[data-attn]');
+      if (chip) {
+        chip.outerHTML = this.attentionChip();
+        this.bindAttentionChip();
+      }
+      if (this.panelArea?.attention) this.renderPanel();
+    }, now ? 50 : 1500);
+  }
+
+  private renderAttention() {
+    const groups: [string, Issue['kind']][] = [
+      ['Problems', 'problem'],
+      ['Batteries', 'battery'],
+      ['Unavailable on the plan', 'offline'],
+    ];
+    const body = groups
+      .map(([title, kind]) => {
+        const rows = this.issues.filter((i) => i.kind === kind);
+        if (!rows.length) return '';
+        return `<div class="nh-section">${title}</div>${rows
+          .map(
+            (i) => `<div class="nh-item attn sev${i.severity}" data-id="${escapeHtml(i.entity)}">
+              <span class="dot"></span><span class="name">${escapeHtml(i.name)}<small>${escapeHtml(i.detail)}</small></span>
+            </div>`,
+          )
+          .join('')}`;
+      })
+      .join('');
+    this.els.panel.innerHTML = `
+      <header><div style="flex:1"><h3>Needs attention</h3><div class="sub">${this.issues.length ? `${this.issues.length} thing${this.issues.length > 1 ? 's' : ''} to look at` : 'All good'}</div></div><button class="nh-x" data-close>✕</button></header>
+      <div class="nh-list">${body || '<div class="nh-section">Nothing needs attention ✓</div>'}</div>`;
+    this.els.panel.querySelector<HTMLElement>('[data-close]')!.onclick = () => this.closePanel();
+    this.els.panel.querySelectorAll<HTMLElement>('[data-id]').forEach((row) => (row.onclick = () => moreInfo(this, row.dataset.id!)));
   }
 
   private renderRoomChips(active?: RoomInfo) {
@@ -834,7 +901,7 @@ export class NeonHouseCard extends HTMLElement {
     return out;
   }
 
-  private openPanel(p: { title: string; area?: string; room?: RoomInfo }) {
+  private openPanel(p: { title: string; area?: string; room?: RoomInfo; attention?: boolean }) {
     this.panelArea = p;
     this.renderPanel();
     this.els.panel.classList.add('open');
@@ -850,6 +917,7 @@ export class NeonHouseCard extends HTMLElement {
     const p = this.panelArea;
     const hass = this._hass;
     if (!p || !hass) return;
+    if (p.attention) return this.renderAttention();
     const ids = new Set<string>(p.area ? this.areaEntities(p.area) : []);
     // devices drawn in this room count too, even if their HA area differs
     if (p.room) for (const d of this.devices) if (d.floor === p.room.view.floor && pointInPolygon(d.device.pos, p.room.view.room.polygon)) ids.add(d.device.entity);
@@ -1027,7 +1095,8 @@ export class NeonHouseCard extends HTMLElement {
       const v = data.view as DeviceView;
       const d = v.device;
       if (d.type === 'camera') return this.openCockpit(v);
-      if (d.type === 'sensor') return moreInfo(this, d.entity);
+      // water valves open from HA's dialog, never by an accidental tap on the lawn
+      if (d.type === 'sensor' || d.type === 'sprinkler') return moreInfo(this, d.entity);
       if (d.type === 'car') return moreInfo(this, d.presence ?? d.entity);
       if (d.type === 'tv') {
         const s = hass.states[d.entity];

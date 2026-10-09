@@ -26,6 +26,10 @@ Assistant: no cloud, no account, no licence key.
   that cleans in circles, a car on its bay while it's home.
 - **Heatmap** – rooms coloured by temperature or humidity; room labels with values and lights on.
 - **Room panel** – tap a room for every entity of its Home Assistant area.
+- **Needs attention** – a chip counting low or dead batteries, problem sensors that are on (tank full,
+  leak, overheated …) and plan devices that went unavailable; tap it for the list. Entities labelled
+  `no_battery_alerts` are left out of the battery check.
+- **Irrigation** – sprinklers spray over their lawn while their valve is open.
 - **Looks** – Neon, Blueprint and Day. House / floor views, cut-away walls, floors pulled apart.
 - **Plan checks** – mistakes in the plan show as plain-language warnings on the card.
 
@@ -59,6 +63,9 @@ For a full-screen 3D view, put it alone in a **Panel** view with `fill: true`.
 | `weather` | `true` | `false` hides the weather outside. |
 | `trail` | `false` | Start with the motion trail on. |
 | `coords` | `false` | Show plan coordinates under the pointer – handy while editing. |
+| `attention` | `true` | The "needs attention" chip. |
+| `attention_exclude_label` | `no_battery_alerts` | Label that keeps an entity out of battery warnings. |
+| `battery_low` | `20` | Battery percentage counted as low. |
 | `stats` | `false` | Frame rate. |
 
 ## The plan
@@ -138,6 +145,7 @@ All devices have `type`, `entity`, `pos: [x, y]`, and optionally `rot` (facing: 
 | `sensor` | – (shows its value) |
 | `vacuum` | `pos` is the dock |
 | `car` | `presence` (drawn while on/home), `length`, `width` |
+| `sprinkler` | `entity` is a valve (or switch); `radius`, `arc` (degrees, centred on `rot`). Sprays while open; a tap opens HA's dialog rather than the water |
 
 ### Furniture
 
@@ -152,7 +160,8 @@ Types: `bed`, `wardrobe`, `dresser`, `desk`, `sofa`, `bookshelf`, `counter`, `ca
 `table`, `chair`, `bathtub`, `shower`, `box`. The side against the wall (a bed's head) is found from
 the nearest wall; set `back` (`up`/`down`/`left`/`right`) to override. Optional: `height`, `arms`
 (sofas: which short ends get an armrest), `upper` (counters: `false` for no wall cabinets, `2` for two
-rows up to the ceiling), `round: true` (tables), `monitor: false` (desks), `name`.
+rows up to the ceiling), `round: true` (tables), `monitor: false` (desks), `z` (stand on something, e.g.
+`0.08` on a terrace slab), `name`. Outdoor furniture has no wall nearby – give it a `back`.
 
 ### Outside, roof, sun
 

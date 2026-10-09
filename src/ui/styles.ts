@@ -6,7 +6,8 @@ export const STYLES = `
   font-family: "Figtree", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;
 }
-.nh-stage { position: absolute; inset: 0; }
+/* its own stacking context: 3D labels (z-indexed by depth) stay under panels and chips */
+.nh-stage { position: absolute; inset: 0; isolation: isolate; z-index: 0; }
 .nh-canvas { position: absolute; inset: 0; display: block; outline: none; }
 .nh-labels { position: absolute; inset: 0; pointer-events: none; }
 .nh-labels > div { pointer-events: none; }
@@ -96,6 +97,15 @@ export const STYLES = `
 .nh-toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }
 .nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }
 .nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }
+.nh-attn { font-weight: 800; }
+.nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }
+.nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }
+.nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }
+.nh-item.attn .name { white-space: normal; }
+.nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }
+.nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }
+.nh-item.attn.sev3 .dot, .nh-item.attn.sev4 .dot { background: #ff5a3c; box-shadow: 0 0 10px #ff5a3c; }
+.nh-item.attn.sev1 .dot { background: var(--nh-muted); box-shadow: none; }
 .nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }
 
 .nh-cockpit {

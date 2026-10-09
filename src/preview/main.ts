@@ -65,6 +65,12 @@ for (const cam of mock.cameras) {
   };
   buttons.appendChild(b);
 }
+for (const id of mock.valves) {
+  const b = document.createElement('button');
+  b.textContent = `Water: ${id.split('.')[1].replace(/_/g, ' ')}`;
+  b.onclick = () => mock.set(id, mock.hass.states[id].state === 'open' ? 'closed' : 'open');
+  buttons.appendChild(b);
+}
 if (mock.vacuum) {
   const id = mock.vacuum;
   const b = document.createElement('button');
