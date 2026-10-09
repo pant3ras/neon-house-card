@@ -48,6 +48,20 @@
           "motion": ["binary_sensor.garden_motion"] },
         { "type": "light", "kind": "flood", "entity": "light.garden_floodlight", "pos": [12.15, -0.15], "z": 2.45, "rot": 45 },
         { "type": "car", "entity": "device_tracker.car", "presence": "device_tracker.car", "pos": [14.65, 4.8], "rot": 0 }
+      ],
+      "furniture": [
+        { "type": "bed", "from": [1.2, 0.15], "to": [2.8, 2.2] },
+        { "type": "wardrobe", "from": [0.15, 3.85], "to": [2.4, 4.44] },
+        { "type": "dresser", "from": [3.0, 0.15], "to": [3.94, 0.6] },
+        { "type": "counter", "from": [5.56, 0.15], "to": [9.0, 0.75], "upper": false },
+        { "type": "cabinet", "from": [9.0, 0.15], "to": [9.65, 0.8] },
+        { "type": "table", "from": [10.0, 1.2], "to": [11.4, 2.2] },
+        { "type": "chair", "from": [10.15, 0.65], "to": [10.6, 1.1], "back": "up" },
+        { "type": "chair", "from": [10.8, 0.65], "to": [11.25, 1.1], "back": "up" },
+        { "type": "chair", "from": [10.15, 2.3], "to": [10.6, 2.75], "back": "down" },
+        { "type": "chair", "from": [10.8, 2.3], "to": [11.25, 2.75], "back": "down" },
+        { "type": "sofa", "from": [10.9, 4.3], "to": [11.79, 6.9] },
+        { "type": "bookshelf", "from": [5.7, 7.44], "to": [7.5, 7.84] }
       ]
     }
   ],

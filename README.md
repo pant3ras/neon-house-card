@@ -11,6 +11,8 @@ Assistant: no cloud, no account, no licence key.
 
 - **Walls from rooms** – draw rooms as polygons; shared edges become one interior wall, outer edges
   outside walls, corners are mitred. Open-plan rooms (`group`), doors, windows, archways, garage doors.
+- **Furniture** – beds, wardrobes, desks, sofas (L-shapes too), bookshelves, kitchen counters … each
+  just two corners; it turns its back to the nearest wall by itself.
 - **Lights** – bulbs, LED strips, floor lamps and floodlights glow in their colour and brightness and
   tint their room. Tap to toggle, long-press for Home Assistant's dialog.
 - **Cameras** – the view cone on the ground turns red and pulses on person/vehicle/motion detection,
@@ -136,6 +138,20 @@ All devices have `type`, `entity`, `pos: [x, y]`, and optionally `rot` (facing: 
 | `sensor` | – (shows its value) |
 | `vacuum` | `pos` is the dock |
 | `car` | `presence` (drawn while on/home), `length`, `width` |
+
+### Furniture
+
+A piece is a rectangle between two opposite corners, under the floor's `"furniture"`:
+
+```json
+{ "type": "bed", "from": [0.3, 0.15], "to": [1.9, 2.2] },
+{ "type": "sofa", "from": [6.2, 5.2], "to": [9.4, 6.05], "arms": ["left", "right"] }
+```
+
+Types: `bed`, `wardrobe`, `dresser`, `desk`, `sofa`, `bookshelf`, `counter`, `cabinet`, `table`,
+`chair`, `box`. The side against the wall (a bed's head) is found from the nearest wall; set `back`
+(`up`/`down`/`left`/`right`) to override. Optional: `height`, `arms` (sofas: which short ends get an
+armrest), `upper: false` (counters without wall cabinets), `monitor: false` (desks), `name`.
 
 ### Outside, roof, sun
 

@@ -27,6 +27,39 @@ export interface Floor {
   walls?: WallSpec[];
   openings?: Opening[];
   devices?: Device[];
+  furniture?: Furniture[];
+}
+
+export type Side = 'up' | 'down' | 'left' | 'right';
+
+export type FurnitureType =
+  | 'bed'
+  | 'wardrobe'
+  | 'dresser'
+  | 'desk'
+  | 'sofa'
+  | 'bookshelf'
+  | 'counter'
+  | 'cabinet'
+  | 'table'
+  | 'chair'
+  | 'box';
+
+/** a piece of furniture: an axis-aligned rectangle between two opposite corners */
+export interface Furniture {
+  type: FurnitureType;
+  from: Vec2;
+  to: Vec2;
+  /** the side against the wall (a bed's head); found from the nearest wall when left out */
+  back?: Side;
+  height?: number;
+  /** sofas: which short ends get an armrest (default both) */
+  arms?: Side[];
+  /** counters: wall cabinets above (default true) */
+  upper?: boolean;
+  /** desks: a monitor on top (default true) */
+  monitor?: boolean;
+  name?: string;
 }
 
 export interface Room {

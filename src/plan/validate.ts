@@ -7,6 +7,8 @@ import { layoutWalls, projectOnSegment } from './walls';
 const OPENING_TYPES = ['door', 'window', 'garage', 'gap'];
 const DEVICE_TYPES = ['light', 'camera', 'tv', 'climate', 'appliance', 'vacuum', 'sensor', 'car'];
 const OUTDOOR_KINDS = ['grass', 'paving', 'terrace', 'parking', 'water'];
+const FURNITURE_TYPES = ['bed', 'wardrobe', 'dresser', 'desk', 'sofa', 'bookshelf', 'counter', 'cabinet', 'table', 'chair', 'box'];
+const SIDES = ['up', 'down', 'left', 'right'];
 
 const isPoint = (p: unknown): p is Vec2 =>
   Array.isArray(p) && p.length === 2 && p.every((n) => typeof n === 'number' && Number.isFinite(n));
@@ -80,6 +82,15 @@ export function validatePlan(plan: Plan): string[] {
         if (!isPoint(w.a) || !isPoint(w.b)) out.push(`${fname}, wall #${wi + 1}: "a" and "b" must be [x, y] points.`);
       });
     }
+
+    (f.furniture ?? []).forEach((p, pi) => {
+      const pname = `${fname}, furniture #${pi + 1} (${p.type ?? '?'})`;
+      if (!FURNITURE_TYPES.includes(p.type)) out.push(`${pname}: "type" must be one of ${FURNITURE_TYPES.join(', ')}.`);
+      if (!isPoint(p.from) || !isPoint(p.to)) return out.push(`${pname}: "from" and "to" must be [x, y] corners.`);
+      if (Math.abs(p.from[0] - p.to[0]) < 0.05 || Math.abs(p.from[1] - p.to[1]) < 0.05)
+        out.push(`${pname}: "from" ${fmt(p.from)} and "to" ${fmt(p.to)} must be opposite corners (different x and y).`);
+      if (p.back && !SIDES.includes(p.back)) out.push(`${pname}: "back" must be one of ${SIDES.join(', ')}.`);
+    });
 
     (f.devices ?? []).forEach((d, di) => {
       const dname = `${fname}, device #${di + 1} (${d.type ?? '?'} ${d.entity ?? ''})`;

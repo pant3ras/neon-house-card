@@ -644,6 +644,7 @@ export class NeonHouseCard extends HTMLElement {
     fv.edgeMaterial.opacity = dim ? 0.15 : 1;
     fv.edgeMaterial.transparent = dim;
     fv.devices.visible = !dim;
+    fv.furniture.visible = !dim;
   }
 
   private selectRoom(r: RoomInfo) {

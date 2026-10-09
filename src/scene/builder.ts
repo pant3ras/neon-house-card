@@ -14,6 +14,7 @@ import {
   w3,
 } from './geo';
 import type { Theme } from './theme';
+import { buildFurniture } from './furniture';
 
 export const CUT_HEIGHT = 1.05;
 const SLAB = 0.18;
@@ -53,6 +54,8 @@ export interface FloorView {
   labelEl: HTMLElement;
   /** the lights, cameras … of this floor are added here by the device layer */
   devices: THREE.Group;
+  /** beds, wardrobes, sofas …; rebuilt with the walls (cut mode lowers them too) */
+  furniture: THREE.Group;
 }
 
 function label(className: string, html: string): [CSS2DObject, HTMLElement] {
@@ -110,6 +113,9 @@ export function buildFloor(floor: Floor, theme: Theme, cut: boolean): FloorView 
   const devices = new THREE.Group();
   devices.name = 'devices';
   group.add(devices);
+  const furniture = new THREE.Group();
+  furniture.name = 'furniture';
+  group.add(furniture);
 
   const outline = floor.rooms.flatMap((r) => r.polygon);
   const b = bounds(outline.length ? outline : [[0, 0]]);
@@ -135,6 +141,7 @@ export function buildFloor(floor: Floor, theme: Theme, cut: boolean): FloorView 
     label: flabel,
     labelEl: flabelEl,
     devices,
+    furniture,
   };
   buildWalls(view, theme, cut);
   return view;
@@ -144,10 +151,12 @@ export function buildFloor(floor: Floor, theme: Theme, cut: boolean): FloorView 
 export function buildWalls(view: FloorView, theme: Theme, cut: boolean) {
   const { floor, walls } = view;
   disposeChildren(walls, view);
+  disposeChildren(view.furniture, view);
   view.openings = [];
 
   const H = cut ? Math.min(CUT_HEIGHT, floor.height) : floor.height;
   const laid = layoutWalls(floor, cut ? CUT_HEIGHT : undefined);
+  view.furniture.add(buildFurniture(floor, laid, theme, cut ? CUT_HEIGHT : Infinity));
   const fill = new MeshBuilder();
   const lines = new LineBuilder();
   const glass = new MeshBuilder();
