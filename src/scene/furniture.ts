@@ -17,6 +17,10 @@ interface Palette {
   blanket: number;
   top: number;
   screen: number;
+  /** sanitary ware and appliances */
+  white: number;
+  metal: number;
+  water: number;
   edge: number;
   edgeOpacity: number;
   opacity: number;
@@ -25,21 +29,24 @@ interface Palette {
 const PALETTES: Record<Theme['name'], Palette> = {
   neon: {
     body: 0x14284c, wood: 0x1b3260, fabric: 0x1f3a6e, mattress: 0x2a4a85, pillow: 0x3d63a8, blanket: 0x24427c,
-    top: 0x2a4a80, screen: 0x3d8bff, edge: 0x5cc4f0, edgeOpacity: 0.45, opacity: 1,
+    top: 0x2a4a80, screen: 0x3d8bff, white: 0x2c4f86, metal: 0x24406e, water: 0x1f78c8,
+    edge: 0x5cc4f0, edgeOpacity: 0.45, opacity: 1,
   },
   blueprint: {
     body: 0x1d4c93, wood: 0x1d4c93, fabric: 0x2a5aa3, mattress: 0x2f63b0, pillow: 0x3a70bf, blanket: 0x2a5aa3,
-    top: 0x2f63b0, screen: 0xbfe0ff, edge: 0xe8f2ff, edgeOpacity: 0.55, opacity: 0.55,
+    top: 0x2f63b0, screen: 0xbfe0ff, white: 0x3a70bf, metal: 0x2f63b0, water: 0x8fc4ff,
+    edge: 0xe8f2ff, edgeOpacity: 0.55, opacity: 0.55,
   },
   day: {
     body: 0xe9e4da, wood: 0xb8875a, fabric: 0x7f96b8, mattress: 0xf4f3ee, pillow: 0xffffff, blanket: 0x9fb4d3,
-    top: 0xd9cbb4, screen: 0x223044, edge: 0x6f7f94, edgeOpacity: 0.35, opacity: 1,
+    top: 0xd9cbb4, screen: 0x223044, white: 0xfbfbf8, metal: 0xc9ced6, water: 0x9fd4ff,
+    edge: 0x6f7f94, edgeOpacity: 0.35, opacity: 1,
   },
 };
 
 const DEFAULT_HEIGHT: Record<string, number> = {
   bed: 1.0, wardrobe: 2.2, dresser: 0.85, desk: 0.76, sofa: 0.82, bookshelf: 2.0,
-  counter: 0.9, cabinet: 2.0, table: 0.76, chair: 0.9, box: 0.8,
+  counter: 0.9, cabinet: 2.0, fridge: 1.85, table: 0.76, chair: 0.9, bathtub: 0.55, shower: 2.05, box: 0.8,
 };
 
 /** the side of a rectangle closest to a wall; beds pick from their short sides, others from their long sides */
@@ -99,7 +106,17 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
     }
     return m;
   };
+  const glass = new THREE.MeshStandardMaterial({
+    color: theme.glass,
+    transparent: true,
+    opacity: theme.name === 'day' ? 0.3 : 0.2,
+    roughness: 0.1,
+    metalness: 0.3,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
   const edges = new LineBuilder();
+  const ceiling = floor.height;
 
   for (const f of items) {
     if (!Array.isArray(f.from) || !Array.isArray(f.to)) continue;
@@ -115,7 +132,10 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
     const H = Math.min(f.height ?? DEFAULT_HEIGHT[f.type] ?? 0.8, maxHeight);
 
     /** a box in the piece's own frame: u along the back, v away from it, h up */
-    const box = (u0: number, u1: number, v0: number, v1: number, h0: number, h1: number, color: number, emissive = 0, outline = true) => {
+    const box = (
+      u0: number, u1: number, v0: number, v1: number, h0: number, h1: number,
+      color: number | THREE.Material, emissive = 0, outline = true,
+    ) => {
       h1 = Math.min(h1, maxHeight);
       if (h1 - h0 < 0.005) return;
       let ax0: number, ax1: number, az0: number, az1: number;
@@ -123,7 +143,8 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
       else if (back === 'down') [ax0, ax1, az0, az1] = [x0 + u0, x0 + u1, z1 - v1, z1 - v0];
       else if (back === 'left') [ax0, ax1, az0, az1] = [x0 + v0, x0 + v1, z0 + u0, z0 + u1];
       else [ax0, ax1, az0, az1] = [x1 - v1, x1 - v0, z0 + u0, z0 + u1];
-      const m = new THREE.Mesh(new THREE.BoxGeometry(ax1 - ax0, h1 - h0, az1 - az0), mat(color, emissive));
+      const material = typeof color === 'number' ? mat(color, emissive) : color;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(ax1 - ax0, h1 - h0, az1 - az0), material);
       m.position.set((ax0 + ax1) / 2, (h0 + h1) / 2, (az0 + az1) / 2);
       m.castShadow = m.receiveShadow = true;
       group.add(m);
@@ -169,6 +190,36 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
           const u = (L * (i + 0.5)) / doors + (i % 2 ? -1 : 1) * (L / doors) * 0.35;
           frontLine(u, H * 0.45, u, H * 0.58);
         }
+        break;
+      }
+      case 'fridge': {
+        box(0, L, 0, D, 0, H, pal.white);
+        if (L > 0.8) {
+          // side-by-side: two tall doors with handles meeting in the middle
+          frontLine(L / 2, 0.04, L / 2, H - 0.04);
+          frontLine(L / 2 - 0.06, H * 0.4, L / 2 - 0.06, H * 0.75);
+          frontLine(L / 2 + 0.06, H * 0.4, L / 2 + 0.06, H * 0.75);
+        } else {
+          // freezer below, fridge above
+          frontLine(0.02, H * 0.36, L - 0.02, H * 0.36);
+          frontLine(L - 0.08, H * 0.42, L - 0.08, H * 0.7);
+          frontLine(L - 0.08, H * 0.12, L - 0.08, H * 0.3);
+        }
+        box(L * 0.6, L * 0.8, D, D + 0.005, H * 0.78, H * 0.84, 0x0a0f1a, pal.screen, false);
+        break;
+      }
+      case 'bathtub': {
+        box(0, L, 0, D, 0, H, pal.white);
+        box(0.08, L - 0.08, 0.08, D - 0.08, H - 0.12, H - 0.02, pal.water, pal.water, false);
+        box(L - 0.16, L - 0.1, 0.02, 0.1, H, H + 0.18, pal.metal, 0, false);
+        break;
+      }
+      case 'shower': {
+        // a walk-in shower: flat tray, one fixed glass pane on the open side, head on the wall
+        box(0, L, 0, D, 0, 0.05, pal.white);
+        box(L * 0.4, L, D - 0.03, D, 0.05, H, glass, 0, true);
+        box(0.12, 0.16, 0.02, 0.06, 0.05, H, pal.metal, 0, false);
+        box(0.04, 0.24, 0.04, 0.3, H - 0.04, H, pal.metal, pal.screen, false);
         break;
       }
       case 'dresser': {
@@ -225,13 +276,47 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
         const doors = Math.max(1, Math.round(L / 0.6));
         for (let i = 1; i < doors; i++) frontLine((L * i) / doors, 0.1, (L * i) / doors, H - 0.08, D - 0.03);
         frontLine(0.02, 0.1, L - 0.02, 0.1, D - 0.03);
-        if (f.upper !== false) {
-          box(0, L, 0, 0.35, 1.5, 2.2, pal.body);
-          for (let i = 1; i < doors; i++) frontLine((L * i) / doors, 1.52, (L * i) / doors, 2.18, 0.35);
+        // wall cabinets: one row by default, or `upper: 2` rows stacked up to the ceiling
+        const rows = f.upper === false ? 0 : typeof f.upper === 'number' ? Math.max(1, Math.round(f.upper)) : 1;
+        if (rows) {
+          const bottom = 1.45;
+          const top = rows === 1 ? 2.2 : ceiling - 0.02;
+          const rh = (top - bottom) / rows;
+          for (let r = 0; r < rows; r++) {
+            const h0 = bottom + r * rh;
+            const h1 = h0 + rh - 0.02;
+            box(0, L, 0, 0.35, h0, h1, pal.body);
+            for (let i = 1; i < doors; i++) frontLine((L * i) / doors, h0 + 0.02, (L * i) / doors, h1 - 0.02, 0.35);
+          }
         }
         break;
       }
       case 'table': {
+        if (f.round) {
+          // a round table on one pedestal
+          const r = Math.min(L, D) / 2;
+          const c = P(L / 2, D / 2, 0);
+          const cyl = (radius: number, h0: number, h1: number, color: number) => {
+            h1 = Math.min(h1, maxHeight);
+            if (h1 - h0 < 0.005) return;
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, h1 - h0, 36), mat(color));
+            m.position.set(c.x, (h0 + h1) / 2, c.z);
+            m.castShadow = m.receiveShadow = true;
+            group.add(m);
+          };
+          cyl(r, H - 0.04, H, pal.top);
+          cyl(0.05, 0.03, H - 0.04, pal.wood);
+          cyl(r * 0.4, 0, 0.03, pal.wood);
+          if (H <= maxHeight) {
+            const ring: THREE.Vector3[] = [];
+            for (let i = 0; i < 36; i++) {
+              const a = (i / 36) * Math.PI * 2;
+              ring.push(new THREE.Vector3(c.x + Math.cos(a) * r, H, c.z + Math.sin(a) * r));
+            }
+            edges.loop(ring);
+          }
+          break;
+        }
         box(0, L, 0, D, H - 0.04, H, pal.top);
         for (const [u, v] of [[0.05, 0.05], [L - 0.11, 0.05], [0.05, D - 0.11], [L - 0.11, D - 0.11]])
           box(u, u + 0.06, v, v + 0.06, 0, H - 0.04, pal.wood, 0, false);

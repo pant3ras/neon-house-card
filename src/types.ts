@@ -41,8 +41,11 @@ export type FurnitureType =
   | 'bookshelf'
   | 'counter'
   | 'cabinet'
+  | 'fridge'
   | 'table'
   | 'chair'
+  | 'bathtub'
+  | 'shower'
   | 'box';
 
 /** a piece of furniture: an axis-aligned rectangle between two opposite corners */
@@ -55,8 +58,10 @@ export interface Furniture {
   height?: number;
   /** sofas: which short ends get an armrest (default both) */
   arms?: Side[];
-  /** counters: wall cabinets above (default true) */
-  upper?: boolean;
+  /** counters: wall cabinets above – false for none, a number for that many rows up to the ceiling */
+  upper?: boolean | number;
+  /** tables: round top on one pedestal */
+  round?: boolean;
   /** desks: a monitor on top (default true) */
   monitor?: boolean;
   name?: string;
@@ -183,6 +188,10 @@ export interface OutdoorArea {
   polygon: Vec2[];
   /** HA area for the room panel */
   area?: string;
+  /** a roof on posts over it (a covered terrace, a carport) */
+  roof?: boolean;
+  /** height of that roof, default 2.6 m */
+  roof_height?: number;
 }
 
 export interface Roof {

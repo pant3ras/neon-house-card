@@ -14819,6 +14819,9 @@ var yp = {
 		blanket: 2376316,
 		top: 2771584,
 		screen: 4033535,
+		white: 2903942,
+		metal: 2375790,
+		water: 2062536,
 		edge: 6079728,
 		edgeOpacity: .45,
 		opacity: 1
@@ -14832,6 +14835,9 @@ var yp = {
 		blanket: 2775715,
 		top: 3105712,
 		screen: 12574975,
+		white: 3829951,
+		metal: 3105712,
+		water: 9422079,
 		edge: 15266559,
 		edgeOpacity: .55,
 		opacity: .55
@@ -14845,6 +14851,9 @@ var yp = {
 		blanket: 10466515,
 		top: 14273460,
 		screen: 2240580,
+		white: 16514040,
+		metal: 13225686,
+		water: 10474751,
 		edge: 7307156,
 		edgeOpacity: .35,
 		opacity: 1
@@ -14858,8 +14867,11 @@ var yp = {
 	bookshelf: 2,
 	counter: .9,
 	cabinet: 2,
+	fridge: 1.85,
 	table: .76,
 	chair: .9,
+	bathtub: .55,
+	shower: 2.05,
 	box: .8
 };
 function xp(e, t) {
@@ -14892,126 +14904,165 @@ function Sp(e, t, n, r) {
 			emissive: t || (n.name === "neon" ? 330780 : 0),
 			emissiveIntensity: t ? .9 : 1
 		}), s.set(r, i)), i;
-	}, l = new Uf();
+	}, l = new No({
+		color: n.glass,
+		transparent: !0,
+		opacity: n.name === "day" ? .3 : .2,
+		roughness: .1,
+		metalness: .3,
+		depthWrite: !1,
+		side: 2
+	}), u = new Uf(), d = e.height;
 	for (let e of a) {
 		if (!Array.isArray(e.from) || !Array.isArray(e.to)) continue;
-		let n = Math.min(e.from[0], e.to[0]), a = Math.max(e.from[0], e.to[0]), s = Math.min(e.from[1], e.to[1]), u = Math.max(e.from[1], e.to[1]);
-		if (a - n < .05 || u - s < .05) continue;
-		let d = xp(e, t), f = d === "up" || d === "down", p = f ? a - n : u - s, m = f ? u - s : a - n, h = Math.min(e.height ?? bp[e.type] ?? .8, r), g = (e, t, o, f, p, m, h, g = 0, _ = !0) => {
-			if (m = Math.min(m, r), m - p < .005) return;
+		let n = Math.min(e.from[0], e.to[0]), a = Math.max(e.from[0], e.to[0]), s = Math.min(e.from[1], e.to[1]), f = Math.max(e.from[1], e.to[1]);
+		if (a - n < .05 || f - s < .05) continue;
+		let p = xp(e, t), m = p === "up" || p === "down", h = m ? a - n : f - s, g = m ? f - s : a - n, _ = Math.min(e.height ?? bp[e.type] ?? .8, r), v = (e, t, o, l, d, m, h, g = 0, _ = !0) => {
+			if (m = Math.min(m, r), m - d < .005) return;
 			let v, y, b, x;
-			d === "up" ? [v, y, b, x] = [
+			p === "up" ? [v, y, b, x] = [
 				n + e,
 				n + t,
 				s + o,
-				s + f
-			] : d === "down" ? [v, y, b, x] = [
+				s + l
+			] : p === "down" ? [v, y, b, x] = [
 				n + e,
 				n + t,
-				u - f,
-				u - o
-			] : d === "left" ? [v, y, b, x] = [
+				f - l,
+				f - o
+			] : p === "left" ? [v, y, b, x] = [
 				n + o,
-				n + f,
+				n + l,
 				s + e,
 				s + t
 			] : [v, y, b, x] = [
-				a - f,
+				a - l,
 				a - o,
 				s + e,
 				s + t
 			];
-			let S = new Z(new Ki(y - v, m - p, x - b), c(h, g));
-			S.position.set((v + y) / 2, (p + m) / 2, (b + x) / 2), S.castShadow = S.receiveShadow = !0, i.add(S), _ && Cp(l, v, y, p, m, b, x);
-		}, _ = (e, t, r) => d === "up" ? new K(n + e, r, s + t) : d === "down" ? new K(n + e, r, u - t) : d === "left" ? new K(n + t, r, s + e) : new K(a - t, r, s + e), v = (e, t, n, i, a = m) => {
-			Math.max(t, i) <= r && l.seg(_(e, a + .004, t), _(n, a + .004, i));
-		}, y = (e) => f ? e === "left" ? "start" : e === "right" ? "end" : null : e === "up" ? "start" : e === "down" ? "end" : null;
+			let S = typeof h == "number" ? c(h, g) : h, C = new Z(new Ki(y - v, m - d, x - b), S);
+			C.position.set((v + y) / 2, (d + m) / 2, (b + x) / 2), C.castShadow = C.receiveShadow = !0, i.add(C), _ && Cp(u, v, y, d, m, b, x);
+		}, y = (e, t, r) => p === "up" ? new K(n + e, r, s + t) : p === "down" ? new K(n + e, r, f - t) : p === "left" ? new K(n + t, r, s + e) : new K(a - t, r, s + e), b = (e, t, n, i, a = g) => {
+			Math.max(t, i) <= r && u.seg(y(e, a + .004, t), y(n, a + .004, i));
+		}, x = (e) => m ? e === "left" ? "start" : e === "right" ? "end" : null : e === "up" ? "start" : e === "down" ? "end" : null;
 		switch (e.type) {
 			case "bed": {
-				g(0, p, 0, m, 0, .32, o.wood), g(.03, p - .03, .04, m - .03, .32, .52, o.mattress, 0, !1), g(0, p, 0, .07, 0, h, o.wood);
-				let e = p > 1.3 ? 2 : 1, t = (p - .2) / e - .08;
+				v(0, h, 0, g, 0, .32, o.wood), v(.03, h - .03, .04, g - .03, .32, .52, o.mattress, 0, !1), v(0, h, 0, .07, 0, _, o.wood);
+				let e = h > 1.3 ? 2 : 1, t = (h - .2) / e - .08;
 				for (let n = 0; n < e; n++) {
 					let e = .1 + n * (t + .08) + .04;
-					g(e, e + t, .1, .48, .52, .64, o.pillow, 0, !1);
+					v(e, e + t, .1, .48, .52, .64, o.pillow, 0, !1);
 				}
-				g(.01, p - .01, m * .38, m - .01, .52, .57, o.blanket);
+				v(.01, h - .01, g * .38, g - .01, .52, .57, o.blanket);
 				break;
 			}
 			case "wardrobe":
 			case "cabinet": {
-				g(0, p, 0, m, 0, h, o.body);
-				let t = Math.max(1, Math.round(p / (e.type === "cabinet" ? .6 : .55)));
-				for (let e = 1; e < t; e++) v(p * e / t, .06, p * e / t, h - .06);
+				v(0, h, 0, g, 0, _, o.body);
+				let t = Math.max(1, Math.round(h / (e.type === "cabinet" ? .6 : .55)));
+				for (let e = 1; e < t; e++) b(h * e / t, .06, h * e / t, _ - .06);
 				for (let e = 0; e < t; e++) {
-					let n = p * (e + .5) / t + (e % 2 ? -1 : 1) * (p / t) * .35;
-					v(n, h * .45, n, h * .58);
+					let n = h * (e + .5) / t + (e % 2 ? -1 : 1) * (h / t) * .35;
+					b(n, _ * .45, n, _ * .58);
 				}
 				break;
 			}
+			case "fridge":
+				v(0, h, 0, g, 0, _, o.white), h > .8 ? (b(h / 2, .04, h / 2, _ - .04), b(h / 2 - .06, _ * .4, h / 2 - .06, _ * .75), b(h / 2 + .06, _ * .4, h / 2 + .06, _ * .75)) : (b(.02, _ * .36, h - .02, _ * .36), b(h - .08, _ * .42, h - .08, _ * .7), b(h - .08, _ * .12, h - .08, _ * .3)), v(h * .6, h * .8, g, g + .005, _ * .78, _ * .84, 659226, o.screen, !1);
+				break;
+			case "bathtub":
+				v(0, h, 0, g, 0, _, o.white), v(.08, h - .08, .08, g - .08, _ - .12, _ - .02, o.water, o.water, !1), v(h - .16, h - .1, .02, .1, _, _ + .18, o.metal, 0, !1);
+				break;
+			case "shower":
+				v(0, h, 0, g, 0, .05, o.white), v(h * .4, h, g - .03, g, .05, _, l, 0, !0), v(.12, .16, .02, .06, .05, _, o.metal, 0, !1), v(.04, .24, .04, .3, _ - .04, _, o.metal, o.screen, !1);
+				break;
 			case "dresser":
-				g(0, p, 0, m, .06, h - .03, o.body), g(-.01, p + .01, 0, m + .01, h - .03, h, o.top);
-				for (let e = 1; e < 3; e++) v(.02, .06 + (h - .09) * e / 3, p - .02, .06 + (h - .09) * e / 3);
+				v(0, h, 0, g, .06, _ - .03, o.body), v(-.01, h + .01, 0, g + .01, _ - .03, _, o.top);
+				for (let e = 1; e < 3; e++) b(.02, .06 + (_ - .09) * e / 3, h - .02, .06 + (_ - .09) * e / 3);
 				for (let e = 0; e < 3; e++) {
-					let t = .06 + (h - .09) * (e + .5) / 3;
-					v(p / 2 - .12, t, p / 2 + .12, t);
+					let t = .06 + (_ - .09) * (e + .5) / 3;
+					b(h / 2 - .12, t, h / 2 + .12, t);
 				}
 				break;
 			case "desk":
-				if (g(0, p, 0, m, h - .04, h, o.top), g(0, .04, .02, m - .02, 0, h - .04, o.wood), g(p - .04, p, .02, m - .02, 0, h - .04, o.wood), g(.04, p - .04, .02, .05, h * .45, h - .04, o.wood, 0, !1), e.monitor !== !1 && p >= .9) {
-					let e = Math.min(.7, p * .45);
-					g(p / 2 - e / 2, p / 2 + e / 2, .1, .13, h + .12, h + .5, 659226, o.screen), g(p / 2 - .03, p / 2 + .03, .12, .16, h, h + .13, o.body, 0, !1);
+				if (v(0, h, 0, g, _ - .04, _, o.top), v(0, .04, .02, g - .02, 0, _ - .04, o.wood), v(h - .04, h, .02, g - .02, 0, _ - .04, o.wood), v(.04, h - .04, .02, .05, _ * .45, _ - .04, o.wood, 0, !1), e.monitor !== !1 && h >= .9) {
+					let e = Math.min(.7, h * .45);
+					v(h / 2 - e / 2, h / 2 + e / 2, .1, .13, _ + .12, _ + .5, 659226, o.screen), v(h / 2 - .03, h / 2 + .03, .12, .16, _, _ + .13, o.body, 0, !1);
 				}
 				break;
 			case "sofa": {
-				let t = (e.arms ?? (f ? ["left", "right"] : ["up", "down"])).map(y), n = t.includes("start") ? .16 : 0, i = t.includes("end") ? .16 : 0;
-				g(0, p, 0, m, .08, .42, o.fabric), g(0, p, 0, .2, .42, h, o.fabric), n && g(0, n, 0, m, .08, .64, o.fabric), i && g(p - i, p, 0, m, .08, .64, o.fabric);
-				let a = p - n - i, s = Math.max(1, Math.round(a / .75));
+				let t = (e.arms ?? (m ? ["left", "right"] : ["up", "down"])).map(x), n = t.includes("start") ? .16 : 0, i = t.includes("end") ? .16 : 0;
+				v(0, h, 0, g, .08, .42, o.fabric), v(0, h, 0, .2, .42, _, o.fabric), n && v(0, n, 0, g, .08, .64, o.fabric), i && v(h - i, h, 0, g, .08, .64, o.fabric);
+				let a = h - n - i, s = Math.max(1, Math.round(a / .75));
 				for (let e = 1; e < s; e++) {
 					let t = n + a * e / s;
-					r > .43 && l.seg(_(t, .2, .425), _(t, m, .425));
+					r > .43 && u.seg(y(t, .2, .425), y(t, g, .425));
 				}
 				break;
 			}
 			case "bookshelf": {
-				g(0, p, 0, m, 0, h, o.body);
-				let e = Math.max(2, Math.round(h / .38));
-				for (let t = 1; t < e; t++) v(.02, h * t / e, p - .02, h * t / e);
-				let t = Math.max(1, Math.round(p / .8));
-				for (let e = 1; e < t; e++) v(p * e / t, .02, p * e / t, h - .02);
+				v(0, h, 0, g, 0, _, o.body);
+				let e = Math.max(2, Math.round(_ / .38));
+				for (let t = 1; t < e; t++) b(.02, _ * t / e, h - .02, _ * t / e);
+				let t = Math.max(1, Math.round(h / .8));
+				for (let e = 1; e < t; e++) b(h * e / t, .02, h * e / t, _ - .02);
 				break;
 			}
 			case "counter": {
-				g(0, p, 0, m - .03, 0, h - .04, o.body), g(0, p, 0, m, h - .04, h, o.top);
-				let t = Math.max(1, Math.round(p / .6));
-				for (let e = 1; e < t; e++) v(p * e / t, .1, p * e / t, h - .08, m - .03);
-				if (v(.02, .1, p - .02, .1, m - .03), e.upper !== !1) {
-					g(0, p, 0, .35, 1.5, 2.2, o.body);
-					for (let e = 1; e < t; e++) v(p * e / t, 1.52, p * e / t, 2.18, .35);
+				v(0, h, 0, g - .03, 0, _ - .04, o.body), v(0, h, 0, g, _ - .04, _, o.top);
+				let t = Math.max(1, Math.round(h / .6));
+				for (let e = 1; e < t; e++) b(h * e / t, .1, h * e / t, _ - .08, g - .03);
+				b(.02, .1, h - .02, .1, g - .03);
+				let n = e.upper === !1 ? 0 : typeof e.upper == "number" ? Math.max(1, Math.round(e.upper)) : 1;
+				if (n) {
+					let e = 1.45, r = ((n === 1 ? 2.2 : d - .02) - e) / n;
+					for (let i = 0; i < n; i++) {
+						let n = e + i * r, a = n + r - .02;
+						v(0, h, 0, .35, n, a, o.body);
+						for (let e = 1; e < t; e++) b(h * e / t, n + .02, h * e / t, a - .02, .35);
+					}
 				}
 				break;
 			}
 			case "table":
-				g(0, p, 0, m, h - .04, h, o.top);
+				if (e.round) {
+					let e = Math.min(h, g) / 2, t = y(h / 2, g / 2, 0), n = (e, n, a, o) => {
+						if (a = Math.min(a, r), a - n < .005) return;
+						let s = new Z(new qi(e, e, a - n, 36), c(o));
+						s.position.set(t.x, (n + a) / 2, t.z), s.castShadow = s.receiveShadow = !0, i.add(s);
+					};
+					if (n(e, _ - .04, _, o.top), n(.05, .03, _ - .04, o.wood), n(e * .4, 0, .03, o.wood), _ <= r) {
+						let n = [];
+						for (let r = 0; r < 36; r++) {
+							let i = r / 36 * Math.PI * 2;
+							n.push(new K(t.x + Math.cos(i) * e, _, t.z + Math.sin(i) * e));
+						}
+						u.loop(n);
+					}
+					break;
+				}
+				v(0, h, 0, g, _ - .04, _, o.top);
 				for (let [e, t] of [
 					[.05, .05],
-					[p - .11, .05],
-					[.05, m - .11],
-					[p - .11, m - .11]
-				]) g(e, e + .06, t, t + .06, 0, h - .04, o.wood, 0, !1);
+					[h - .11, .05],
+					[.05, g - .11],
+					[h - .11, g - .11]
+				]) v(e, e + .06, t, t + .06, 0, _ - .04, o.wood, 0, !1);
 				break;
 			case "chair":
-				g(0, p, 0, m, .42, .47, o.fabric), g(0, p, 0, .05, .47, h, o.fabric);
+				v(0, h, 0, g, .42, .47, o.fabric), v(0, h, 0, .05, .47, _, o.fabric);
 				for (let [e, t] of [
 					[.02, .02],
-					[p - .06, .02],
-					[.02, m - .06],
-					[p - .06, m - .06]
-				]) g(e, e + .04, t, t + .04, 0, .42, o.wood, 0, !1);
+					[h - .06, .02],
+					[.02, g - .06],
+					[h - .06, g - .06]
+				]) v(e, e + .04, t, t + .04, 0, .42, o.wood, 0, !1);
 				break;
-			default: g(0, p, 0, m, 0, h, o.body);
+			default: v(0, h, 0, g, 0, _, o.body);
 		}
 	}
-	return l.empty || i.add(l.build(Kf(o.edge, 1, o.edgeOpacity))), i;
+	return u.empty || i.add(u.build(Kf(o.edge, 1, o.edgeOpacity))), i;
 }
 function Cp(e, t, n, r, i, a, o) {
 	let s = (e, t, n) => new K(e, t, n);
@@ -15060,7 +15111,7 @@ function Dp(e, t, n) {
 			floor: e.id,
 			room: n.id
 		}, r.add(a), c.loop(n.polygon.map((e) => Vf(e, .012)));
-		let o = qf(n.polygon), [l, u] = Ep("nh-room", `<b>${Lp(n.name)}</b><span class="nh-room-sub"></span>`);
+		let o = qf(n.polygon), [l, u] = Ep("nh-room", `<b>${Rp(n.name)}</b><span class="nh-room-sub"></span>`);
 		l.position.copy(Vf(o, .25)), r.add(l), s.push({
 			room: n,
 			floor: e,
@@ -15078,7 +15129,7 @@ function Dp(e, t, n) {
 	u.name = "devices", r.add(u);
 	let d = new Cn();
 	d.name = "furniture", r.add(d);
-	let f = e.rooms.flatMap((e) => e.polygon), p = Yf(f.length ? f : [[0, 0]]), m = new K((p.minX + p.maxX) / 2, e.elevation + e.height / 2, (p.minY + p.maxY) / 2), h = Math.hypot(p.maxX - p.minX, p.maxY - p.minY) / 2 + 1, [g, _] = Ep("nh-floor", `<b>${Lp(e.name)}</b><span class="nh-floor-sub"></span>`);
+	let f = e.rooms.flatMap((e) => e.polygon), p = Yf(f.length ? f : [[0, 0]]), m = new K((p.minX + p.maxX) / 2, e.elevation + e.height / 2, (p.minY + p.maxY) / 2), h = Math.hypot(p.maxX - p.minX, p.maxY - p.minY) / 2 + 1, [g, _] = Ep("nh-floor", `<b>${Rp(e.name)}</b><span class="nh-floor-sub"></span>`);
 	g.position.set(p.minX - .6, e.height * .6, (p.minY + p.maxY) / 2), r.add(g);
 	let v = {
 		floor: e,
@@ -15229,10 +15280,40 @@ function Mp(e, t) {
 	u.position.set(Math.round(a), -.01, Math.round(o));
 	let d = u.material;
 	d.transparent = !0, d.opacity = t.name === "day" ? .35 : .55, n.add(u);
-	for (let r of e.outdoor ?? []) n.add(Np(r, t));
-	return n;
+	for (let r of e.outdoor ?? []) n.add(Pp(r, t));
+	let f = new Cn();
+	f.name = "covers";
+	let p = e.floors.filter((e) => Math.abs(e.elevation) < .5).flatMap((e) => e.rooms.map((e) => e.polygon));
+	for (let n of e.outdoor ?? []) n.roof && n.polygon?.length >= 3 && f.add(Np(n, t, p));
+	return n.add(f), n;
 }
-function Np(e, t) {
+function Np(e, t, n) {
+	let r = new Cn(), i = e.roof_height ?? 2.6, a = e.polygon, o = (e) => n.some((t) => t.some((n, r) => up(e, n, t[(r + 1) % t.length]).dist < .35)), s = new No({
+		color: t.device,
+		roughness: .6,
+		emissive: t.name === "neon" ? 529454 : 0
+	}), c = new Uf(), l = /* @__PURE__ */ new Set();
+	for (let e = 0; e < a.length; e++) {
+		let t = a[e], n = a[(e + 1) % a.length], u = Math.hypot(n[0] - t[0], n[1] - t[1]), d = Math.max(1, Math.ceil(u / 3));
+		for (let e = 0; e <= d; e++) {
+			let a = [t[0] + (n[0] - t[0]) * e / d, t[1] + (n[1] - t[1]) * e / d], u = `${a[0].toFixed(2)},${a[1].toFixed(2)}`;
+			if (l.has(u) || o(a)) continue;
+			l.add(u);
+			let f = new Z(new Ki(.12, i, .12), s);
+			f.position.set(a[0], i / 2, a[1]), f.castShadow = !0, r.add(f), c.seg(Vf(a, .02), Vf(a, i));
+		}
+	}
+	let u = new No({
+		color: t.roof,
+		emissive: t.name === "neon" ? 662076 : 0,
+		transparent: t.name !== "day",
+		opacity: t.name === "day" ? 1 : .7,
+		side: 2,
+		depthWrite: t.name === "day"
+	}), d = new Z(Xf(a, i + .1, .1), u);
+	return d.castShadow = !0, r.add(d), c.loop(a.map((e) => Vf(e, i + .1))), c.loop(a.map((e) => Vf(e, i))), r.add(c.build(Kf(t.roofEdge, 1.3))), r;
+}
+function Pp(e, t) {
 	let n = new Cn(), r = {
 		grass: .012,
 		water: .008,
@@ -15257,7 +15338,7 @@ function Np(e, t) {
 	}
 	return n;
 }
-function Pp(e, t, n) {
+function Fp(e, t, n) {
 	let r = new Cn();
 	r.name = "roof";
 	let i = e.rooms.flatMap((e) => e.polygon);
@@ -15312,7 +15393,7 @@ function Pp(e, t, n) {
 				[f, o]
 			]) v.seg(e, i);
 		}
-		t.solar && Fp(r, t, n, {
+		t.solar && Ip(r, t, n, {
 			x0: s,
 			x1: c,
 			z0: l,
@@ -15333,7 +15414,7 @@ function Pp(e, t, n) {
 	}), S = new Z(_.geometry(), x);
 	return S.castShadow = !0, S.userData.pick = { kind: "roof" }, r.add(S), r.add(v.build(Kf(n.roofEdge, 1.4))), r;
 }
-function Fp(e, t, n, r) {
+function Ip(e, t, n, r) {
 	let i = t.solar, a = new No({
 		color: 662074,
 		emissive: n.name === "neon" ? 666202 : 0,
@@ -15381,10 +15462,10 @@ function Fp(e, t, n, r) {
 		entity: i.power
 	}, e.add(g);
 }
-function Ip(e) {
+function Lp(e) {
 	Zf(e.group);
 }
-function Lp(e) {
+function Rp(e) {
 	return e.replace(/[&<>"]/g, (e) => ({
 		"&": "&amp;",
 		"<": "&lt;",
@@ -15394,7 +15475,7 @@ function Lp(e) {
 }
 //#endregion
 //#region src/ha.ts
-var Rp = /* @__PURE__ */ new Set([
+var zp = /* @__PURE__ */ new Set([
 	"on",
 	"open",
 	"opening",
@@ -15413,37 +15494,37 @@ var Rp = /* @__PURE__ */ new Set([
 	"true",
 	"detected",
 	"unlocked"
-]), zp = (e, t) => t ? e?.states[t] : void 0, Bp = (e) => !!e && Rp.has(e.state), Vp = (e) => !e || e.state === "unavailable" || e.state === "unknown", Hp = (e) => {
+]), Bp = (e, t) => t ? e?.states[t] : void 0, Vp = (e) => !!e && zp.has(e.state), Hp = (e) => !e || e.state === "unavailable" || e.state === "unknown", Up = (e) => {
 	if (!e) return;
 	let t = parseFloat(e.state);
 	return Number.isFinite(t) ? t : void 0;
 };
-function Up(e, t) {
+function Wp(e, t) {
 	return e?.states[t]?.attributes.friendly_name ?? t;
 }
-function Wp(e) {
-	let t = e?.attributes ?? {};
-	return Array.isArray(t.rgb_color) ? new Y(t.rgb_color[0] / 255, t.rgb_color[1] / 255, t.rgb_color[2] / 255) : Array.isArray(t.hs_color) ? new Y().setHSL(t.hs_color[0] / 360, t.hs_color[1] / 100, .55) : Gp(t.color_temp_kelvin ?? (t.color_temp ? 1e6 / t.color_temp : 2900));
-}
 function Gp(e) {
+	let t = e?.attributes ?? {};
+	return Array.isArray(t.rgb_color) ? new Y(t.rgb_color[0] / 255, t.rgb_color[1] / 255, t.rgb_color[2] / 255) : Array.isArray(t.hs_color) ? new Y().setHSL(t.hs_color[0] / 360, t.hs_color[1] / 100, .55) : Kp(t.color_temp_kelvin ?? (t.color_temp ? 1e6 / t.color_temp : 2900));
+}
+function Kp(e) {
 	let t = e / 100, n, r, i;
 	t <= 66 ? (n = 255, r = 99.47 * Math.log(t) - 161.12, i = t <= 19 ? 0 : 138.52 * Math.log(t - 10) - 305.04) : (n = 329.7 * (t - 60) ** -.1332, r = 288.12 * (t - 60) ** -.0755, i = 255);
 	let a = (e) => Math.min(255, Math.max(0, e)) / 255;
 	return new Y(a(n), a(r), a(i));
 }
-var Kp = (e) => Bp(e) ? (e.attributes.brightness ?? 255) / 255 : 0;
-function qp(e, t) {
+var qp = (e) => Vp(e) ? (e.attributes.brightness ?? 255) / 255 : 0;
+function Jp(e, t) {
 	e.dispatchEvent(new CustomEvent("hass-more-info", {
 		detail: { entityId: t },
 		bubbles: !0,
 		composed: !0
 	}));
 }
-async function Jp(e, t) {
+async function Yp(e, t) {
 	let n = t.split(".")[0], r = e.states[t];
-	return n === "media_player" ? e.callService("media_player", r && Bp(r) && r.state !== "idle" ? "turn_off" : "turn_on", { entity_id: t }) : n === "vacuum" ? e.callService("vacuum", r?.state === "cleaning" ? "return_to_base" : "start", { entity_id: t }) : n === "cover" ? e.callService("cover", "toggle", { entity_id: t }) : n === "climate" ? e.callService("climate", r?.state === "off" ? "turn_on" : "turn_off", { entity_id: t }) : n === "scene" || n === "script" ? e.callService(n, "turn_on", { entity_id: t }) : e.callService("homeassistant", "toggle", { entity_id: t });
+	return n === "media_player" ? e.callService("media_player", r && Vp(r) && r.state !== "idle" ? "turn_off" : "turn_on", { entity_id: t }) : n === "vacuum" ? e.callService("vacuum", r?.state === "cleaning" ? "return_to_base" : "start", { entity_id: t }) : n === "cover" ? e.callService("cover", "toggle", { entity_id: t }) : n === "climate" ? e.callService("climate", r?.state === "off" ? "turn_on" : "turn_off", { entity_id: t }) : n === "scene" || n === "script" ? e.callService(n, "turn_on", { entity_id: t }) : e.callService("homeassistant", "toggle", { entity_id: t });
 }
-var Yp = /* @__PURE__ */ new Set([
+var Xp = /* @__PURE__ */ new Set([
 	"light",
 	"switch",
 	"fan",
@@ -15458,7 +15539,7 @@ var Yp = /* @__PURE__ */ new Set([
 	"siren",
 	"valve"
 ]);
-function Xp(e, t, n) {
+function Zp(e, t, n) {
 	let r = e.states[t]?.attributes.entity_picture;
 	if (!r) return;
 	let i = n ? r.replace("/api/camera_proxy/", "/api/camera_proxy_stream/") : `${r}&t=${Date.now()}`;
@@ -15466,14 +15547,14 @@ function Xp(e, t, n) {
 }
 //#endregion
 //#region src/scene/devices.ts
-var Zp = Math.PI / 180, Qp = (e = 0) => -e * Zp, $p = (e = 0) => [Math.sin(e * Zp), -Math.cos(e * Zp)];
-function em(e, t) {
+var Qp = Math.PI / 180, $p = (e = 0) => -e * Qp, em = (e = 0) => [Math.sin(e * Qp), -Math.cos(e * Qp)];
+function tm(e, t) {
 	e.traverse((e) => e.userData.pick = {
 		kind: "device",
 		view: t
 	});
 }
-function tm(e, t) {
+function nm(e, t) {
 	let n = document.createElement("div");
 	return n.className = `nh-badge ${e}`, {
 		obj: new df(n),
@@ -15481,28 +15562,28 @@ function tm(e, t) {
 		important: t
 	};
 }
-function nm(e, t, n, r, i = 1.2) {
+function rm(e, t, n, r, i = 1.2) {
 	let a = new Uf(), o = new Qi(new Ki(e, t, n)), s = o.getAttribute("position");
 	for (let e = 0; e < s.count; e += 2) a.seg(new K().fromBufferAttribute(s, e), new K().fromBufferAttribute(s, e + 1));
 	return o.dispose(), a.build(Kf(r, i));
 }
-function rm(e, t, n) {
+function im(e, t, n) {
 	if (!e?.entity || !Array.isArray(e.pos)) return null;
 	switch (e.type) {
-		case "light": return im(e, t, n);
-		case "camera": return sm(e, t, n);
-		case "tv": return lm(e, t, n);
-		case "climate": return dm(e, t, n);
-		case "appliance": return fm(e, t, n);
-		case "vacuum": return pm(e, t, n);
-		case "sensor": return mm(e, t, n);
-		case "car": return hm(e, t, n);
+		case "light": return am(e, t, n);
+		case "camera": return cm(e, t, n);
+		case "tv": return um(e, t, n);
+		case "climate": return fm(e, t, n);
+		case "appliance": return pm(e, t, n);
+		case "vacuum": return mm(e, t, n);
+		case "sensor": return hm(e, t, n);
+		case "car": return gm(e, t, n);
 		default: return null;
 	}
 }
-function im(e, t, n) {
+function am(e, t, n) {
 	let r = e.kind ?? "bulb", i = new Cn(), a = e.z ?? (r === "strip" ? .9 : r === "flood" ? 2.6 : r === "lamp" ? 1.3 : t.height - .15);
-	i.position.copy(Vf(e.pos, a)), i.rotation.y = Qp(e.rot);
+	i.position.copy(Vf(e.pos, a)), i.rotation.y = $p(e.rot);
 	let o = new No({
 		color: 2238515,
 		emissive: 0,
@@ -15515,7 +15596,7 @@ function im(e, t, n) {
 	let c = new Cs(16777215, 0, r === "flood" ? 9 : r === "strip" ? 4.5 : 6.5, 1.6);
 	c.position.y = r === "strip" ? .15 : -.05, r === "flood" && c.position.set(0, -.3, -.6), i.add(c);
 	let l = new Yr(new Fr({
-		map: om(),
+		map: sm(),
 		color: 16777215,
 		transparent: !0,
 		opacity: 0,
@@ -15529,8 +15610,8 @@ function im(e, t, n) {
 		object: i,
 		entities: [e.entity],
 		update(t) {
-			let n = zp(t.hass, e.entity);
-			u = Wp(n), d = Kp(n), o.color.set(Vp(n) ? 3817290 : 2765120), l.material.color.copy(u);
+			let n = Bp(t.hass, e.entity);
+			u = Gp(n), d = qp(n), o.color.set(Hp(n) ? 3817290 : 2765120), l.material.color.copy(u);
 		},
 		tick(e) {
 			let t = d - f;
@@ -15544,21 +15625,21 @@ function im(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return em(i, p), p;
+	return tm(i, p), p;
 }
-var am = null;
-function om() {
-	if (am) return am;
+var om = null;
+function sm() {
+	if (om) return om;
 	let e = document.createElement("canvas");
 	e.width = e.height = 64;
 	let t = e.getContext("2d"), n = t.createRadialGradient(32, 32, 0, 32, 32, 32);
-	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.25, "rgba(255,255,255,.55)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), am = new Hi(e), am;
+	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.25, "rgba(255,255,255,.55)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), om = new Hi(e), om;
 }
-function sm(e, t, n) {
+function cm(e, t, n) {
 	let r = n.theme, i = new Cn(), a = e.z ?? 2.5;
 	i.position.copy(Vf(e.pos, a));
 	let o = new Cn();
-	o.rotation.y = Qp(e.rot), i.add(o);
+	o.rotation.y = $p(e.rot), i.add(o);
 	let s = new No({
 		color: r.name === "day" ? 15922423 : 1714762,
 		emissive: 0
@@ -15569,8 +15650,8 @@ function sm(e, t, n) {
 		emissive: 1731839,
 		emissiveIntensity: .6
 	}));
-	l.rotation.x = Math.PI / 2, l.position.z = -.11, o.add(l), o.add(nm(.14, .12, .2, r.deviceEdge, 1));
-	let u = (e.fov ?? 100) * Zp, d = e.range ?? 7, f = [];
+	l.rotation.x = Math.PI / 2, l.position.z = -.11, o.add(l), o.add(rm(.14, .12, .2, r.deviceEdge, 1));
+	let u = (e.fov ?? 100) * Qp, d = e.range ?? 7, f = [];
 	for (let e = 0; e <= 24; e++) {
 		let t = -u / 2 + u * e / 24;
 		f.push(new K(Math.sin(t) * d, 0, -Math.cos(t) * d));
@@ -15587,17 +15668,17 @@ function sm(e, t, n) {
 		depthWrite: !1,
 		side: 2
 	}), _ = new Z(h, g);
-	_.position.y = -a + .035, _.rotation.y = Qp(e.rot), _.renderOrder = 4, i.add(_);
+	_.position.y = -a + .035, _.rotation.y = $p(e.rot), _.renderOrder = 4, i.add(_);
 	let v = new Uf();
 	v.seg(new K(), f[0]), v.seg(new K(), f[24]);
 	for (let e = 0; e < 24; e++) v.seg(f[e], f[e + 1]);
 	let y = Kf(r.wallEdge, 1, .3), b = v.build(y);
-	b.position.y = -a + .04, b.rotation.y = Qp(e.rot), i.add(b);
+	b.position.y = -a + .04, b.rotation.y = $p(e.rot), i.add(b);
 	let x = new Uf();
 	x.seg(new K(0, 0, 0), new K(0, -a + .04, 0));
 	let S = x.build(Kf(r.wallEdge, 1, .35));
 	i.add(S);
-	let C = e.motion ?? [], w = !1, T = 0, E = tm("nh-cam", !0);
+	let C = e.motion ?? [], w = !1, T = 0, E = nm("nh-cam", !0);
 	E.obj.position.set(0, .32, 0), i.add(E.obj);
 	let D = {
 		device: e,
@@ -15606,12 +15687,12 @@ function sm(e, t, n) {
 		entities: [e.entity, ...C],
 		badge: E,
 		update(t) {
-			let n = C.filter((e) => Bp(zp(t.hass, e)));
+			let n = C.filter((e) => Vp(Bp(t.hass, e)));
 			w = n.length > 0;
-			let i = zp(t.hass, e.entity), a = e.name ?? i?.attributes.friendly_name?.replace(/ (live view|hd stream|sd stream)$/i, "") ?? e.entity;
-			E.el.classList.toggle("alarm", w), E.el.classList.toggle("off", Vp(i));
-			let o = n.map((e) => cm(e, t.hass));
-			E.el.innerHTML = `<span class="ico">◉</span>${gm(a)}${w ? ` · <b>${gm([...new Set(o)].join(", ") || "motion")}</b>` : ""}`;
+			let i = Bp(t.hass, e.entity), a = e.name ?? i?.attributes.friendly_name?.replace(/ (live view|hd stream|sd stream)$/i, "") ?? e.entity;
+			E.el.classList.toggle("alarm", w), E.el.classList.toggle("off", Hp(i));
+			let o = n.map((e) => lm(e, t.hass));
+			E.el.innerHTML = `<span class="ico">◉</span>${_m(a)}${w ? ` · <b>${_m([...new Set(o)].join(", ") || "motion")}</b>` : ""}`;
 			let c = w ? r.alert : r.wallEdge;
 			g.color.set(c), y.color.set(c), s.emissive.set(w ? r.alert : 0), w || (g.opacity = .09, s.emissiveIntensity = 0);
 		},
@@ -15627,9 +15708,9 @@ function sm(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return em(o, D), em(_, D), D;
+	return tm(o, D), tm(_, D), D;
 }
-function cm(e, t) {
+function lm(e, t) {
 	for (let n of [t?.states[e]?.attributes.friendly_name, e]) {
 		let e = String(n ?? "").toLowerCase();
 		if (/person|people|human/.test(e)) return "person";
@@ -15639,9 +15720,9 @@ function cm(e, t) {
 	}
 	return "motion";
 }
-function lm(e, t, n) {
+function um(e, t, n) {
 	let r = n.theme, i = e.width ?? 1.23, a = 9 / 16 * i, o = new Cn();
-	o.position.copy(Vf(e.pos, e.z ?? 1.25)), o.rotation.y = Qp(e.rot);
+	o.position.copy(Vf(e.pos, e.z ?? 1.25)), o.rotation.y = $p(e.rot);
 	let s = new No({
 		color: 724242,
 		roughness: .3,
@@ -15652,7 +15733,7 @@ function lm(e, t, n) {
 		color: 329224,
 		toneMapped: !1
 	}), u = new Z(new _o(i, a), l);
-	u.position.z = -.027, u.rotation.y = Math.PI, o.add(u), o.add(nm(i + .04, a + .04, .05, r.deviceEdge, 1));
+	u.position.z = -.027, u.rotation.y = Math.PI, o.add(u), o.add(rm(i + .04, a + .04, .05, r.deviceEdge, 1));
 	let d = new Cs(5213183, 0, 4, 1.8);
 	d.position.z = -.6, o.add(d);
 	let f, p = !1, m = new ss();
@@ -15663,7 +15744,7 @@ function lm(e, t, n) {
 		object: o,
 		entities: [e.entity, ...e.power ? [e.power] : []],
 		update(t) {
-			let n = zp(t.hass, e.entity);
+			let n = Bp(t.hass, e.entity);
 			p = !!n && [
 				"on",
 				"playing",
@@ -15679,24 +15760,24 @@ function lm(e, t, n) {
 					e.colorSpace = Ie, l.map?.dispose(), l.map = e, l.color.set(16777215), l.needsUpdate = !0, t.requestRender();
 				});
 			}
-			(!p || !r) && (f = void 0, l.map && (l.map.dispose(), l.map = null, l.needsUpdate = !0)), l.map || l.color.set(p ? um(n?.attributes.app_name ?? n?.attributes.source) : 329224), d.intensity = p ? 2.2 : 0, d.color.set(p ? um(n?.attributes.app_name ?? n?.attributes.source) : 0);
+			(!p || !r) && (f = void 0, l.map && (l.map.dispose(), l.map = null, l.needsUpdate = !0)), l.map || l.color.set(p ? dm(n?.attributes.app_name ?? n?.attributes.source) : 329224), d.intensity = p ? 2.2 : 0, d.color.set(p ? dm(n?.attributes.app_name ?? n?.attributes.source) : 0);
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
-	return em(o, h), h;
+	return tm(o, h), h;
 }
-function um(e) {
+function dm(e) {
 	let t = (e ?? "").toLowerCase();
 	return t.includes("netflix") ? 15010068 : t.includes("youtube") ? 16722474 : t.includes("disney") ? 2052056 : t.includes("prime") ? 43233 : t.includes("hbo") || t.includes("max") ? 7023871 : t.includes("spotify") ? 1947988 : t.includes("tv") || t.includes("hdmi") ? 3112447 : 3829247;
 }
-function dm(e, t, n) {
+function fm(e, t, n) {
 	let r = n.theme, i = new Cn();
-	i.position.copy(Vf(e.pos, e.z ?? t.height - .4)), i.rotation.y = Qp(e.rot);
+	i.position.copy(Vf(e.pos, e.z ?? t.height - .4)), i.rotation.y = $p(e.rot);
 	let a = new No({
 		color: r.name === "day" ? 16777215 : 1846348,
 		emissive: 0
 	});
-	i.add(new Z(new Ki(.9, .28, .22), a)), i.add(nm(.9, .28, .22, r.deviceEdge, 1));
+	i.add(new Z(new Ki(.9, .28, .22), a)), i.add(rm(.9, .28, .22, r.deviceEdge, 1));
 	let o = new Tr(), s = /* @__PURE__ */ new Float32Array(108), c = Array.from({ length: 36 }, () => Math.random());
 	o.setAttribute("position", new dr(s, 3));
 	let l = new Pi({
@@ -15708,7 +15789,7 @@ function dm(e, t, n) {
 		blending: 2
 	}), u = new zi(o, l);
 	i.add(u);
-	let d = tm("nh-climate", !0);
+	let d = nm("nh-climate", !0);
 	d.obj.position.set(0, .35, 0), i.add(d.obj);
 	let f = !1, p = 0, m = {
 		device: e,
@@ -15717,8 +15798,8 @@ function dm(e, t, n) {
 		entities: [e.entity],
 		badge: d,
 		update(t) {
-			let n = zp(t.hass, e.entity), r = n?.state ?? "off";
-			f = !!n && r !== "off" && !Vp(n);
+			let n = Bp(t.hass, e.entity), r = n?.state ?? "off";
+			f = !!n && r !== "off" && !Hp(n);
 			let i = r === "heat" || n?.attributes.hvac_action === "heating" ? 16747069 : 6279423;
 			l.color.set(i), a.emissive.set(f ? i : 0), a.emissiveIntensity = f ? .35 : 0;
 			let o = n?.attributes.current_temperature, s = n?.attributes.temperature;
@@ -15735,9 +15816,9 @@ function dm(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return em(i, m), m;
+	return tm(i, m), m;
 }
-function fm(e, t, n) {
+function pm(e, t, n) {
 	let r = n.theme, i = e.kind ?? "plug", [a, o, s] = {
 		purifier: [
 			.32,
@@ -15765,13 +15846,13 @@ function fm(e, t, n) {
 			.6
 		]
 	}[i], c = new Cn();
-	c.position.copy(Vf(e.pos, e.z ?? (i === "plug" ? .3 : o / 2))), c.rotation.y = Qp(e.rot);
+	c.position.copy(Vf(e.pos, e.z ?? (i === "plug" ? .3 : o / 2))), c.rotation.y = $p(e.rot);
 	let l = new No({
 		color: r.name === "day" ? 16054008 : r.device,
 		emissive: 0,
 		roughness: .5
 	});
-	c.add(new Z(new Ki(a, o, s), l)), c.add(nm(a, o, s, r.deviceEdge, 1));
+	c.add(new Z(new Ki(a, o, s), l)), c.add(rm(a, o, s, r.deviceEdge, 1));
 	let u = new Z(new bo(Math.min(a, s) * .38, .012, 6, 28), new ni({
 		color: r.ok,
 		transparent: !0,
@@ -15784,17 +15865,17 @@ function fm(e, t, n) {
 		object: c,
 		entities: [e.entity, ...e.power ? [e.power] : []],
 		update(t) {
-			let n = zp(t.hass, e.entity), i = Hp(zp(t.hass, e.power));
-			d = e.power && i !== void 0 ? i > (e.active_watts ?? 5) : Bp(n), l.emissive.set(d ? r.ok : 0), l.emissiveIntensity = d ? .3 : 0, u.material.opacity = d ? .9 : 0;
+			let n = Bp(t.hass, e.entity), i = Up(Bp(t.hass, e.power));
+			d = e.power && i !== void 0 ? i > (e.active_watts ?? 5) : Vp(n), l.emissive.set(d ? r.ok : 0), l.emissiveIntensity = d ? .3 : 0, u.material.opacity = d ? .9 : 0;
 		},
 		tick(e) {
 			return d ? (u.rotation.z += e * 3, !0) : !1;
 		},
 		focus: () => c.getWorldPosition(new K())
 	};
-	return em(c, f), f;
+	return tm(c, f), f;
 }
-function pm(e, t, n) {
+function mm(e, t, n) {
 	let r = n.theme, i = new Cn(), a = Vf(e.pos, .06);
 	i.position.copy(a);
 	let o = new No({
@@ -15808,11 +15889,11 @@ function pm(e, t, n) {
 		opacity: .9
 	}), l = new Z(new bo(.17, .008, 6, 36), c);
 	l.rotation.x = Math.PI / 2, l.position.y = .046, i.add(l);
-	let u = new Z(new Ki(.3, .12, .08), new No({ color: r.device })), [d, f] = $p(e.rot);
-	u.position.copy(Vf([e.pos[0] - d * .24, e.pos[1] - f * .24], .06)), u.rotation.y = Qp(e.rot);
+	let u = new Z(new Ki(.3, .12, .08), new No({ color: r.device })), [d, f] = em(e.rot);
+	u.position.copy(Vf([e.pos[0] - d * .24, e.pos[1] - f * .24], .06)), u.rotation.y = $p(e.rot);
 	let p = new Cn();
 	p.add(i, u);
-	let m = tm("nh-vac", !1);
+	let m = nm("nh-vac", !1);
 	m.obj.position.set(0, .3, 0), i.add(m.obj);
 	let h = !1, g = 0, _ = {
 		device: e,
@@ -15821,21 +15902,21 @@ function pm(e, t, n) {
 		entities: [e.entity],
 		badge: m,
 		update(t) {
-			let n = zp(t.hass, e.entity), s = n?.state ?? "unknown";
+			let n = Bp(t.hass, e.entity), s = n?.state ?? "unknown";
 			h = s === "cleaning" || s === "returning";
 			let l = s === "error";
 			c.color.set(l ? r.alert : h ? r.ok : r.wallEdge), o.emissive.set(h ? r.ok : 0), o.emissiveIntensity = h ? .25 : 0;
 			let u = n?.attributes.battery_level;
-			m.el.innerHTML = `<span class="ico">⬤</span>${gm(s)}${u == null ? "" : ` · ${u}%`}`, m.important = h || l, h || i.position.copy(a);
+			m.el.innerHTML = `<span class="ico">⬤</span>${_m(s)}${u == null ? "" : ` · ${u}%`}`, m.important = h || l, h || i.position.copy(a);
 		},
 		tick(e) {
 			return h ? (g += e * .35, i.position.set(a.x + Math.sin(g) * 1.4, a.y, a.z + Math.sin(g * 2) * .8 + .9), !0) : !1;
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return em(p, _), _;
+	return tm(p, _), _;
 }
-function mm(e, t, n) {
+function hm(e, t, n) {
 	let r = n.theme, i = new Cn();
 	i.position.copy(Vf(e.pos, e.z ?? 1.5));
 	let a = new Z(new qi(.05, .05, .03, 16), new No({
@@ -15844,7 +15925,7 @@ function mm(e, t, n) {
 		emissiveIntensity: .15
 	}));
 	a.rotation.x = Math.PI / 2, i.add(a);
-	let o = tm("nh-sensor", !1);
+	let o = nm("nh-sensor", !1);
 	o.obj.position.set(0, .18, 0), i.add(o.obj);
 	let s = {
 		device: e,
@@ -15853,16 +15934,16 @@ function mm(e, t, n) {
 		entities: [e.entity],
 		badge: o,
 		update(t) {
-			let n = zp(t.hass, e.entity), r = n?.attributes.unit_of_measurement ?? "";
-			o.el.classList.toggle("off", Vp(n)), o.el.textContent = Vp(n) ? "–" : `${n.state}${r}`;
+			let n = Bp(t.hass, e.entity), r = n?.attributes.unit_of_measurement ?? "";
+			o.el.classList.toggle("off", Hp(n)), o.el.textContent = Hp(n) ? "–" : `${n.state}${r}`;
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return em(i, s), s;
+	return tm(i, s), s;
 }
-function hm(e, t, n) {
+function gm(e, t, n) {
 	let r = n.theme, i = e.length ?? 4.6, a = e.width ?? 1.85, o = new Cn();
-	o.position.copy(Vf(e.pos, 0)), o.rotation.y = Qp(e.rot);
+	o.position.copy(Vf(e.pos, 0)), o.rotation.y = $p(e.rot);
 	let s = new Cn(), c = new No({
 		color: r.name === "day" ? 4016732 : 1780820,
 		metalness: .6,
@@ -15878,7 +15959,7 @@ function hm(e, t, n) {
 	u.position.y = .55;
 	let d = new Z(new Ki(a * .86, .45, i * .5), l);
 	d.position.set(0, 1.03, i * .04), s.add(u, d);
-	let f = nm(a, .55, i, r.deviceEdge, 1.2);
+	let f = rm(a, .55, i, r.deviceEdge, 1.2);
 	f.position.y = .55, s.add(f);
 	let p = new No({ color: 461069 });
 	for (let e of [-1, 1]) for (let t of [-1, 1]) {
@@ -15906,14 +15987,14 @@ function hm(e, t, n) {
 		object: o,
 		entities: [e.entity, ...e.presence ? [e.presence] : []],
 		update(t) {
-			let n = zp(t.hass, e.presence ?? e.entity);
-			y = !e.presence || Bp(n) || n?.state === "home", s.visible = y;
+			let n = Bp(t.hass, e.presence ?? e.entity);
+			y = !e.presence || Vp(n) || n?.state === "home", s.visible = y;
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
-	return em(o, b), b;
+	return tm(o, b), b;
 }
-function gm(e) {
+function _m(e) {
 	return e.replace(/[&<>"]/g, (e) => ({
 		"&": "&amp;",
 		"<": "&lt;",
@@ -15923,13 +16004,13 @@ function gm(e) {
 }
 //#endregion
 //#region src/scene/weather.ts
-var _m = /* @__PURE__ */ new Set([
+var vm = /* @__PURE__ */ new Set([
 	"rainy",
 	"pouring",
 	"lightning-rainy",
 	"snowy-rainy",
 	"hail"
-]), vm = /* @__PURE__ */ new Set(["snowy", "snowy-rainy"]), ym = {
+]), ym = /* @__PURE__ */ new Set(["snowy", "snowy-rainy"]), bm = {
 	cloudy: .9,
 	partlycloudy: .45,
 	rainy: .9,
@@ -15943,7 +16024,7 @@ var _m = /* @__PURE__ */ new Set([
 	windy: .3,
 	"windy-variant": .6,
 	exceptional: .8
-}, bm = class {
+}, xm = class {
 	area;
 	theme;
 	group = new Cn();
@@ -15984,7 +16065,7 @@ var _m = /* @__PURE__ */ new Set([
 		let a = new Tr();
 		a.setAttribute("position", new dr(this.snowPos, 3)), this.snow = new zi(a, new Pi({
 			size: .09,
-			map: Cm(),
+			map: wm(),
 			color: 16777215,
 			transparent: !0,
 			opacity: .9,
@@ -15992,7 +16073,7 @@ var _m = /* @__PURE__ */ new Set([
 		})), this.snow.frustumCulled = !1;
 		for (let t = 0; t < n; t++) this.snowPos[t * 3] = e.center.x + (Math.random() - .5) * r, this.snowPos[t * 3 + 1] = Math.random() * 14, this.snowPos[t * 3 + 2] = e.center.z + (Math.random() - .5) * r;
 		this.group.add(this.snow);
-		let o = Tm();
+		let o = Em();
 		for (let n = 0; n < 12; n++) {
 			let r = new Yr(new Fr({
 				map: o,
@@ -16004,13 +16085,13 @@ var _m = /* @__PURE__ */ new Set([
 			r.scale.set(i, i * .5, 1), r.userData.angle = n / 12 * Math.PI * 2 + Math.random() * .4, r.userData.dist = e.radius * 1.6 + 6 + Math.random() * 10, r.userData.height = 16 + Math.random() * 6, r.userData.speed = .01 + Math.random() * .015, this.placeCloud(r), this.clouds.push(r), this.group.add(r);
 		}
 		this.sunSprite = new Yr(new Fr({
-			map: Cm(),
+			map: wm(),
 			color: 16765562,
 			transparent: !0,
 			depthWrite: !1,
 			blending: 2
 		})), this.sunSprite.scale.setScalar(6), this.moonSprite = new Yr(new Fr({
-			map: Cm(),
+			map: wm(),
 			color: 12375295,
 			transparent: !0,
 			depthWrite: !1,
@@ -16040,14 +16121,14 @@ var _m = /* @__PURE__ */ new Set([
 	}
 	update(e) {
 		let t = e.weather;
-		this.condition = t?.state ?? "sunny", this.rainAmount = this.enabled && _m.has(this.condition) ? this.condition === "pouring" ? 1 : .6 : 0, this.snowAmount = this.enabled && vm.has(this.condition) ? 1 : 0, this.cloudAmount = this.enabled ? ym[this.condition] ?? .1 : 0;
+		this.condition = t?.state ?? "sunny", this.rainAmount = this.enabled && vm.has(this.condition) ? this.condition === "pouring" ? 1 : .6 : 0, this.snowAmount = this.enabled && ym.has(this.condition) ? 1 : 0, this.cloudAmount = this.enabled ? bm[this.condition] ?? .1 : 0;
 		let n = Number(t?.attributes.wind_speed ?? 0), r = (Number(t?.attributes.wind_bearing ?? 0) + 180 - e.north) * Math.PI / 180, i = Math.min(1, n / 50);
 		this.wind.set(Math.sin(r) * i * 4, 0, -Math.cos(r) * i * 4);
 		let a = e.sun, o = Number(a?.attributes.elevation ?? 35), s = Number(a?.attributes.azimuth ?? 180);
 		this.night = a ? a.state === "below_horizon" : !1;
-		let c = xm(s - e.north, Math.max(o, 4));
+		let c = Sm(s - e.north, Math.max(o, 4));
 		this.sunSprite.position.copy(this.area.center).addScaledVector(c, 55);
-		let l = xm(s + 180 - e.north, 35);
+		let l = Sm(s + 180 - e.north, 35);
 		this.moonSprite.position.copy(this.area.center).addScaledVector(l, 55);
 		let u = this.night ? l : c;
 		this.sunLight.position.copy(this.area.center).addScaledVector(u, 30);
@@ -16123,21 +16204,21 @@ var _m = /* @__PURE__ */ new Set([
 		});
 	}
 };
-function xm(e, t) {
+function Sm(e, t) {
 	let n = e * Math.PI / 180, r = t * Math.PI / 180;
 	return new K(Math.sin(n) * Math.cos(r), Math.sin(r), -Math.cos(n) * Math.cos(r));
 }
-var Sm = null;
-function Cm() {
-	if (Sm) return Sm;
+var Cm = null;
+function wm() {
+	if (Cm) return Cm;
 	let e = document.createElement("canvas");
 	e.width = e.height = 64;
 	let t = e.getContext("2d"), n = t.createRadialGradient(32, 32, 0, 32, 32, 32);
-	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.35, "rgba(255,255,255,.7)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), Sm = new Hi(e), Sm;
+	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.35, "rgba(255,255,255,.7)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), Cm = new Hi(e), Cm;
 }
-var wm = null;
-function Tm() {
-	if (wm) return wm;
+var Tm = null;
+function Em() {
+	if (Tm) return Tm;
 	let e = document.createElement("canvas");
 	e.width = 256, e.height = 128;
 	let t = e.getContext("2d");
@@ -16145,11 +16226,11 @@ function Tm() {
 		let e = 40 + Math.random() * 176, n = 50 + Math.random() * 40, r = 18 + Math.random() * 30, i = t.createRadialGradient(e, n, 0, e, n, r);
 		i.addColorStop(0, "rgba(255,255,255,.35)"), i.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = i, t.beginPath(), t.arc(e, n, r, 0, Math.PI * 2), t.fill();
 	}
-	return wm = new Hi(e), wm;
+	return Tm = new Hi(e), Tm;
 }
 //#endregion
 //#region src/scene/trail.ts
-var Em = class {
+var Dm = class {
 	theme;
 	group = new Cn();
 	minutes = 30;
@@ -16186,7 +16267,7 @@ var Em = class {
 					time: r,
 					entity: t,
 					camera: i,
-					kind: cm(t, e)
+					kind: lm(t, e)
 				}), s = n.s;
 			}
 		}
@@ -16198,7 +16279,7 @@ var Em = class {
 		for (let a of e) {
 			let e = i.get(a.camera) ?? 0;
 			i.set(a.camera, e + 1);
-			let o = Dm(a.camera, e);
+			let o = Om(a.camera, e);
 			r.push(o);
 			let s = (n - a.time) / (this.minutes * 6e4), c = 1 - Math.min(.85, s), l = new Cn();
 			l.position.copy(o);
@@ -16238,18 +16319,18 @@ var Em = class {
 		this.markers = [], this.count = 0;
 	}
 };
-function Dm(e, t) {
+function Om(e, t) {
 	let n = e.device, r = (n.rot ?? 0) * Math.PI / 180, i = (n.range ?? 7) * .45, a = r + (t % 5 - 2) * .22, o = n.z ?? 2.5, s = new K(Math.sin(a) * i, -o + .05, -Math.cos(a) * i);
 	return e.object.updateWorldMatrix(!0, !1), e.object.localToWorld(s);
 }
 //#endregion
 //#region src/ui/styles.ts
-var Om = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n.nh-stage { position: absolute; inset: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", km = [
+var km = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n.nh-stage { position: absolute; inset: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", Am = [
 	"door",
 	"window",
 	"garage",
 	"gap"
-], Am = [
+], jm = [
 	"light",
 	"camera",
 	"tv",
@@ -16258,13 +16339,13 @@ var Om = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflo
 	"vacuum",
 	"sensor",
 	"car"
-], jm = [
+], Mm = [
 	"grass",
 	"paving",
 	"terrace",
 	"parking",
 	"water"
-], Mm = [
+], Nm = [
 	"bed",
 	"wardrobe",
 	"dresser",
@@ -16273,16 +16354,19 @@ var Om = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflo
 	"bookshelf",
 	"counter",
 	"cabinet",
+	"fridge",
 	"table",
 	"chair",
+	"bathtub",
+	"shower",
 	"box"
-], Nm = [
+], Pm = [
 	"up",
 	"down",
 	"left",
 	"right"
-], Pm = (e) => Array.isArray(e) && e.length === 2 && e.every((e) => typeof e == "number" && Number.isFinite(e)), Fm = (e) => `[${e[0]}, ${e[1]}]`;
-function Im(e) {
+], Fm = (e) => Array.isArray(e) && e.length === 2 && e.every((e) => typeof e == "number" && Number.isFinite(e)), Im = (e) => `[${e[0]}, ${e[1]}]`;
+function Lm(e) {
 	let t = 0;
 	for (let n = 0; n < e.length; n++) {
 		let [r, i] = e[n], [a, o] = e[(n + 1) % e.length];
@@ -16290,7 +16374,7 @@ function Im(e) {
 	}
 	return Math.abs(t / 2);
 }
-function Lm(e) {
+function Rm(e) {
 	let t = [];
 	if (!e || !Array.isArray(e.floors) || !e.floors.length) return ["The plan has no \"floors\"."];
 	let n = /* @__PURE__ */ new Set();
@@ -16304,13 +16388,13 @@ function Lm(e) {
 				t.push(`${r}: "polygon" needs at least 3 corner points.`), o = !1;
 				return;
 			}
-			let s = e.polygon.findIndex((e) => !Pm(e));
-			s >= 0 ? (t.push(`${r}: corner #${s + 1} is not a [x, y] pair of numbers.`), o = !1) : Im(e.polygon) < .3 && t.push(`${r}: the polygon has (almost) no area – are two corners swapped?`);
+			let s = e.polygon.findIndex((e) => !Fm(e));
+			s >= 0 ? (t.push(`${r}: corner #${s + 1} is not a [x, y] pair of numbers.`), o = !1) : Lm(e.polygon) < .3 && t.push(`${r}: the polygon has (almost) no area – are two corners swapped?`);
 		}), e.rooms?.length || t.push(`${i}: has no rooms.`), o) {
 			let n = mp(e);
 			(e.openings ?? []).forEach((e, r) => {
-				let a = `${i}, opening #${r + 1} (${e.type ?? "?"}${Pm(e.at) ? ` at ${Fm(e.at)}` : ""})`;
-				if (km.includes(e.type) || t.push(`${a}: "type" must be one of ${km.join(", ")}.`), !Pm(e.at)) return t.push(`${a}: "at" must be a [x, y] point on a wall.`);
+				let a = `${i}, opening #${r + 1} (${e.type ?? "?"}${Fm(e.at) ? ` at ${Im(e.at)}` : ""})`;
+				if (Am.includes(e.type) || t.push(`${a}: "type" must be one of ${Am.join(", ")}.`), !Fm(e.at)) return t.push(`${a}: "at" must be a [x, y] point on a wall.`);
 				(typeof e.width != "number" || e.width <= 0) && t.push(`${a}: "width" in metres is missing.`);
 				let o = Infinity, s = 0;
 				for (let t of n) {
@@ -16319,23 +16403,23 @@ function Lm(e) {
 				}
 				o > .6 ? t.push(`${a}: not on a wall (nearest wall is ${o.toFixed(2)} m away) – it is left out.`) : e.width > s && t.push(`${a}: ${e.width} m wide but the wall is only ${s.toFixed(2)} m long.`);
 			}), (e.walls ?? []).forEach((e, n) => {
-				(!Pm(e.a) || !Pm(e.b)) && t.push(`${i}, wall #${n + 1}: "a" and "b" must be [x, y] points.`);
+				(!Fm(e.a) || !Fm(e.b)) && t.push(`${i}, wall #${n + 1}: "a" and "b" must be [x, y] points.`);
 			});
 		}
 		(e.furniture ?? []).forEach((e, n) => {
 			let r = `${i}, furniture #${n + 1} (${e.type ?? "?"})`;
-			if (Mm.includes(e.type) || t.push(`${r}: "type" must be one of ${Mm.join(", ")}.`), !Pm(e.from) || !Pm(e.to)) return t.push(`${r}: "from" and "to" must be [x, y] corners.`);
-			(Math.abs(e.from[0] - e.to[0]) < .05 || Math.abs(e.from[1] - e.to[1]) < .05) && t.push(`${r}: "from" ${Fm(e.from)} and "to" ${Fm(e.to)} must be opposite corners (different x and y).`), e.back && !Nm.includes(e.back) && t.push(`${r}: "back" must be one of ${Nm.join(", ")}.`);
+			if (Nm.includes(e.type) || t.push(`${r}: "type" must be one of ${Nm.join(", ")}.`), !Fm(e.from) || !Fm(e.to)) return t.push(`${r}: "from" and "to" must be [x, y] corners.`);
+			(Math.abs(e.from[0] - e.to[0]) < .05 || Math.abs(e.from[1] - e.to[1]) < .05) && t.push(`${r}: "from" ${Im(e.from)} and "to" ${Im(e.to)} must be opposite corners (different x and y).`), e.back && !Pm.includes(e.back) && t.push(`${r}: "back" must be one of ${Pm.join(", ")}.`);
 		}), (e.devices ?? []).forEach((e, n) => {
 			let r = `${i}, device #${n + 1} (${e.type ?? "?"} ${e.entity ?? ""})`;
-			Am.includes(e.type) || t.push(`${r}: "type" must be one of ${Am.join(", ")}.`), e.entity || t.push(`${r}: needs an "entity".`), Pm(e.pos) || t.push(`${r}: "pos" must be a [x, y] point.`);
+			jm.includes(e.type) || t.push(`${r}: "type" must be one of ${jm.join(", ")}.`), e.entity || t.push(`${r}: needs an "entity".`), Fm(e.pos) || t.push(`${r}: "pos" must be a [x, y] point.`);
 		});
 	}), (e.outdoor ?? []).forEach((e, n) => {
 		let r = `Outdoor area "${e.name ?? `#${n + 1}`}"`;
-		jm.includes(e.kind) || t.push(`${r}: "kind" must be one of ${jm.join(", ")}.`), (!Array.isArray(e.polygon) || e.polygon.length < 3 || !e.polygon.every(Pm)) && t.push(`${r}: "polygon" needs at least 3 [x, y] points.`);
+		Mm.includes(e.kind) || t.push(`${r}: "kind" must be one of ${Mm.join(", ")}.`), (!Array.isArray(e.polygon) || e.polygon.length < 3 || !e.polygon.every(Fm)) && t.push(`${r}: "polygon" needs at least 3 [x, y] points.`);
 	}), t;
 }
-function Rm(e, t) {
+function zm(e, t) {
 	let n = /* @__PURE__ */ new Set();
 	for (let t of e.floors ?? []) {
 		for (let e of t.devices ?? []) {
@@ -16354,7 +16438,7 @@ function Rm(e, t) {
 }
 //#endregion
 //#region src/card.ts
-var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
+var Bm = "0.1.0", Vm = 3.2, Hm = "neon-house-prefs", Um = {
 	theme: "neon",
 	markers: "important",
 	cut: !1,
@@ -16364,7 +16448,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 	weather: !0,
 	trail: !1,
 	heatmap: "none"
-}, Um = class extends HTMLElement {
+}, Wm = class extends HTMLElement {
 	config;
 	_hass;
 	plan;
@@ -16372,7 +16456,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 	shadow;
 	engine;
 	theme = ep.neon;
-	prefs = { ...Hm };
+	prefs = { ...Um };
 	floors = [];
 	devices = [];
 	byEntity = /* @__PURE__ */ new Map();
@@ -16402,7 +16486,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 		requestRender: () => this.engine?.requestRender()
 	};
 	constructor() {
-		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = Ym();
+		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = Xm();
 	}
 	static getStubConfig() {
 		return {
@@ -16413,7 +16497,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 	setConfig(e) {
 		if (!e.plan && !e.plan_url) throw Error("neon-house-card: set `plan` or `plan_url`");
 		let t = JSON.stringify(e) !== JSON.stringify(this.config);
-		this.config = e, e.theme && !Jm() && (this.prefs.theme = e.theme), e.heatmap && !Jm() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
+		this.config = e, e.theme && !Ym() && (this.prefs.theme = e.theme), e.heatmap && !Ym() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
 	}
 	set hass(e) {
 		this._hass = e, this.ctx.hass = e, this.built ? this.applyHass(this.seen.size === 0) : this.maybeBuild();
@@ -16450,7 +16534,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 	ensureDom() {
 		if (this.els) return;
 		this.shadow.innerHTML = `
-      <style>${Om}</style>
+      <style>${km}</style>
       <div class="nh-root">
         <div class="nh-stage"></div>
         <div class="nh-top">
@@ -16488,14 +16572,14 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 		this.els.root.style.height = this.hasAttribute("fill") ? "100%" : this.config?.fill ? "calc(100vh - var(--header-height, 56px) - env(safe-area-inset-top, 0px))" : `${e ?? 560}px`;
 	}
 	showError(e) {
-		this.els.stage.innerHTML = `<div class="nh-error">${Lp(e)}</div>`;
+		this.els.stage.innerHTML = `<div class="nh-error">${Rp(e)}</div>`;
 	}
 	maybeBuild() {
 		if (!this.built && this.plan && this.config && this.isConnected) try {
 			this.build();
 		} catch (e) {
 			console.error(e);
-			let t = Lm(this.plan);
+			let t = Rm(this.plan);
 			this.showError(`neon-house: ${e.message}${t.length ? `\n\nProblems in the plan:\n• ${t.join("\n• ")}` : ""}`);
 		}
 	}
@@ -16519,7 +16603,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 		this.hemi = new ls(this.theme.ambient, this.theme.background, this.theme.ambientIntensity), a.add(this.hemi), this.ground = Mp(e, this.theme), a.add(this.ground);
 		let o = [...e.floors].sort((e, t) => e.elevation - t.elevation);
 		this.floors = o.map((e) => Dp(e, this.theme, this.prefs.cut));
-		for (let e of this.floors) a.add(e.group);
+		for (let e of this.floors) a.add(e.group), e.labelEl.onclick = () => this.selectFloor(e.floor.id);
 		let s = o.flatMap((e) => e.rooms.flatMap((e) => e.polygon));
 		if (s.length) {
 			let e = s.map((e) => e[0]), t = s.map((e) => e[1]), n = o.at(-1);
@@ -16527,7 +16611,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 		}
 		this.devices = [], this.byEntity.clear();
 		for (let e of this.floors) for (let t of e.floor.devices ?? []) {
-			let n = rm(t, e.floor, this.ctx);
+			let n = im(t, e.floor, this.ctx);
 			if (n) {
 				e.devices.add(n.object), this.devices.push(n);
 				for (let e of n.entities) this.byEntity.has(e) || this.byEntity.set(e, []), this.byEntity.get(e).push(n);
@@ -16538,7 +16622,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 			lights: this.devices.filter((n) => n.floor === e.floor && n.device.type === "light" && Jf(n.device.pos, t.room.polygon)),
 			temperature: t.room.temperature,
 			humidity: t.room.humidity
-		}))), e.roof && o.length && (this.roof = Pp(o.at(-1), e.roof, this.theme), a.add(this.roof)), this.weather = new bm({
+		}))), e.roof && o.length && (this.roof = Fp(o.at(-1), e.roof, this.theme), a.add(this.roof)), this.weather = new xm({
 			center: this.houseCenter.clone().setY(0),
 			radius: this.houseRadius
 		}, this.theme, n ? 1400 : 600), this.weather.setEnabled(this.prefs.weather), n) {
@@ -16554,14 +16638,14 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 				far: 90
 			}), e.shadow.bias = -5e-4;
 		}
-		a.add(this.weather.group), this.trail = new Em(this.theme), a.add(this.trail.group), this.built = !0, this.seen.clear(), this.showWarnings(), this.renderModes(), this.applyHass(!0);
-		let c = this.config?.floor ?? (this.floors.length === 1 ? this.floors[0].floor.id : null);
+		a.add(this.weather.group), this.trail = new Dm(this.theme), a.add(this.trail.group), this.built = !0, this.seen.clear(), this.showWarnings(), this.renderModes(), this.applyHass(!0);
+		let c = this.config?.floor ?? this.mainFloor()?.floor.id ?? null;
 		this.selectFloor(r ? c : this.selectedFloor, !1), r && this.frameView(.01, 35), this.prefs.trail && this.reloadTrail();
 	}
 	teardownScene() {
 		let e = this.engine?.scene;
 		if (e) {
-			for (let t of this.floors) e.remove(t.group), Ip(t);
+			for (let t of this.floors) e.remove(t.group), Lp(t);
 			for (let t of [
 				this.ground,
 				this.roof,
@@ -16579,11 +16663,11 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 	}
 	showWarnings() {
 		if (!this.plan) return;
-		let e = Lm(this.plan);
-		this._hass && e.push(...Rm(this.plan, this._hass));
+		let e = Rm(this.plan);
+		this._hass && e.push(...zm(this.plan, this._hass));
 		let t = this.els.warn;
 		if (t.classList.toggle("show", e.length > 0), e.length) {
-			t.querySelector("summary").textContent = `⚠ ${e.length} plan warning${e.length > 1 ? "s" : ""}`, t.querySelector("ul").innerHTML = e.map((e) => `<li>${Lp(e)}</li>`).join("");
+			t.querySelector("summary").textContent = `⚠ ${e.length} plan warning${e.length > 1 ? "s" : ""}`, t.querySelector("ul").innerHTML = e.map((e) => `<li>${Rp(e)}</li>`).join("");
 			for (let t of e) console.warn(`neon-house: ${t}`);
 		}
 	}
@@ -16612,7 +16696,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 			let t = this.anims.get(e);
 			t || (t = (t, n) => e.tick(t, n), this.anims.set(e, t)), this.engine.animate(t);
 		}
-		for (let e of n) for (let n of this.openingsByEntity.get(e) ?? []) n.target = +!!Bp(t.states[e]), this.engine.animate((e) => {
+		for (let e of n) for (let n of this.openingsByEntity.get(e) ?? []) n.target = +!!Vp(t.states[e]), this.engine.animate((e) => {
 			let t = n.target - n.amount;
 			return Math.abs(t) < .01 ? (n.apply(n.target), !1) : (n.apply(n.amount + Math.sign(t) * Math.min(Math.abs(t), e * 1.6)), !0);
 		});
@@ -16620,7 +16704,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 		let i = this.plan?.weather_entity;
 		if (this.weather && (e || n.has("sun.sun") || i && n.has(i))) {
 			this.weather.update({
-				weather: zp(t, i),
+				weather: Bp(t, i),
 				sun: t.states["sun.sun"],
 				north: this.plan?.north ?? 0
 			});
@@ -16646,17 +16730,17 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 				let t = e.glow?.();
 				t && (i++, r.add(t.color.clone().multiplyScalar(t.amount)));
 			}
-			let a = n.view.material, o = new Y(t.floorFill), s = this.prefs.heatmap, c = Hp(zp(e, s === "temperature" ? n.temperature : s === "humidity" ? n.humidity : void 0));
+			let a = n.view.material, o = new Y(t.floorFill), s = this.prefs.heatmap, c = Up(Bp(e, s === "temperature" ? n.temperature : s === "humidity" ? n.humidity : void 0));
 			if (s !== "none" && c !== void 0) {
-				let e = s === "temperature" ? Wm(c) : Gm(c);
+				let e = s === "temperature" ? Gm(c) : Km(c);
 				a.color.copy(o.lerp(e, .55)), a.emissive.copy(e).multiplyScalar(t.name === "day" ? .05 : .22);
 			} else {
 				a.color.set(t.floorFill);
 				let e = Math.max(r.r, r.g, r.b, 1), n = t.name === "day" ? .04 : .075;
 				a.emissive.copy(r.multiplyScalar(n / e));
 			}
-			let l = [], u = zp(e, n.temperature), d = zp(e, n.humidity);
-			u && !Vp(u) && l.push(`${qm(u.state)}°`), d && !Vp(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
+			let l = [], u = Bp(e, n.temperature), d = Bp(e, n.humidity);
+			u && !Hp(u) && l.push(`${Jm(u.state)}°`), d && !Hp(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
 			let f = n.view.labelEl.querySelector(".nh-room-sub");
 			f && (f.textContent = l.join(" · "));
 		}
@@ -16684,7 +16768,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 			return;
 		}
 		let n = e[0];
-		t.textContent = `⚠ Motion · ${n.device.name ?? Up(this._hass, n.device.entity).replace(/ (live view|hd stream|sd stream)$/i, "")}${e.length > 1 ? ` +${e.length - 1}` : ""}`, t.classList.add("show"), t.onclick = () => this.openCockpit(n);
+		t.textContent = `⚠ Motion · ${n.device.name ?? Wp(this._hass, n.device.entity).replace(/ (live view|hd stream|sd stream)$/i, "")}${e.length > 1 ? ` +${e.length - 1}` : ""}`, t.classList.add("show"), t.onclick = () => this.openCockpit(n);
 	}
 	reloadTrail() {
 		clearTimeout(this.trailTimer), this.trailTimer = window.setTimeout(async () => {
@@ -16696,9 +16780,15 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 		let n = e ? this.floors.findIndex((t) => t.floor.id === e) : -1;
 		this.floors.forEach((e, t) => {
 			let r = n < 0 && this.prefs.apart;
-			e.group.position.y = e.floor.elevation + (r ? t * Bm : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
-			for (let r of e.rooms) r.label.visible = this.prefs.names && (n === t || n < 0 && this.floors.length === 1);
-		}), this.ground && (this.ground.visible = n < 0 || this.floors[n].floor.elevation > -.5), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = n < 0 && this.prefs.apart ? (this.floors.length - 1) * Bm : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
+			e.group.position.y = e.floor.elevation + (r ? t * Vm : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
+			for (let r of e.rooms) r.label.visible = this.prefs.names && (n === t || n < 0 && e === this.mainFloor());
+		}), this.ground && (this.ground.visible = n < 0 || this.floors[n].floor.elevation > -.5);
+		let r = this.ground?.getObjectByName("covers");
+		r && (r.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = n < 0 && this.prefs.apart ? (this.floors.length - 1) * Vm : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
+	}
+	mainFloor() {
+		let e = this.floors.filter((e) => e.floor.elevation > -.5);
+		return e.length === 1 ? e[0] : void 0;
 	}
 	frameView(e, t) {
 		if (!this.engine) return;
@@ -16726,8 +16816,8 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 	}
 	renderFloorChips() {
 		let e = this.els.floors, t = ["<span class=\"nh-title\">Neon<i>House</i></span>"];
-		t.push(`<button class="nh-chip ${this.selectedFloor === null ? "on" : ""}" data-floor="">${this.floors.length === 1 ? "House" : "All floors"}</button>`);
-		for (let e of [...this.floors].reverse()) t.push(`<button class="nh-chip ${this.selectedFloor === e.floor.id ? "on" : ""}" data-floor="${e.floor.id}">${Lp(e.floor.name)}</button>`);
+		t.push(`<button class="nh-chip ${this.selectedFloor === null ? "on" : ""}" data-floor="">${this.mainFloor() ? "House" : "All floors"}</button>`);
+		for (let e of [...this.floors].reverse()) t.push(`<button class="nh-chip ${this.selectedFloor === e.floor.id ? "on" : ""}" data-floor="${e.floor.id}">${Rp(e.floor.name)}</button>`);
 		t.push("<span class=\"nh-spacer\"></span>"), t.push(`<span class="nh-seg">${[
 			"neon",
 			"blueprint",
@@ -16737,18 +16827,18 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 			"important",
 			"all"
 		].map((e) => `<button class="nh-chip ${this.prefs.markers === e ? "on" : ""}" data-markers="${e}">${e[0].toUpperCase() + e.slice(1)}</button>`).join("")}</span>`), e.innerHTML = t.join(""), e.querySelectorAll("[data-floor]").forEach((e) => e.onclick = () => this.selectFloor(e.dataset.floor || null)), e.querySelectorAll("[data-theme]").forEach((e) => e.onclick = () => {
-			this.prefs.theme = e.dataset.theme, Xm(this.prefs), this.built = !1, this.build();
+			this.prefs.theme = e.dataset.theme, Zm(this.prefs), this.built = !1, this.build();
 		}), e.querySelectorAll("[data-markers]").forEach((e) => e.onclick = () => {
-			this.prefs.markers = e.dataset.markers, Xm(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
+			this.prefs.markers = e.dataset.markers, Zm(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
 		});
 	}
 	renderRoomChips(e) {
 		let t = this.els.rooms, n = [], r = this.selectedFloor ? this.floors.filter((e) => e.floor.id === this.selectedFloor) : [...this.floors].reverse();
 		for (let t of r) {
-			!this.selectedFloor && this.floors.length > 1 && n.push(`<span class="nh-group-label">${Lp(t.floor.name)}</span>`);
+			!this.selectedFloor && this.floors.length > 1 && n.push(`<span class="nh-group-label">${Rp(t.floor.name)}</span>`);
 			for (let r of this.rooms.filter((e) => e.view.floor === t.floor)) {
 				let i = `${t.floor.id}/${r.view.room.id}`;
-				n.push(`<button class="nh-chip ${e === r ? "on" : ""}" data-room="${i}">${Lp(r.view.room.name)}</button>`);
+				n.push(`<button class="nh-chip ${e === r ? "on" : ""}" data-room="${i}">${Rp(r.view.room.name)}</button>`);
 			}
 		}
 		t.innerHTML = n.join(""), t.querySelectorAll("[data-room]").forEach((e) => {
@@ -16803,7 +16893,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 				break;
 			case "weather": if (t.weather = !t.weather, this.weather?.setEnabled(t.weather), this.weather && this._hass) {
 				this.weather.update({
-					weather: zp(this._hass, this.plan?.weather_entity),
+					weather: Bp(this._hass, this.plan?.weather_entity),
 					sun: this._hass.states["sun.sun"],
 					north: this.plan?.north ?? 0
 				});
@@ -16811,7 +16901,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 				this.engine?.animate((t) => e.tick(t));
 			}
 		}
-		Xm(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
+		Zm(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
 	}
 	toast(e) {
 		let t = this.els.toast;
@@ -16843,7 +16933,7 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 		};
 		for (let e of n) {
 			let t = e.split(".")[0];
-			t === "camera" ? r.Cameras.push(e) : Yp.has(t) ? r.Controls.push(e) : t === "sensor" || t === "binary_sensor" ? r.Sensors.push(e) : [
+			t === "camera" ? r.Cameras.push(e) : Xp.has(t) ? r.Controls.push(e) : t === "sensor" || t === "binary_sensor" ? r.Sensors.push(e) : [
 				"button",
 				"number",
 				"select",
@@ -16853,24 +16943,24 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 				"image"
 			].includes(t) || r.Other.push(e);
 		}
-		let i = zp(t, e.room?.temperature), a = zp(t, e.room?.humidity), o = [i && !Vp(i) ? `${qm(i.state)}°C` : "", a && !Vp(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
-			let n = t.states[e], r = e.split(".")[0], i = Bp(n) && r !== "sensor", a = Yp.has(r) && !Vp(n), o = n?.attributes.unit_of_measurement ? ` ${n.attributes.unit_of_measurement}` : "";
+		let i = Bp(t, e.room?.temperature), a = Bp(t, e.room?.humidity), o = [i && !Hp(i) ? `${Jm(i.state)}°C` : "", a && !Hp(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
+			let n = t.states[e], r = e.split(".")[0], i = Vp(n) && r !== "sensor", a = Xp.has(r) && !Hp(n), o = n?.attributes.unit_of_measurement ? ` ${n.attributes.unit_of_measurement}` : "";
 			return `<div class="nh-item ${i ? "on" : ""}" data-id="${e}">
-        <span class="dot"></span><span class="name">${Lp(Up(t, e))}</span>
-        ${a ? `<span class="nh-toggle ${i ? "on" : ""}" data-toggle="${e}"></span>` : `<span class="state">${Lp(n ? n.state + o : "–")}</span>`}
+        <span class="dot"></span><span class="name">${Rp(Wp(t, e))}</span>
+        ${a ? `<span class="nh-toggle ${i ? "on" : ""}" data-toggle="${e}"></span>` : `<span class="state">${Rp(n ? n.state + o : "–")}</span>`}
       </div>`;
-		}, c = Object.entries(r).filter(([, e]) => e.length).map(([e, n]) => `<div class="nh-section">${e}</div>${n.sort((e, n) => Up(t, e).localeCompare(Up(t, n))).map(s).join("")}`).join("");
+		}, c = Object.entries(r).filter(([, e]) => e.length).map(([e, n]) => `<div class="nh-section">${e}</div>${n.sort((e, n) => Wp(t, e).localeCompare(Wp(t, n))).map(s).join("")}`).join("");
 		this.els.panel.innerHTML = `
-      <header><div style="flex:1"><h3>${Lp(e.title)}</h3>${o ? `<div class="sub">${o}</div>` : ""}</div><button class="nh-x" data-close>✕</button></header>
+      <header><div style="flex:1"><h3>${Rp(e.title)}</h3>${o ? `<div class="sub">${o}</div>` : ""}</div><button class="nh-x" data-close>✕</button></header>
       <div class="nh-list">${c || `<div class="nh-section">No entities${e.area ? "" : " – set an HA area for this room"}</div>`}</div>`, this.els.panel.querySelector("[data-close]").onclick = () => this.closePanel(), this.els.panel.querySelectorAll("[data-id]").forEach((e) => {
 			e.onclick = (n) => {
 				let r = n.target;
 				if (r.dataset.toggle) {
-					Jp(t, r.dataset.toggle), r.classList.toggle("on");
+					Yp(t, r.dataset.toggle), r.classList.toggle("on");
 					return;
 				}
 				let i = e.dataset.id, a = this.devices.find((e) => e.device.type === "camera" && e.device.entity === i);
-				a ? this.openCockpit(a) : qp(this, i);
+				a ? this.openCockpit(a) : Jp(this, i);
 			};
 		});
 	}
@@ -16879,22 +16969,22 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 		if (!t || !this.engine) return;
 		let n = e.device;
 		this.closeCockpit(!1), this.cockpit = e, this.selectedFloor && this.selectedFloor !== e.floor.id && this.selectFloor(e.floor.id, !1);
-		let r = n.stream ?? n.entity, i = n.name ?? Up(t, n.entity).replace(/ (live view|hd stream|sd stream)$/i, ""), a = this.els.cockpit;
+		let r = n.stream ?? n.entity, i = n.name ?? Wp(t, n.entity).replace(/ (live view|hd stream|sd stream)$/i, ""), a = this.els.cockpit;
 		a.innerHTML = `
-      <header><b>◉ ${Lp(i)}</b><button class="nh-x" data-close>✕</button></header>
+      <header><b>◉ ${Rp(i)}</b><button class="nh-x" data-close>✕</button></header>
       <div class="live"><img alt=""><span class="rec">LIVE</span></div>
       <div class="acts">
         <button class="nh-chip" data-act="ha">Open in Home Assistant</button>
         <button class="nh-chip" data-act="view">Look from camera</button>
         <button class="nh-chip" data-act="back">Back to house</button>
       </div>`, a.classList.add("open"), a.classList.toggle("alarm", !!e.alarm?.());
-		let o = a.querySelector("img"), s = Xp(t, r, !0), c = !1, l = () => {
-			let e = Xp(t, r, !1);
+		let o = a.querySelector("img"), s = Zp(t, r, !0), c = !1, l = () => {
+			let e = Zp(t, r, !1);
 			e && (o.src = e);
 		}, u = () => {
 			c || (c = !0, l(), this.cockpitTimer = window.setInterval(l, 2e3));
 		};
-		o.onerror = u, s ? o.src = s : u(), a.querySelector("[data-close]").onclick = () => this.closeCockpit(!0), a.querySelector("[data-act=\"ha\"]").onclick = () => qp(this, r), a.querySelector("[data-act=\"back\"]").onclick = () => this.closeCockpit(!0), a.querySelector("[data-act=\"view\"]").onclick = () => this.lookFromCamera(e), this.lookFromCamera(e);
+		o.onerror = u, s ? o.src = s : u(), a.querySelector("[data-close]").onclick = () => this.closeCockpit(!0), a.querySelector("[data-act=\"ha\"]").onclick = () => Jp(this, r), a.querySelector("[data-act=\"back\"]").onclick = () => this.closeCockpit(!0), a.querySelector("[data-act=\"view\"]").onclick = () => this.lookFromCamera(e), this.lookFromCamera(e);
 	}
 	lookFromCamera(e) {
 		let t = e.device, n = e.focus(), r = (t.rot ?? 0) * Math.PI / 180, i = new K(Math.sin(r), 0, -Math.cos(r)), a = n.clone().addScaledVector(i, -1.6).add(new K(0, 1.2, 0)), o = n.clone().addScaledVector(i, (t.range ?? 7) * .5).setY(n.y - (t.z ?? 2.5) + .2);
@@ -16943,17 +17033,17 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 		if (i.kind === "device") {
 			let e = i.view, t = e.device;
 			if (t.type === "camera") return this.openCockpit(e);
-			if (t.type === "sensor") return qp(this, t.entity);
-			if (t.type === "car") return qp(this, t.presence ?? t.entity);
+			if (t.type === "sensor") return Jp(this, t.entity);
+			if (t.type === "car") return Jp(this, t.presence ?? t.entity);
 			if (t.type === "tv") {
-				let e = r.states[t.entity], n = t.power && (!e || e.state === "off" || Vp(e)) ? t.power : t.entity;
-				return Jp(r, n), this.toast(`${Up(r, n)} → toggled`);
+				let e = r.states[t.entity], n = t.power && (!e || e.state === "off" || Hp(e)) ? t.power : t.entity;
+				return Yp(r, n), this.toast(`${Wp(r, n)} → toggled`);
 			}
 			let n = t.entity.split(".")[0];
-			if (!Yp.has(n)) return qp(this, t.entity);
-			Jp(r, t.entity);
+			if (!Xp.has(n)) return Jp(this, t.entity);
+			Yp(r, t.entity);
 			let a = r.states[t.entity];
-			this.toast(`${t.name ?? Up(r, t.entity)} → ${Bp(a) ? "off" : "on"}`);
+			this.toast(`${t.name ?? Wp(r, t.entity)} → ${Vp(a) ? "off" : "on"}`);
 		} else if (i.kind === "room") {
 			let e = this.rooms.find((e) => e.view.floor.id === i.floor && e.view.room.id === i.room);
 			e && this.selectRoom(e);
@@ -16962,17 +17052,17 @@ var zm = "0.1.0", Bm = 3.2, Vm = "neon-house-prefs", Hm = {
 			area: i.area
 		});
 		else {
-			if (i.kind === "solar" && i.entity) return qp(this, i.entity);
+			if (i.kind === "solar" && i.entity) return Jp(this, i.entity);
 			this.panelArea && this.closePanel();
 		}
 	}
 	longPress(e, t) {
 		let n = this.engine?.pick(e, t);
-		n?.data.kind === "device" && qp(this, n.data.view.device.entity);
+		n?.data.kind === "device" && Jp(this, n.data.view.device.entity);
 	}
 };
-function Wm(e) {
-	return Km([
+function Gm(e) {
+	return qm([
 		[16, 3107839],
 		[19, 2541274],
 		[21, 3073674],
@@ -16980,15 +17070,15 @@ function Wm(e) {
 		[28, 16727383]
 	], e);
 }
-function Gm(e) {
-	return Km([
+function Km(e) {
+	return qm([
 		[25, 16757053],
 		[40, 3073674],
 		[55, 2541274],
 		[70, 3107839]
 	], e);
 }
-function Km(e, t) {
+function qm(e, t) {
 	if (t <= e[0][0]) return new Y(e[0][1]);
 	for (let n = 0; n < e.length - 1; n++) {
 		let [r, i] = e[n], [a, o] = e[n + 1];
@@ -16996,41 +17086,41 @@ function Km(e, t) {
 	}
 	return new Y(e.at(-1)[1]);
 }
-var qm = (e) => {
+var Jm = (e) => {
 	let t = Number(e);
 	return Number.isFinite(t) ? (Math.round(t * 10) / 10).toString() : e;
 };
-function Jm() {
+function Ym() {
 	try {
-		return !!localStorage.getItem(Vm);
+		return !!localStorage.getItem(Hm);
 	} catch {
 		return !1;
 	}
 }
-function Ym() {
+function Xm() {
 	try {
-		let e = localStorage.getItem(Vm);
+		let e = localStorage.getItem(Hm);
 		if (e) return {
-			...Hm,
+			...Um,
 			...JSON.parse(e)
 		};
 	} catch {}
-	return { ...Hm };
+	return { ...Um };
 }
-function Xm(e) {
+function Zm(e) {
 	try {
-		localStorage.setItem(Vm, JSON.stringify(e));
+		localStorage.setItem(Hm, JSON.stringify(e));
 	} catch {}
 }
 if (!customElements.get("neon-house-card")) {
-	customElements.define("neon-house-card", Um);
+	customElements.define("neon-house-card", Wm);
 	let e = window;
 	e.customCards = e.customCards || [], e.customCards.push({
 		type: "neon-house-card",
 		name: "Neon House",
 		description: "Your home as a neon 3D plan: lights, cameras, climate, weather – all local.",
 		preview: !1
-	}), console.info(`%c NEON-HOUSE %c ${zm} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
+	}), console.info(`%c NEON-HOUSE %c ${Bm} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
 }
 //#endregion
-export { Um as NeonHouseCard };
+export { Wm as NeonHouseCard };

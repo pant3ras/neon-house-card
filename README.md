@@ -148,15 +148,17 @@ A piece is a rectangle between two opposite corners, under the floor's `"furnitu
 { "type": "sofa", "from": [6.2, 5.2], "to": [9.4, 6.05], "arms": ["left", "right"] }
 ```
 
-Types: `bed`, `wardrobe`, `dresser`, `desk`, `sofa`, `bookshelf`, `counter`, `cabinet`, `table`,
-`chair`, `box`. The side against the wall (a bed's head) is found from the nearest wall; set `back`
-(`up`/`down`/`left`/`right`) to override. Optional: `height`, `arms` (sofas: which short ends get an
-armrest), `upper: false` (counters without wall cabinets), `monitor: false` (desks), `name`.
+Types: `bed`, `wardrobe`, `dresser`, `desk`, `sofa`, `bookshelf`, `counter`, `cabinet`, `fridge`,
+`table`, `chair`, `bathtub`, `shower`, `box`. The side against the wall (a bed's head) is found from
+the nearest wall; set `back` (`up`/`down`/`left`/`right`) to override. Optional: `height`, `arms`
+(sofas: which short ends get an armrest), `upper` (counters: `false` for no wall cabinets, `2` for two
+rows up to the ceiling), `round: true` (tables), `monitor: false` (desks), `name`.
 
 ### Outside, roof, sun
 
 `outdoor`: areas with `kind` `grass`, `paving`, `terrace`, `parking` or `water`, a `polygon` and an
-optional HA `area`. `roof`: `type` `gable`, `hip` or `flat`, `ridge` `x`/`y`, `pitch`, `overhang`.
+optional HA `area`; `roof: true` puts a roof on posts over it (a covered terrace, a carport), at
+`roof_height` (default 2.6 m). A cellar is just another floor with a negative `elevation`. `roof`: `type` `gable`, `hip` or `flat`, `ridge` `x`/`y`, `pitch`, `overhang`.
 `north`: the compass direction the top of the plan faces (degrees) – it puts the sun in the right
 place. `weather_entity`: the weather entity that drives rain, snow and clouds.
 

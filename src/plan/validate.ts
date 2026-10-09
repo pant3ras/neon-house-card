@@ -7,7 +7,9 @@ import { layoutWalls, projectOnSegment } from './walls';
 const OPENING_TYPES = ['door', 'window', 'garage', 'gap'];
 const DEVICE_TYPES = ['light', 'camera', 'tv', 'climate', 'appliance', 'vacuum', 'sensor', 'car'];
 const OUTDOOR_KINDS = ['grass', 'paving', 'terrace', 'parking', 'water'];
-const FURNITURE_TYPES = ['bed', 'wardrobe', 'dresser', 'desk', 'sofa', 'bookshelf', 'counter', 'cabinet', 'table', 'chair', 'box'];
+const FURNITURE_TYPES = [
+  'bed', 'wardrobe', 'dresser', 'desk', 'sofa', 'bookshelf', 'counter', 'cabinet', 'fridge', 'table', 'chair', 'bathtub', 'shower', 'box',
+];
 const SIDES = ['up', 'down', 'left', 'right'];
 
 const isPoint = (p: unknown): p is Vec2 =>

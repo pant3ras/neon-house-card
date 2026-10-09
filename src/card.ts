@@ -278,7 +278,10 @@ export class NeonHouseCard extends HTMLElement {
 
     const floors = [...plan.floors].sort((a, b) => a.elevation - b.elevation);
     this.floors = floors.map((f) => buildFloor(f, this.theme, this.prefs.cut));
-    for (const fv of this.floors) scene.add(fv.group);
+    for (const fv of this.floors) {
+      scene.add(fv.group);
+      fv.labelEl.onclick = () => this.selectFloor(fv.floor.id);
+    }
 
     // house extent for the default view and the weather box
     const pts = floors.flatMap((f) => f.rooms.flatMap((r) => r.polygon));
@@ -342,8 +345,8 @@ export class NeonHouseCard extends HTMLElement {
     this.showWarnings();
     this.renderModes();
     this.applyHass(true);
-    // a one-level house opens inside (roof off); "House" brings the roof back
-    const start = this.config?.floor ?? (this.floors.length === 1 ? this.floors[0].floor.id : null);
+    // a house with one level above ground (maybe a cellar too) opens inside; "House" brings the roof back
+    const start = this.config?.floor ?? this.mainFloor()?.floor.id ?? null;
     this.selectFloor(first ? start : this.selectedFloor, false);
     if (first) this.frameView(0.01, 35);
     if (this.prefs.trail) this.reloadTrail();
@@ -609,10 +612,12 @@ export class NeonHouseCard extends HTMLElement {
         this.dimFloor(fv, i < sel);
       }
       fv.label.visible = sel < 0 && this.prefs.names;
-      for (const r of fv.rooms) r.label.visible = this.prefs.names && (sel === i || (sel < 0 && this.floors.length === 1));
+      for (const r of fv.rooms) r.label.visible = this.prefs.names && (sel === i || (sel < 0 && fv === this.mainFloor()));
     });
     // the lawn would hide a cellar: drop it while looking at a floor below ground
     if (this.ground) this.ground.visible = sel < 0 || this.floors[sel].floor.elevation > -0.5;
+    const covers = this.ground?.getObjectByName('covers');
+    if (covers) covers.visible = sel < 0 && !this.prefs.cut;
     if (this.roof) {
       this.roof.visible = sel < 0 && !this.prefs.cut;
       this.roof.position.y = sel < 0 && this.prefs.apart ? (this.floors.length - 1) * APART_GAP : 0;
@@ -621,6 +626,12 @@ export class NeonHouseCard extends HTMLElement {
     this.renderRoomChips();
     if (fly) this.frameView(0.9);
     this.engine?.requestRender();
+  }
+
+  /** the only level above ground, when there is just one (a bungalow, with or without a cellar) */
+  private mainFloor(): FloorView | undefined {
+    const above = this.floors.filter((f) => f.floor.elevation > -0.5);
+    return above.length === 1 ? above[0] : undefined;
   }
 
   /** fly to the whole house or the selected floor; `azimuth` only for the very first view */
@@ -664,7 +675,7 @@ export class NeonHouseCard extends HTMLElement {
   private renderFloorChips() {
     const el = this.els.floors;
     const chips = [`<span class="nh-title">Neon<i>House</i></span>`];
-    chips.push(`<button class="nh-chip ${this.selectedFloor === null ? 'on' : ''}" data-floor="">${this.floors.length === 1 ? 'House' : 'All floors'}</button>`);
+    chips.push(`<button class="nh-chip ${this.selectedFloor === null ? 'on' : ''}" data-floor="">${this.mainFloor() ? 'House' : 'All floors'}</button>`);
     for (const fv of [...this.floors].reverse())
       chips.push(`<button class="nh-chip ${this.selectedFloor === fv.floor.id ? 'on' : ''}" data-floor="${fv.floor.id}">${escapeHtml(fv.floor.name)}</button>`);
     chips.push(`<span class="nh-spacer"></span>`);

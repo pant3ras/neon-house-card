@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import type { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import type { Floor, OutdoorArea, Plan, Room, Roof, Vec2 } from '../types';
-import { layoutWalls, wallPieces, wallPoint, faceRange, type LaidWall, type WallOpening } from '../plan/walls';
+import { layoutWalls, wallPieces, wallPoint, faceRange, projectOnSegment, type LaidWall, type WallOpening } from '../plan/walls';
 import {
   LineBuilder,
   MeshBuilder,
@@ -375,6 +375,58 @@ export function buildGround(plan: Plan, theme: Theme): THREE.Group {
   g.add(grid);
 
   for (const area of plan.outdoor ?? []) g.add(outdoorArea(area, theme));
+
+  // roofs over covered areas live in one group so they come and go with the house roof
+  const covers = new THREE.Group();
+  covers.name = 'covers';
+  const house = plan.floors.filter((f) => Math.abs(f.elevation) < 0.5).flatMap((f) => f.rooms.map((r) => r.polygon));
+  for (const area of plan.outdoor ?? []) if (area.roof && area.polygon?.length >= 3) covers.add(coveredRoof(area, theme, house));
+  g.add(covers);
+  return g;
+}
+
+/** a flat roof on posts; posts stand only where the area is away from the house walls */
+function coveredRoof(area: OutdoorArea, theme: Theme, house: Vec2[][]): THREE.Object3D {
+  const g = new THREE.Group();
+  const h = area.roof_height ?? 2.6;
+  const poly = area.polygon;
+  const nearHouse = (p: Vec2) =>
+    house.some((r) => r.some((a, i) => projectOnSegment(p, a, r[(i + 1) % r.length]).dist < 0.35));
+
+  const postMat = new THREE.MeshStandardMaterial({ color: theme.device, roughness: 0.6, emissive: theme.name === 'neon' ? 0x08142e : 0 });
+  const lines = new LineBuilder();
+  const seen = new Set<string>();
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i];
+    const b = poly[(i + 1) % poly.length];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const n = Math.max(1, Math.ceil(len / 3));
+    for (let k = 0; k <= n; k++) {
+      const p: Vec2 = [a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n];
+      const key = `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
+      if (seen.has(key) || nearHouse(p)) continue;
+      seen.add(key);
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, h, 0.12), postMat);
+      post.position.set(p[0], h / 2, p[1]);
+      post.castShadow = true;
+      g.add(post);
+      lines.seg(w3(p, 0.02), w3(p, h));
+    }
+  }
+  const roofMat = new THREE.MeshStandardMaterial({
+    color: theme.roof,
+    emissive: theme.name === 'neon' ? 0x0a1a3c : 0x000000,
+    transparent: theme.name !== 'day',
+    opacity: theme.name === 'day' ? 1 : 0.7,
+    side: THREE.DoubleSide,
+    depthWrite: theme.name === 'day',
+  });
+  const slab = new THREE.Mesh(slabGeometry(poly, h + 0.1, 0.1), roofMat);
+  slab.castShadow = true;
+  g.add(slab);
+  lines.loop(poly.map((p) => w3(p, h + 0.1)));
+  lines.loop(poly.map((p) => w3(p, h)));
+  g.add(lines.build(lineMaterial(theme.roofEdge, 1.3)));
   return g;
 }
 
