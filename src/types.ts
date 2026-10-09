@@ -309,7 +309,7 @@ export interface CardConfig {
   attention_exclude_label?: string;
   /** battery percentage counted as low (default 20) */
   battery_low?: number;
-  /** buttons in the top bar that open other dashboards, e.g. { name: Utilities, path: /cyber-home } */
+  /** buttons in the top bar that open other dashboards, e.g. { name: Utilities, path: /my-dashboard/utilities } */
   links?: { name: string; path: string }[];
   /** show the frame rate */
   stats?: boolean;
