@@ -136,6 +136,48 @@ export const STYLES = `
 .nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }
 .nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }
+.nh-cockpit { max-height: calc(100% - 70px); }
+.nh-cockpit .body { overflow-y: auto; min-height: 0; }
+.nh-cockpit .live .ptz, .nh-cockpit .live .snap {
+  position: absolute; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35);
+  background: rgba(4,10,24,.45); color: #fff; font-size: 13px; cursor: pointer; backdrop-filter: blur(4px);
+  display: grid; place-items: center; padding: 0;
+}
+.nh-cockpit .live .ptz:hover, .nh-cockpit .live .snap:hover { border-color: var(--nh-accent); box-shadow: 0 0 10px -2px var(--nh-accent); }
+.nh-cockpit .live .ptz.up { top: 8px; left: 50%; transform: translateX(-50%); }
+.nh-cockpit .live .ptz.down { bottom: 8px; left: 50%; transform: translateX(-50%); }
+.nh-cockpit .live .ptz.left { left: 8px; top: 50%; transform: translateY(-50%); }
+.nh-cockpit .live .ptz.right { right: 8px; top: 50%; transform: translateY(-50%); }
+.nh-cockpit .live .snap { right: 8px; top: 8px; font-size: 16px; }
+.nh-cockpit .live .priv {
+  position: absolute; inset: 0; display: none; place-items: center; color: #fff; font-weight: 700; font-size: 13px;
+  background: rgba(4,10,24,.88);
+}
+.nh-cockpit .live.private .priv { display: grid; }
+.nh-cockpit .live.private .ptz { display: none; }
+.nh-cockpit .quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 6px; padding: 8px 10px 0; }
+.nh-cbtn {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 4px; border-radius: 12px;
+  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text); font: inherit; font-size: 11px; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+}
+.nh-cbtn .i { font-size: 16px; line-height: 1; }
+.nh-cbtn:disabled { opacity: .4; cursor: default; }
+.nh-cbtn.on { border-color: var(--nh-accent); background: color-mix(in srgb, var(--nh-accent) 18%, var(--nh-pill)); box-shadow: 0 0 12px -3px var(--nh-accent); }
+.nh-cbtn.armed { border-color: #ffb13d; color: #ffd28a; background: rgba(255,177,61,.15); }
+.nh-cbtn.danger { border-color: #ff8095; color: #fff; background: rgba(255,51,85,.85); animation: nh-pulse 1.2s ease-in-out infinite; }
+.nh-cockpit .presets { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 8px 10px 0; }
+.nh-cockpit .presets .lbl, .nh-cockpit details.more summary {
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted);
+}
+.nh-cockpit details.more { padding: 8px 10px 0; }
+.nh-cockpit details.more summary { cursor: pointer; padding: 2px 0; }
+.nh-cockpit .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px 14px; padding: 8px 0 2px; }
+.nh-cockpit .grid label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+.nh-cockpit select {
+  background: var(--nh-pill); color: var(--nh-text); border: 1px solid var(--nh-border); border-radius: 8px;
+  padding: 3px 6px; font: inherit; font-size: 12px; max-width: 110px;
+}
 
 .nh-toast {
   position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;

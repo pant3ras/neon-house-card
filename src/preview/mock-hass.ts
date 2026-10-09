@@ -138,7 +138,32 @@ export function createMockHass(plan: Plan): MockHass {
         states[sid] = entity(sid, '96.4', { friendly_name: `${titleOf(d.power)} Current consumption`, unit_of_measurement: 'W', device_class: 'power' });
         deviceOf[d.power] = deviceOf[sid] = `plug_${obj}`;
       }
-      if (d.type === 'camera') cameras.push({ entity: d.entity, name: d.name ?? titleOf(d.entity), motion: d.motion ?? [] });
+      if (d.type === 'camera') {
+        cameras.push({ entity: d.entity, name: d.name ?? titleOf(d.entity), motion: d.motion ?? [] });
+        // the controls a pan/tilt camera with a floodlight and siren brings along, on the same device
+        const base = d.entity.split('.')[1];
+        const dev = `cam_${base}`;
+        const levels = { options: ['high', 'normal', 'low', 'off'] };
+        const extra: [string, string, Attrs][] = [
+          [`light.${base}_floodlight`, 'off', {}],
+          [`siren.${base}_siren`, 'off', {}],
+          [`switch.${base}_privacy`, 'off', {}],
+          [`switch.${base}_record_to_sd_card`, 'on', {}],
+          [`switch.${base}_auto_track`, 'off', {}],
+          [`switch.${base}_notifications`, 'on', {}],
+          ...(['up', 'down', 'left', 'right'].map((dir) => [`button.${base}_move_${dir}`, 'unknown', {}]) as [string, string, Attrs][]),
+          [`select.${base}_move_to_preset`, 'unknown', { options: ['Viewpoint 1', 'Viewpoint 2', 'Viewpoint 3'] }],
+          [`select.${base}_person_detection`, 'normal', levels],
+          [`select.${base}_vehicle_detection`, 'high', levels],
+          [`select.${base}_motion_detection`, 'off', levels],
+          [`select.${base}_night_vision`, 'Smart Mode', { options: ['Infrared Mode', 'Full Color Mode', 'Smart Mode'] }],
+        ];
+        deviceOf[d.entity] = dev;
+        for (const [id, state, attrs] of extra) {
+          states[id] = entity(id, state, { friendly_name: `${titleOf(d.entity)} ${titleOf(id).replace(`${base} `, '')}`, ...attrs });
+          deviceOf[id] = dev;
+        }
+      }
       if (d.type === 'vacuum') vacuum = d.entity;
       if (d.type === 'sprinkler' && !valves.includes(d.entity)) valves.push(d.entity);
     }
@@ -196,6 +221,8 @@ export function createMockHass(plan: Plan): MockHass {
       else if (service === 'turn_off') next = 'off';
       else if (service === 'start') next = 'cleaning';
       else if (service === 'return_to_base') next = 'docked';
+      else if (service === 'select_option') next = data.option;
+      else if (service === 'press') continue;
       if (d === 'light' && next === 'on' && !s.attributes.brightness) set(id, next, { brightness: 255 });
       else set(id, next);
     }

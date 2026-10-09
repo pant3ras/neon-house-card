@@ -16761,7 +16761,7 @@ function Ym(e, t) {
 }
 //#endregion
 //#region src/ui/styles.ts
-var Xm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n/* its own stacking context: 3D labels (z-indexed by depth) stay under panels and chips */\n.nh-stage { position: absolute; inset: 0; isolation: isolate; z-index: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-labels > .nh-badge.nh-cam { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-cam:hover { border-color: var(--nh-accent); }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-badge .sub { color: var(--nh-muted); font-weight: 500; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-attn { font-weight: 800; }\n.nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }\n.nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }\n.nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }\n.nh-labels > .nh-badge.nh-tap { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-tap:hover { border-color: #ffd23b; }\n.nh-badge.nh-watt { font-size: 10px; padding: 1px 6px; border-color: #ffd23b; box-shadow: 0 0 10px -3px #ffd23b; }\n.nh-badge.nh-watt.est { border-style: dashed; box-shadow: none; }\n.nh-item.nh-load { position: relative; }\n.nh-item.nh-load::after {\n  content: \"\"; position: absolute; left: 28px; right: 8px; bottom: 3px; height: 2px; border-radius: 2px; opacity: .6;\n  background: linear-gradient(90deg, #ffd23b var(--share), transparent var(--share));\n}\n.nh-item.nh-load .dot { background: transparent; border: 1px dashed #ffd23b; box-sizing: border-box; }\n.nh-item.nh-load.on .dot { background: #ffd23b; border: 0; box-shadow: 0 0 10px #ffd23b; }\n.nh-note { color: var(--nh-muted); font-size: 11px; line-height: 1.45; padding: 10px 8px 2px; }\n.nh-item.attn .name { white-space: normal; }\n.nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }\n.nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }\n.nh-item.attn.sev3 .dot, .nh-item.attn.sev4 .dot { background: #ff5a3c; box-shadow: 0 0 10px #ff5a3c; }\n.nh-item.attn.sev1 .dot { background: var(--nh-muted); box-shadow: none; }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-update {\n  position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  border: 0; font: inherit; font-weight: 700; cursor: pointer; background: var(--nh-accent); color: var(--nh-on-accent);\n  box-shadow: 0 0 24px -4px var(--nh-accent); white-space: nowrap;\n}\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", Zm = [
+var Xm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n/* its own stacking context: 3D labels (z-indexed by depth) stay under panels and chips */\n.nh-stage { position: absolute; inset: 0; isolation: isolate; z-index: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-labels > .nh-badge.nh-cam { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-cam:hover { border-color: var(--nh-accent); }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-badge .sub { color: var(--nh-muted); font-weight: 500; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-attn { font-weight: 800; }\n.nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }\n.nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }\n.nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }\n.nh-labels > .nh-badge.nh-tap { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-tap:hover { border-color: #ffd23b; }\n.nh-badge.nh-watt { font-size: 10px; padding: 1px 6px; border-color: #ffd23b; box-shadow: 0 0 10px -3px #ffd23b; }\n.nh-badge.nh-watt.est { border-style: dashed; box-shadow: none; }\n.nh-item.nh-load { position: relative; }\n.nh-item.nh-load::after {\n  content: \"\"; position: absolute; left: 28px; right: 8px; bottom: 3px; height: 2px; border-radius: 2px; opacity: .6;\n  background: linear-gradient(90deg, #ffd23b var(--share), transparent var(--share));\n}\n.nh-item.nh-load .dot { background: transparent; border: 1px dashed #ffd23b; box-sizing: border-box; }\n.nh-item.nh-load.on .dot { background: #ffd23b; border: 0; box-shadow: 0 0 10px #ffd23b; }\n.nh-note { color: var(--nh-muted); font-size: 11px; line-height: 1.45; padding: 10px 8px 2px; }\n.nh-item.attn .name { white-space: normal; }\n.nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }\n.nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }\n.nh-item.attn.sev3 .dot, .nh-item.attn.sev4 .dot { background: #ff5a3c; box-shadow: 0 0 10px #ff5a3c; }\n.nh-item.attn.sev1 .dot { background: var(--nh-muted); box-shadow: none; }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n.nh-cockpit { max-height: calc(100% - 70px); }\n.nh-cockpit .body { overflow-y: auto; min-height: 0; }\n.nh-cockpit .live .ptz, .nh-cockpit .live .snap {\n  position: absolute; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35);\n  background: rgba(4,10,24,.45); color: #fff; font-size: 13px; cursor: pointer; backdrop-filter: blur(4px);\n  display: grid; place-items: center; padding: 0;\n}\n.nh-cockpit .live .ptz:hover, .nh-cockpit .live .snap:hover { border-color: var(--nh-accent); box-shadow: 0 0 10px -2px var(--nh-accent); }\n.nh-cockpit .live .ptz.up { top: 8px; left: 50%; transform: translateX(-50%); }\n.nh-cockpit .live .ptz.down { bottom: 8px; left: 50%; transform: translateX(-50%); }\n.nh-cockpit .live .ptz.left { left: 8px; top: 50%; transform: translateY(-50%); }\n.nh-cockpit .live .ptz.right { right: 8px; top: 50%; transform: translateY(-50%); }\n.nh-cockpit .live .snap { right: 8px; top: 8px; font-size: 16px; }\n.nh-cockpit .live .priv {\n  position: absolute; inset: 0; display: none; place-items: center; color: #fff; font-weight: 700; font-size: 13px;\n  background: rgba(4,10,24,.88);\n}\n.nh-cockpit .live.private .priv { display: grid; }\n.nh-cockpit .live.private .ptz { display: none; }\n.nh-cockpit .quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 6px; padding: 8px 10px 0; }\n.nh-cbtn {\n  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 4px; border-radius: 12px;\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text); font: inherit; font-size: 11px; font-weight: 600;\n  cursor: pointer; white-space: nowrap;\n}\n.nh-cbtn .i { font-size: 16px; line-height: 1; }\n.nh-cbtn:disabled { opacity: .4; cursor: default; }\n.nh-cbtn.on { border-color: var(--nh-accent); background: color-mix(in srgb, var(--nh-accent) 18%, var(--nh-pill)); box-shadow: 0 0 12px -3px var(--nh-accent); }\n.nh-cbtn.armed { border-color: #ffb13d; color: #ffd28a; background: rgba(255,177,61,.15); }\n.nh-cbtn.danger { border-color: #ff8095; color: #fff; background: rgba(255,51,85,.85); animation: nh-pulse 1.2s ease-in-out infinite; }\n.nh-cockpit .presets { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 8px 10px 0; }\n.nh-cockpit .presets .lbl, .nh-cockpit details.more summary {\n  font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted);\n}\n.nh-cockpit details.more { padding: 8px 10px 0; }\n.nh-cockpit details.more summary { cursor: pointer; padding: 2px 0; }\n.nh-cockpit .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px 14px; padding: 8px 0 2px; }\n.nh-cockpit .grid label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }\n.nh-cockpit select {\n  background: var(--nh-pill); color: var(--nh-text); border: 1px solid var(--nh-border); border-radius: 8px;\n  padding: 3px 6px; font: inherit; font-size: 12px; max-width: 110px;\n}\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-update {\n  position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  border: 0; font: inherit; font-weight: 700; cursor: pointer; background: var(--nh-accent); color: var(--nh-on-accent);\n  box-shadow: 0 0 24px -4px var(--nh-accent); white-space: nowrap;\n}\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", Zm = [
 	"door",
 	"window",
 	"garage",
@@ -17114,7 +17114,55 @@ var hh = class extends Sf {
 		let t = this.wires.get(e);
 		t && (this.group.remove(t.line, t.label), $f(t.line), this.wires.delete(e));
 	}
-}, vh = "0.2.0", yh = import.meta.url, bh = 3.2, xh = "neon-house-prefs", Sh = {
+}, vh = [
+	["Person", /\b(person|people|human)[ _-]?detection\b/],
+	["Vehicle", /\b(vehicle|car)[ _-]?detection\b/],
+	["Pet", /\b(pet|animal)[ _-]?detection\b/],
+	["Motion", /\bmotion[ _-]?detection\b/]
+];
+function yh(e, t) {
+	let n = {
+		ptz: {},
+		detection: []
+	}, r = e.entities?.[t]?.device_id;
+	if (!r) return n;
+	let i = Object.values(e.entities).filter((t) => t.device_id === r && !t.hidden && e.states[t.entity_id]).map((e) => e.entity_id).sort(), a = (t) => `${t.split(".")[1].replace(/_/g, " ")} ${String(e.states[t]?.attributes.friendly_name ?? "").toLowerCase()}`, o = /* @__PURE__ */ new Map();
+	for (let e of i) {
+		let t = e.split(".")[0], r = a(e);
+		if (t === "light") n.light ??= e;
+		else if (t === "siren") n.siren ??= e;
+		else if (t === "button") {
+			let t = r.match(/\b(?:move|ptz|pan|tilt)[ _-]?(up|down|left|right)\b/);
+			t && (n.ptz[t[1]] ??= e);
+		} else t === "select" ? /preset/.test(r) && !/patrol/.test(r) ? n.presets ??= e : /night[ _-]?vision/.test(r) && !/switching/.test(r) && (n.nightVision ??= e) : t === "switch" && (/privacy/.test(r) && !/zone/.test(r) ? n.privacy ??= e : /auto[ _-]?track/.test(r) ? n.track ??= e : /record(ing)?[ _-]?to[ _-]?sd|\brecord(ing)?$/.test(r) && !/audio/.test(r) ? n.record ??= e : /\bnotifications?\b/.test(r) && !/rich/.test(r) && (n.notifications ??= e));
+		if ((t === "select" || t === "switch") && !/trigger|alarm|sensitivity|digital/.test(r)) {
+			for (let [n, i] of vh) if (i.test(r)) {
+				(!o.has(n) || t === "select") && o.set(n, e);
+				break;
+			}
+		}
+	}
+	return n.detection = vh.filter(([e]) => o.has(e)).map(([e]) => ({
+		label: e,
+		entity: o.get(e)
+	})), n;
+}
+function bh(e) {
+	return [
+		e.light,
+		e.siren,
+		e.privacy,
+		e.presets,
+		e.nightVision,
+		e.track,
+		e.record,
+		e.notifications,
+		...e.detection.map((e) => e.entity)
+	].filter((e) => !!e);
+}
+//#endregion
+//#region src/card.ts
+var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = {
 	theme: "neon",
 	markers: "important",
 	cut: !1,
@@ -17124,7 +17172,7 @@ var hh = class extends Sf {
 	weather: !0,
 	trail: !1,
 	heatmap: "none"
-}, Ch = class extends HTMLElement {
+}, Eh = class extends HTMLElement {
 	config;
 	_hass;
 	plan;
@@ -17132,7 +17180,7 @@ var hh = class extends Sf {
 	shadow;
 	engine;
 	theme = np.neon;
-	prefs = { ...Sh };
+	prefs = { ...Th };
 	floors = [];
 	devices = [];
 	byEntity = /* @__PURE__ */ new Map();
@@ -17156,6 +17204,7 @@ var hh = class extends Sf {
 	updateChecked = !1;
 	cockpit;
 	cockpitTimer = 0;
+	cam;
 	seen = /* @__PURE__ */ new Map();
 	anims = /* @__PURE__ */ new WeakMap();
 	resizeObs;
@@ -17169,7 +17218,7 @@ var hh = class extends Sf {
 		requestRender: () => this.engine?.requestRender()
 	};
 	constructor() {
-		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = Ah();
+		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = Nh();
 	}
 	static getStubConfig() {
 		return {
@@ -17180,7 +17229,7 @@ var hh = class extends Sf {
 	setConfig(e) {
 		if (!e.plan && !e.plan_url) throw Error("neon-house-card: set `plan` or `plan_url`");
 		let t = JSON.stringify(e) !== JSON.stringify(this.config);
-		this.config = e, e.theme && !kh() && (this.prefs.theme = e.theme), e.heatmap && !kh() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
+		this.config = e, e.theme && !Mh() && (this.prefs.theme = e.theme), e.heatmap && !Mh() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
 	}
 	set hass(e) {
 		this._hass = e, this.ctx.hass = e, this.updateChecked || (this.updateChecked = !0, this.checkForUpdate()), this.built ? this.applyHass(this.seen.size === 0) : this.maybeBuild();
@@ -17302,7 +17351,7 @@ var hh = class extends Sf {
 		}
 		if (this.indexOpenings(), this.rooms = this.floors.flatMap((e) => e.rooms.map((t) => ({
 			view: t,
-			lights: this.devices.filter((n) => n.floor === e.floor && n.device.type === "light" && wh(n, t.room.polygon)),
+			lights: this.devices.filter((n) => n.floor === e.floor && n.device.type === "light" && Dh(n, t.room.polygon)),
 			temperature: t.room.temperature,
 			humidity: t.room.humidity
 		}))), e.roof && o.length && (this.roof = Fm(o.at(-1), e.roof, this.theme), a.add(this.roof)), this.weather = new Hm({
@@ -17394,7 +17443,7 @@ var hh = class extends Sf {
 			let e = this.weather;
 			this.engine.animate((t) => e.tick(t));
 		}
-		this.prefs.trail && !e && [...n].some((e) => this.devices.some((t) => t.device.type === "camera" && t.device.motion?.includes(e))) && this.reloadTrail(), this.panelArea && this.renderPanel(), this.cockpit && this.els.cockpit.classList.toggle("alarm", !!this.cockpit.alarm?.()), this.engine.requestRender();
+		this.prefs.trail && !e && [...n].some((e) => this.devices.some((t) => t.device.type === "camera" && t.device.motion?.includes(e))) && this.reloadTrail(), this.panelArea && this.renderPanel(), this.cockpit && (this.els.cockpit.classList.toggle("alarm", !!this.cockpit.alarm?.()), this.renderCameraControls()), this.engine.requestRender();
 	}
 	autoRoomSensors() {
 		let e = this._hass;
@@ -17415,7 +17464,7 @@ var hh = class extends Sf {
 			}
 			let a = n.view.material, o = new Y(t.floorFill), s = this.prefs.heatmap, c = Ap(Dp(e, s === "temperature" ? n.temperature : s === "humidity" ? n.humidity : void 0));
 			if (s !== "none" && c !== void 0) {
-				let e = s === "temperature" ? Th(c) : Eh(c);
+				let e = s === "temperature" ? Oh(c) : kh(c);
 				a.color.copy(o.lerp(e, .55)), a.emissive.copy(e).multiplyScalar(t.name === "day" ? .05 : .22);
 			} else {
 				a.color.set(t.floorFill);
@@ -17423,7 +17472,7 @@ var hh = class extends Sf {
 				a.emissive.copy(r.multiplyScalar(n / e));
 			}
 			let l = [], u = Dp(e, n.temperature), d = Dp(e, n.humidity);
-			u && !kp(u) && l.push(`${Oh(u.state)}°`), d && !kp(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
+			u && !kp(u) && l.push(`${jh(u.state)}°`), d && !kp(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
 			let f = n.view.labelEl.querySelector(".nh-room-sub");
 			f && (f.textContent = l.join(" · "));
 		}
@@ -17462,11 +17511,11 @@ var hh = class extends Sf {
 		e && !this.floors.some((t) => t.floor.id === e) && (e = null), this.selectedFloor = e;
 		let n = e ? this.floors.findIndex((t) => t.floor.id === e) : -1, r = n < 0 && this.canPullApart() && this.prefs.apart, i = this.groundIndex();
 		this.floors.forEach((e, t) => {
-			e.group.position.y = e.floor.elevation + (r ? (t - i) * bh : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
+			e.group.position.y = e.floor.elevation + (r ? (t - i) * Ch : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
 			for (let r of e.rooms) r.label.visible = this.prefs.names && (n === t || n < 0 && e === this.mainFloor());
 		}), this.ground && (this.ground.visible = n < 0 || this.floors[n].floor.elevation > -.5);
 		let a = this.ground?.getObjectByName("covers");
-		a && (a.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = r ? (this.floors.length - 1 - i) * bh : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
+		a && (a.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = r ? (this.floors.length - 1 - i) * Ch : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
 	}
 	mainFloor() {
 		let e = this.floors.filter((e) => e.floor.elevation > -.5);
@@ -17520,16 +17569,16 @@ var hh = class extends Sf {
 			"important",
 			"all"
 		].map((e) => `<button class="nh-chip ${this.prefs.markers === e ? "on" : ""}" data-markers="${e}">${e[0].toUpperCase() + e.slice(1)}</button>`).join("")}</span>`), e.innerHTML = t.join(""), e.querySelectorAll("[data-floor]").forEach((e) => e.onclick = () => this.selectFloor(e.dataset.floor || null)), e.querySelectorAll("[data-link]").forEach((e) => e.onclick = () => Fp(e.dataset.link)), e.querySelectorAll("[data-theme]").forEach((e) => e.onclick = () => {
-			this.prefs.theme = e.dataset.theme, jh(this.prefs), this.built = !1, this.build();
+			this.prefs.theme = e.dataset.theme, Ph(this.prefs), this.built = !1, this.build();
 		}), e.querySelectorAll("[data-markers]").forEach((e) => e.onclick = () => {
-			this.prefs.markers = e.dataset.markers, jh(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
+			this.prefs.markers = e.dataset.markers, Ph(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
 		}), this.bindAttentionChip();
 	}
 	async checkForUpdate() {
 		try {
 			let e = (await this._hass.callWS({ type: "lovelace/resources" })).find((e) => e.url.includes("neon-house-card.js"));
 			if (!e) return;
-			let t = new URL(e.url, location.origin), n = new URL(yh);
+			let t = new URL(e.url, location.origin), n = new URL(Sh);
 			if (t.pathname !== n.pathname || t.search === n.search) return;
 			let r = document.createElement("button");
 			r.className = "nh-update", r.textContent = "⟳ Neon House was updated – tap to reload", r.onclick = () => location.reload(), this.els.root.appendChild(r);
@@ -17694,7 +17743,7 @@ var hh = class extends Sf {
 				this.engine?.animate((t) => e.tick(t));
 			}
 		}
-		jh(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
+		Ph(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
 	}
 	toast(e) {
 		let t = this.els.toast;
@@ -17719,7 +17768,7 @@ var hh = class extends Sf {
 		if (e.attention) return this.renderAttention();
 		if (e.energy) return this.renderEnergy();
 		let n = new Set(e.area ? this.areaEntities(e.area) : []);
-		if (e.room) for (let t of this.devices) t.floor === e.room.view.floor && wh(t, e.room.view.room.polygon) && n.add(t.device.entity);
+		if (e.room) for (let t of this.devices) t.floor === e.room.view.floor && Dh(t, e.room.view.room.polygon) && n.add(t.device.entity);
 		let r = {
 			Controls: [],
 			Cameras: [],
@@ -17738,7 +17787,7 @@ var hh = class extends Sf {
 				"image"
 			].includes(t) || r.Other.push(e);
 		}
-		let i = Dp(t, e.room?.temperature), a = Dp(t, e.room?.humidity), o = [i && !kp(i) ? `${Oh(i.state)}°C` : "", a && !kp(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
+		let i = Dp(t, e.room?.temperature), a = Dp(t, e.room?.humidity), o = [i && !kp(i) ? `${jh(i.state)}°C` : "", a && !kp(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
 			let n = t.states[e], r = e.split(".")[0], i = Op(n) && r !== "sensor", a = Rp.has(r) && !kp(n), o = n?.attributes.unit_of_measurement ? ` ${n.attributes.unit_of_measurement}` : "";
 			return `<div class="nh-item ${i ? "on" : ""}" data-id="${e}">
         <span class="dot"></span><span class="name">${Rm(jp(t, e))}</span>
@@ -17764,22 +17813,102 @@ var hh = class extends Sf {
 		if (!t || !this.engine) return;
 		let n = e.device;
 		this.closeCockpit(!1), this.cockpit = e, this.selectedFloor && this.selectedFloor !== e.floor.id && this.selectFloor(e.floor.id, !1);
-		let r = n.stream ?? n.entity, i = n.name ?? jp(t, n.entity).replace(/ (live view|hd stream|sd stream)$/i, ""), a = this.els.cockpit;
-		a.innerHTML = `
-      <header><b>◉ ${Rm(i)}</b><button class="nh-x" data-close>✕</button></header>
-      <div class="live"><img alt=""><span class="rec">LIVE</span></div>
-      <div class="acts">
-        <button class="nh-chip" data-act="ha">Open in Home Assistant</button>
-        <button class="nh-chip" data-act="view">Look from camera</button>
-        <button class="nh-chip" data-act="back">Back to house</button>
-      </div>`, a.classList.add("open"), a.classList.toggle("alarm", !!e.alarm?.());
-		let o = a.querySelector("img"), s = zp(t, r, !0), c = !1, l = () => {
-			let e = zp(t, r, !1);
-			e && (o.src = e);
-		}, u = () => {
-			c || (c = !0, l(), this.cockpitTimer = window.setInterval(l, 2e3));
+		let r = n.stream ?? n.entity, i = n.name ?? jp(t, n.entity).replace(/ (live view|hd stream|sd stream)$/i, ""), a = yh(t, n.entity);
+		this.cam = {
+			controls: a,
+			stream: r,
+			name: i,
+			sig: "",
+			sirenArmed: 0,
+			moreOpen: !1
 		};
-		o.onerror = u, s ? o.src = s : u(), a.querySelector("[data-close]").onclick = () => this.closeCockpit(!0), a.querySelector("[data-act=\"ha\"]").onclick = () => Ip(this, r), a.querySelector("[data-act=\"back\"]").onclick = () => this.closeCockpit(!0), a.querySelector("[data-act=\"view\"]").onclick = () => this.lookFromCamera(e), this.lookFromCamera(e);
+		let o = {
+			up: "▲",
+			down: "▼",
+			left: "◀",
+			right: "▶"
+		}, s = [
+			"up",
+			"down",
+			"left",
+			"right"
+		].filter((e) => a.ptz[e]).map((e) => `<button class="ptz ${e}" data-ptz="${e}" title="Turn ${e}">${o[e]}</button>`).join(""), c = this.els.cockpit;
+		c.innerHTML = `
+      <header><b>◉ ${Rm(i)}</b><button class="nh-x" data-close>✕</button></header>
+      <div class="body">
+        <div class="live"><img alt=""><span class="rec">LIVE</span>${s}
+          <button class="snap" data-snap title="Save a picture">⤓</button>
+          <div class="priv">🙈 Privacy mode – the camera is off</div></div>
+        <div class="ctl"></div>
+        <div class="acts">
+          <button class="nh-chip" data-act="ha">Open in Home Assistant</button>
+          <button class="nh-chip" data-act="view">Look from camera</button>
+          <button class="nh-chip" data-act="back">Back to house</button>
+        </div>
+      </div>`, c.classList.add("open"), c.classList.toggle("alarm", !!e.alarm?.());
+		let l = c.querySelector("img"), u = zp(t, r, !0), d = !1, f = () => {
+			let e = zp(t, r, !1);
+			e && (l.src = e);
+		}, p = () => {
+			d || (d = !0, f(), this.cockpitTimer = window.setInterval(f, 2e3));
+		};
+		l.onerror = p, u ? l.src = u : p(), c.querySelector("[data-close]").onclick = () => this.closeCockpit(!0), c.querySelector("[data-act=\"ha\"]").onclick = () => Ip(this, r), c.querySelector("[data-act=\"back\"]").onclick = () => this.closeCockpit(!0), c.querySelector("[data-act=\"view\"]").onclick = () => this.lookFromCamera(e), c.querySelector("[data-snap]").onclick = () => void this.savePicture(), c.querySelectorAll("[data-ptz]").forEach((e) => e.onclick = () => void t.callService("button", "press", { entity_id: a.ptz[e.dataset.ptz] })), this.renderCameraControls(!0), this.lookFromCamera(e);
+	}
+	renderCameraControls(e = !1) {
+		let t = this._hass, n = this.cam, r = this.els.cockpit.querySelector(".ctl");
+		if (!t || !n || !r) return;
+		let i = n.controls, a = bh(i).map((e) => t.states[e]?.state).join("|") + n.sirenArmed;
+		if (!e && a === n.sig || !e && this.shadow.activeElement?.tagName === "SELECT") return;
+		n.sig = a;
+		let o = (e) => Op(Dp(t, e)), s = (e) => kp(Dp(t, e)), c = (e, t, n, r, i) => `<button class="nh-cbtn ${t}" data-cact="${e}" ${s(i) ? "disabled" : ""}><span class="i">${n}</span>${r}</button>`, l = [];
+		i.light && l.push(c("light", o(i.light) ? "on" : "", "💡", "Light", i.light)), i.siren && l.push(o(i.siren) ? c("siren", "danger", "🚨", "Stop siren", i.siren) : c("siren", n.sirenArmed ? "armed" : "", "🚨", n.sirenArmed ? "Tap again" : "Siren", i.siren)), i.privacy && l.push(c("privacy", o(i.privacy) ? "on" : "", "🙈", o(i.privacy) ? "Camera off" : "Privacy", i.privacy)), i.record && l.push(c("record", o(i.record) ? "on" : "", "⏺", "Recording", i.record)), i.track && l.push(c("track", o(i.track) ? "on" : "", "🎯", "Auto-track", i.track));
+		let u = Dp(t, i.presets)?.attributes.options ?? [], d = (e) => {
+			let n = t.states[e], r = (n?.attributes.options ?? []).map((e) => `<option value="${Rm(e)}" ${e === n?.state ? "selected" : ""}>${Rm(e.replace(/ mode$/i, ""))}</option>`).join("");
+			return `<select data-select="${Rm(e)}" ${s(e) ? "disabled" : ""}>${r}</select>`;
+		}, f = (e, t) => `<label><span>${e}</span>${t.startsWith("select.") ? d(t) : `<span class="nh-toggle ${o(t) ? "on" : ""}" data-toggle="${Rm(t)}"></span>`}</label>`, p = [
+			...i.detection.map((e) => f(e.label, e.entity)),
+			...i.nightVision ? [f("Night vision", i.nightVision)] : [],
+			...i.notifications ? [f("Notifications", i.notifications)] : []
+		];
+		this.els.cockpit.querySelector(".live")?.classList.toggle("private", o(i.privacy));
+		let m = u.length ? `<div class="presets"><span class="lbl">Go to</span>${u.map((e) => `<button class="nh-chip" data-preset="${Rm(e)}">${Rm(e)}</button>`).join("")}</div>` : "";
+		r.innerHTML = `
+      ${l.length ? `<div class="quick">${l.join("")}</div>` : ""}
+      ${m}
+      ${p.length ? `<details class="more" ${n.moreOpen ? "open" : ""}><summary>Detection &amp; settings</summary><div class="grid">${p.join("")}</div></details>` : ""}`, r.querySelector("details")?.addEventListener("toggle", (e) => n.moreOpen = e.target.open), r.querySelectorAll("[data-cact]").forEach((e) => e.onclick = () => this.cameraAction(e.dataset.cact)), r.querySelectorAll("[data-preset]").forEach((e) => e.onclick = () => void t.callService("select", "select_option", {
+			entity_id: i.presets,
+			option: e.dataset.preset
+		})), r.querySelectorAll("[data-select]").forEach((e) => e.onchange = () => void t.callService("select", "select_option", {
+			entity_id: e.dataset.select,
+			option: e.value
+		})), r.querySelectorAll("[data-toggle]").forEach((e) => e.onclick = () => void Lp(t, e.dataset.toggle));
+	}
+	cameraAction(e) {
+		let t = this._hass, n = this.cam;
+		if (!t || !n) return;
+		let r = n.controls;
+		if (e === "siren") Op(Dp(t, r.siren)) ? t.callService("siren", "turn_off", { entity_id: r.siren }) : n.sirenArmed ? (clearTimeout(n.sirenArmed), n.sirenArmed = 0, t.callService("siren", "turn_on", { entity_id: r.siren })) : n.sirenArmed = window.setTimeout(() => {
+			n.sirenArmed = 0, this.renderCameraControls();
+		}, 3e3);
+		else {
+			let n = {
+				light: r.light,
+				privacy: r.privacy,
+				record: r.record,
+				track: r.track
+			}[e];
+			n && Lp(t, n);
+		}
+		this.renderCameraControls();
+	}
+	async savePicture() {
+		let e = this._hass, t = this.cam, n = e && t ? zp(e, t.stream, !1) : void 0;
+		if (n && t) try {
+			let e = await (await fetch(n)).blob(), r = e.type.includes("png") ? "png" : e.type.includes("svg") ? "svg" : "jpg", i = document.createElement("a");
+			i.href = URL.createObjectURL(e), i.download = `${t.name}-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 19).replace(/[:T]/g, "-")}.${r}`, i.click(), setTimeout(() => URL.revokeObjectURL(i.href), 1e4), this.toast("Picture saved");
+		} catch {
+			this.toast("No picture from the camera");
+		}
 	}
 	lookFromCamera(e) {
 		let t = e.device, n = e.focus(), r = (t.rot ?? 0) * Math.PI / 180, i = new K(Math.sin(r), 0, -Math.cos(r)), a = n.clone().addScaledVector(i, -1.6).add(new K(0, 1.2, 0)), o = n.clone().addScaledVector(i, (t.range ?? 7) * .5).setY(n.y - (t.z ?? 2.5) + .2);
@@ -17788,7 +17917,7 @@ var hh = class extends Sf {
 	closeCockpit(e) {
 		clearInterval(this.cockpitTimer);
 		let t = this.els?.cockpit.querySelector("img");
-		t && (t.onerror = null, t.src = ""), this.els?.cockpit.classList.remove("open", "alarm");
+		t && (t.onerror = null, t.src = ""), this.els?.cockpit.classList.remove("open", "alarm"), this.cam?.sirenArmed && clearTimeout(this.cam.sirenArmed), this.cam = void 0;
 		let n = this.cockpit;
 		this.cockpit = void 0, e && n && this.selectFloor(this.selectedFloor);
 	}
@@ -17859,9 +17988,9 @@ var hh = class extends Sf {
 		let n = this.engine?.pick(e, t);
 		n?.data.kind === "device" && Ip(this, n.data.view.device.entity);
 	}
-}, wh = (e, t) => Array.isArray(e.device.pos) && Xf(e.device.pos, t);
-function Th(e) {
-	return Dh([
+}, Dh = (e, t) => Array.isArray(e.device.pos) && Xf(e.device.pos, t);
+function Oh(e) {
+	return Ah([
 		[16, 3107839],
 		[19, 2541274],
 		[21, 3073674],
@@ -17869,15 +17998,15 @@ function Th(e) {
 		[28, 16727383]
 	], e);
 }
-function Eh(e) {
-	return Dh([
+function kh(e) {
+	return Ah([
 		[25, 16757053],
 		[40, 3073674],
 		[55, 2541274],
 		[70, 3107839]
 	], e);
 }
-function Dh(e, t) {
+function Ah(e, t) {
 	if (t <= e[0][0]) return new Y(e[0][1]);
 	for (let n = 0; n < e.length - 1; n++) {
 		let [r, i] = e[n], [a, o] = e[n + 1];
@@ -17885,41 +18014,41 @@ function Dh(e, t) {
 	}
 	return new Y(e.at(-1)[1]);
 }
-var Oh = (e) => {
+var jh = (e) => {
 	let t = Number(e);
 	return Number.isFinite(t) ? (Math.round(t * 10) / 10).toString() : e;
 };
-function kh() {
+function Mh() {
 	try {
-		return !!localStorage.getItem(xh);
+		return !!localStorage.getItem(wh);
 	} catch {
 		return !1;
 	}
 }
-function Ah() {
+function Nh() {
 	try {
-		let e = localStorage.getItem(xh);
+		let e = localStorage.getItem(wh);
 		if (e) return {
-			...Sh,
+			...Th,
 			...JSON.parse(e)
 		};
 	} catch {}
-	return { ...Sh };
+	return { ...Th };
 }
-function jh(e) {
+function Ph(e) {
 	try {
-		localStorage.setItem(xh, JSON.stringify(e));
+		localStorage.setItem(wh, JSON.stringify(e));
 	} catch {}
 }
 if (!customElements.get("neon-house-card")) {
-	customElements.define("neon-house-card", Ch);
+	customElements.define("neon-house-card", Eh);
 	let e = window;
 	e.customCards = e.customCards || [], e.customCards.push({
 		type: "neon-house-card",
 		name: "Neon House",
 		description: "Your home as a neon 3D plan: lights, cameras, climate, weather – all local.",
 		preview: !1
-	}), console.info(`%c NEON-HOUSE %c ${vh} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
+	}), console.info(`%c NEON-HOUSE %c ${xh} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
 }
 //#endregion
-export { Ch as NeonHouseCard };
+export { Eh as NeonHouseCard };

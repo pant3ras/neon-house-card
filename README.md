@@ -16,8 +16,10 @@ Assistant: no cloud, no account, no licence key.
 - **Lights** – bulbs, LED strips, floor lamps and floodlights glow in their colour and brightness and
   tint their room. Tap to toggle, long-press for Home Assistant's dialog.
 - **Cameras** – the view cone on the ground turns red and pulses on person/vehicle/motion detection,
-  with an alert banner. Tap for the **camera cockpit**: live picture plus a flight to the camera's
-  point of view.
+  with an alert banner. Tap for the **camera cockpit**: live picture, a flight to the camera's point of
+  view, and the camera's own controls – pan/tilt arrows, saved viewpoints, floodlight, siren (two taps
+  to sound it), privacy mode, recording, auto-tracking, detection levels, night vision, and saving the
+  current picture. The controls are found on the camera's Home Assistant device by themselves.
 - **Motion trail** – detections of the last 30 minutes from the recorder, as markers joined in time order.
 - **Weather outside** – rain, downpours, snow, clouds, fog, lightning, sun and moon in the right place,
   stars at night, wind-driven rain.

@@ -11,6 +11,7 @@ import { missingEntities, validatePlan } from './plan/validate';
 import { findIssues, type Issue } from './attention';
 import { electricityMeter, formatWatts, houseLoad, type HouseLoad, type LoadRow } from './energy';
 import { PowerFlow } from './scene/flow';
+import { controlEntities, findCameraControls, type CameraControls } from './camera-controls';
 import { TOGGLEABLE, cameraUrl, isOn, isUnavailable, moreInfo, nameOf, navigate, num, stateOf, toggle } from './ha';
 import type { CameraDevice, CardConfig, HassEntity, HomeAssistant, Plan, ThemeName, Vec2 } from './types';
 
@@ -95,6 +96,7 @@ export class NeonHouseCard extends HTMLElement {
   private updateChecked = false;
   private cockpit?: DeviceView;
   private cockpitTimer = 0;
+  private cam?: { controls: CameraControls; stream: string; name: string; sig: string; sirenArmed: number; moreOpen: boolean };
   private seen = new Map<string, HassEntity | undefined>();
   private anims = new WeakMap<DeviceView, (dt: number, t: number) => boolean>();
   private resizeObs?: ResizeObserver;
@@ -528,7 +530,10 @@ export class NeonHouseCard extends HTMLElement {
       if (motionChanged) this.reloadTrail();
     }
     if (this.panelArea) this.renderPanel();
-    if (this.cockpit) this.els.cockpit.classList.toggle('alarm', !!this.cockpit.alarm?.());
+    if (this.cockpit) {
+      this.els.cockpit.classList.toggle('alarm', !!this.cockpit.alarm?.());
+      this.renderCameraControls();
+    }
     this.engine.requestRender();
   }
 
@@ -1125,14 +1130,26 @@ export class NeonHouseCard extends HTMLElement {
     if (this.selectedFloor && this.selectedFloor !== view.floor.id) this.selectFloor(view.floor.id, false);
     const stream = d.stream ?? d.entity;
     const name = d.name ?? nameOf(hass, d.entity).replace(/ (live view|hd stream|sd stream)$/i, '');
+    const controls = findCameraControls(hass, d.entity);
+    this.cam = { controls, stream, name, sig: '', sirenArmed: 0, moreOpen: false };
+    const arrows = { up: '▲', down: '▼', left: '◀', right: '▶' };
+    const ptz = (['up', 'down', 'left', 'right'] as const)
+      .filter((dir) => controls.ptz[dir])
+      .map((dir) => `<button class="ptz ${dir}" data-ptz="${dir}" title="Turn ${dir}">${arrows[dir]}</button>`)
+      .join('');
     const el = this.els.cockpit;
     el.innerHTML = `
       <header><b>◉ ${escapeHtml(name)}</b><button class="nh-x" data-close>✕</button></header>
-      <div class="live"><img alt=""><span class="rec">LIVE</span></div>
-      <div class="acts">
-        <button class="nh-chip" data-act="ha">Open in Home Assistant</button>
-        <button class="nh-chip" data-act="view">Look from camera</button>
-        <button class="nh-chip" data-act="back">Back to house</button>
+      <div class="body">
+        <div class="live"><img alt=""><span class="rec">LIVE</span>${ptz}
+          <button class="snap" data-snap title="Save a picture">⤓</button>
+          <div class="priv">🙈 Privacy mode – the camera is off</div></div>
+        <div class="ctl"></div>
+        <div class="acts">
+          <button class="nh-chip" data-act="ha">Open in Home Assistant</button>
+          <button class="nh-chip" data-act="view">Look from camera</button>
+          <button class="nh-chip" data-act="back">Back to house</button>
+        </div>
       </div>`;
     el.classList.add('open');
     el.classList.toggle('alarm', !!view.alarm?.());
@@ -1157,7 +1174,126 @@ export class NeonHouseCard extends HTMLElement {
     el.querySelector<HTMLElement>('[data-act="ha"]')!.onclick = () => moreInfo(this, stream);
     el.querySelector<HTMLElement>('[data-act="back"]')!.onclick = () => this.closeCockpit(true);
     el.querySelector<HTMLElement>('[data-act="view"]')!.onclick = () => this.lookFromCamera(view);
+    el.querySelector<HTMLElement>('[data-snap]')!.onclick = () => void this.savePicture();
+    el.querySelectorAll<HTMLElement>('[data-ptz]').forEach(
+      (b) => (b.onclick = () => void hass.callService('button', 'press', { entity_id: controls.ptz[b.dataset.ptz as 'up'] })),
+    );
+    this.renderCameraControls(true);
     this.lookFromCamera(view);
+  }
+
+  /** the camera's own controls, redrawn only when one of their states changes */
+  private renderCameraControls(force = false) {
+    const hass = this._hass;
+    const cam = this.cam;
+    const el = this.els.cockpit.querySelector<HTMLElement>('.ctl');
+    if (!hass || !cam || !el) return;
+    const c = cam.controls;
+    const sig = controlEntities(c).map((id) => hass.states[id]?.state).join('|') + cam.sirenArmed;
+    if (!force && sig === cam.sig) return;
+    // don't pull an open drop-down from under the finger; the next update redraws it
+    if (!force && this.shadow.activeElement?.tagName === 'SELECT') return;
+    cam.sig = sig;
+    const on = (id?: string) => isOn(stateOf(hass, id));
+    const dead = (id?: string) => isUnavailable(stateOf(hass, id));
+    const btn = (act: string, cls: string, icon: string, label: string, id?: string) =>
+      `<button class="nh-cbtn ${cls}" data-cact="${act}" ${dead(id) ? 'disabled' : ''}><span class="i">${icon}</span>${label}</button>`;
+    const quick: string[] = [];
+    if (c.light) quick.push(btn('light', on(c.light) ? 'on' : '', '💡', 'Light', c.light));
+    if (c.siren)
+      quick.push(
+        on(c.siren)
+          ? btn('siren', 'danger', '🚨', 'Stop siren', c.siren)
+          : btn('siren', cam.sirenArmed ? 'armed' : '', '🚨', cam.sirenArmed ? 'Tap again' : 'Siren', c.siren),
+      );
+    if (c.privacy) quick.push(btn('privacy', on(c.privacy) ? 'on' : '', '🙈', on(c.privacy) ? 'Camera off' : 'Privacy', c.privacy));
+    if (c.record) quick.push(btn('record', on(c.record) ? 'on' : '', '⏺', 'Recording', c.record));
+    if (c.track) quick.push(btn('track', on(c.track) ? 'on' : '', '🎯', 'Auto-track', c.track));
+
+    const presets = (stateOf(hass, c.presets)?.attributes.options ?? []) as string[];
+    const select = (id: string) => {
+      const s = hass.states[id];
+      const opts = (s?.attributes.options ?? []) as string[];
+      const options = opts
+        .map((o) => `<option value="${escapeHtml(o)}" ${o === s?.state ? 'selected' : ''}>${escapeHtml(o.replace(/ mode$/i, ''))}</option>`)
+        .join('');
+      return `<select data-select="${escapeHtml(id)}" ${dead(id) ? 'disabled' : ''}>${options}</select>`;
+    };
+    const setting = (label: string, id: string) =>
+      `<label><span>${label}</span>${
+        id.startsWith('select.') ? select(id) : `<span class="nh-toggle ${on(id) ? 'on' : ''}" data-toggle="${escapeHtml(id)}"></span>`
+      }</label>`;
+    const settings = [
+      ...c.detection.map((x) => setting(x.label, x.entity)),
+      ...(c.nightVision ? [setting('Night vision', c.nightVision)] : []),
+      ...(c.notifications ? [setting('Notifications', c.notifications)] : []),
+    ];
+
+    this.els.cockpit.querySelector('.live')?.classList.toggle('private', on(c.privacy));
+    const presetRow = presets.length
+      ? `<div class="presets"><span class="lbl">Go to</span>${presets
+          .map((p) => `<button class="nh-chip" data-preset="${escapeHtml(p)}">${escapeHtml(p)}</button>`)
+          .join('')}</div>`
+      : '';
+    el.innerHTML = `
+      ${quick.length ? `<div class="quick">${quick.join('')}</div>` : ''}
+      ${presetRow}
+      ${settings.length ? `<details class="more" ${cam.moreOpen ? 'open' : ''}><summary>Detection &amp; settings</summary><div class="grid">${settings.join('')}</div></details>` : ''}`;
+
+    el.querySelector('details')?.addEventListener('toggle', (e) => (cam.moreOpen = (e.target as HTMLDetailsElement).open));
+    el.querySelectorAll<HTMLElement>('[data-cact]').forEach((b) => (b.onclick = () => this.cameraAction(b.dataset.cact!)));
+    el.querySelectorAll<HTMLElement>('[data-preset]').forEach(
+      (b) => (b.onclick = () => void hass.callService('select', 'select_option', { entity_id: c.presets, option: b.dataset.preset })),
+    );
+    el.querySelectorAll<HTMLSelectElement>('[data-select]').forEach(
+      (s) => (s.onchange = () => void hass.callService('select', 'select_option', { entity_id: s.dataset.select, option: s.value })),
+    );
+    el.querySelectorAll<HTMLElement>('[data-toggle]').forEach((t) => (t.onclick = () => void toggle(hass, t.dataset.toggle!)));
+  }
+
+  private cameraAction(act: string) {
+    const hass = this._hass;
+    const cam = this.cam;
+    if (!hass || !cam) return;
+    const c = cam.controls;
+    if (act === 'siren') {
+      // a siren outside wakes the street: sounding it takes a second tap, stopping it one
+      if (isOn(stateOf(hass, c.siren))) void hass.callService('siren', 'turn_off', { entity_id: c.siren });
+      else if (cam.sirenArmed) {
+        clearTimeout(cam.sirenArmed);
+        cam.sirenArmed = 0;
+        void hass.callService('siren', 'turn_on', { entity_id: c.siren });
+      } else {
+        cam.sirenArmed = window.setTimeout(() => {
+          cam.sirenArmed = 0;
+          this.renderCameraControls();
+        }, 3000);
+      }
+    } else {
+      const id = { light: c.light, privacy: c.privacy, record: c.record, track: c.track }[act];
+      if (id) void toggle(hass, id);
+    }
+    this.renderCameraControls();
+  }
+
+  /** the current frame as a file */
+  private async savePicture() {
+    const hass = this._hass;
+    const cam = this.cam;
+    const url = hass && cam ? cameraUrl(hass, cam.stream, false) : undefined;
+    if (!url || !cam) return;
+    try {
+      const blob = await (await fetch(url)).blob();
+      const ext = blob.type.includes('png') ? 'png' : blob.type.includes('svg') ? 'svg' : 'jpg';
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${cam.name}-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.${ext}`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      this.toast('Picture saved');
+    } catch {
+      this.toast('No picture from the camera');
+    }
   }
 
   private lookFromCamera(view: DeviceView) {
@@ -1179,6 +1315,8 @@ export class NeonHouseCard extends HTMLElement {
       img.src = ''; // ends the MJPEG connection
     }
     this.els?.cockpit.classList.remove('open', 'alarm');
+    if (this.cam?.sirenArmed) clearTimeout(this.cam.sirenArmed);
+    this.cam = undefined;
     const was = this.cockpit;
     this.cockpit = undefined;
     if (returnView && was) this.selectFloor(this.selectedFloor);
