@@ -11,8 +11,20 @@ export interface Plan {
   roof?: Roof;
   /** weather entity driving rain, snow, clouds and lightning outside */
   weather_entity?: string;
+  /** utility bills: an amount above zero shows up under "needs attention" */
+  bills?: Bill[];
   /** degrees the plan's "up" (−y) is turned from north, clockwise; used for the sun */
   north?: number;
+}
+
+export interface Bill {
+  name: string;
+  /** the entity holding the amount owed now */
+  entity: string;
+  /** read the amount from this attribute instead of the state ("208,24 lei" is fine) */
+  attribute?: string;
+  /** due date: an attribute of the same entity, or another entity */
+  due?: string;
 }
 
 export interface Floor {
@@ -46,6 +58,7 @@ export type FurnitureType =
   | 'chair'
   | 'bathtub'
   | 'shower'
+  | 'stove'
   | 'box';
 
 /** a piece of furniture: an axis-aligned rectangle between two opposite corners */
@@ -195,7 +208,21 @@ export interface SprinklerDevice extends DeviceBase {
   arc?: number;
 }
 
+export interface MeterDevice extends DeviceBase {
+  type: 'meter';
+  kind: 'electricity' | 'gas' | 'water';
+  /** what the label shows, e.g. this month's consumption */
+  entity: string;
+  /** a second figure, e.g. the meter index */
+  index?: string;
+  /** text after the main figure when its entity has no unit (e.g. "m³ in 2026") */
+  unit?: string;
+  /** drawn as a lid in the ground (a water meter pit) */
+  underground?: boolean;
+}
+
 export type Device =
+  | MeterDevice
   | SprinklerDevice
   | LightDevice
   | CameraDevice
@@ -282,6 +309,8 @@ export interface CardConfig {
   attention_exclude_label?: string;
   /** battery percentage counted as low (default 20) */
   battery_low?: number;
+  /** buttons in the top bar that open other dashboards, e.g. { name: Utilities, path: /cyber-home } */
+  links?: { name: string; path: string }[];
   /** show the frame rate */
   stats?: boolean;
 }

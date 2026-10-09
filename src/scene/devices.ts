@@ -8,7 +8,9 @@ import type {
   Device,
   Floor,
   HomeAssistant,
+  HassEntity,
   LightDevice,
+  MeterDevice,
   SensorDevice,
   SprinklerDevice,
   TvDevice,
@@ -97,10 +99,88 @@ export function createDevice(device: Device, floor: Floor, ctx: DeviceCtx): Devi
       return carView(device, floor, ctx);
     case 'sprinkler':
       return sprinklerView(device, floor, ctx);
+    case 'meter':
+      return meterView(device, floor, ctx);
     default:
       return null;
   }
 }
+
+// ---------- utility meters ----------
+
+const METER_ICON: Record<MeterDevice['kind'], string> = { electricity: '⚡', gas: '🔥', water: '💧' };
+const METER_COLOR: Record<MeterDevice['kind'], number> = { electricity: 0xffd23b, gas: 0xff8a3d, water: 0x3fa9ff };
+
+function meterView(d: MeterDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
+  const t = ctx.theme;
+  const accent = METER_COLOR[d.kind] ?? t.wallEdge;
+  const underground = d.underground ?? d.kind === 'water';
+  const g = new THREE.Group();
+  const body = new THREE.MeshStandardMaterial({ color: t.name === 'day' ? 0xe9edf2 : t.device, roughness: 0.5 });
+  const glow = new THREE.MeshBasicMaterial({ color: accent, toneMapped: false });
+
+  if (underground) {
+    // a meter pit: a round lid flush with the ground, ringed in the meter's colour
+    g.position.copy(w3(d.pos, d.z ?? 0.03));
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.04, 28), body);
+    g.add(lid);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.015, 6, 40), glow);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.025;
+    g.add(ring);
+  } else {
+    g.position.copy(w3(d.pos, d.z ?? (d.kind === 'electricity' ? 1.8 : 0.6)));
+    g.rotation.y = yaw(d.rot);
+    const [w, h, dep] = d.kind === 'electricity' ? [0.4, 0.55, 0.12] : [0.32, 0.26, 0.2];
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(w, h, dep), body));
+    g.add(edgeBox(w, h, dep, t.deviceEdge, 1));
+    // a small lit display on the front (local −z faces into the room)
+    const display = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.55, h * 0.18), glow);
+    display.position.set(0, h * 0.18, -dep / 2 - 0.002);
+    display.rotation.y = Math.PI;
+    g.add(display);
+    if (d.kind === 'gas') {
+      // the gas pipe in and out
+      const pipeMat = new THREE.MeshStandardMaterial({ color: 0xd8b13a, metalness: 0.6, roughness: 0.4 });
+      for (const sx of [-0.1, 0.1]) {
+        const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.35, 10), pipeMat);
+        pipe.position.set(sx, -h / 2 - 0.17, 0);
+        g.add(pipe);
+      }
+    }
+  }
+
+  const badge = makeBadge('nh-meter', true);
+  badge.obj.position.set(0, underground ? 0.45 : 0.45, 0);
+  g.add(badge.obj);
+
+  const view: DeviceView = {
+    device: d,
+    floor,
+    object: g,
+    entities: [d.entity, ...(d.index ? [d.index] : [])],
+    badge,
+    update(c) {
+      const s = stateOf(c.hass, d.entity);
+      const idx = stateOf(c.hass, d.index);
+      const fmt = (x?: HassEntity, unit?: string) => {
+        if (!x || isUnavailable(x)) return '–';
+        const u = unit ?? x.attributes.unit_of_measurement;
+        return `${round2(x.state)}${u ? ` ${u}` : ''}`;
+      };
+      badge.el.classList.toggle('off', isUnavailable(s));
+      badge.el.innerHTML = `<span class="ico">${METER_ICON[d.kind] ?? '◆'}</span>${escape(fmt(s, d.unit))}${idx ? `<span class="sub"> · ${escape(fmt(idx))}</span>` : ''}`;
+    },
+    focus: () => g.getWorldPosition(new THREE.Vector3()),
+  };
+  pickable(g, view);
+  return view;
+}
+
+const round2 = (s: string) => {
+  const n = Number(s);
+  return Number.isFinite(n) ? String(Math.round(n * 100) / 100) : s;
+};
 
 // ---------- sprinklers ----------
 
@@ -432,6 +512,7 @@ function cameraView(d: CameraDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
     opacity: 0.09,
     depthWrite: false,
     side: THREE.DoubleSide,
+    ...OUTSIDE_ONLY,
   });
   const wedge = new THREE.Mesh(wedgeGeo, wedgeMat);
   wedge.position.y = -z + 0.035;
@@ -444,6 +525,7 @@ function cameraView(d: CameraDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
   wl.seg(new THREE.Vector3(), rim[steps]);
   for (let i = 0; i < steps; i++) wl.seg(rim[i], rim[i + 1]);
   const wedgeLineMat = lineMaterial(t.wallEdge, 1, 0.3);
+  Object.assign(wedgeLineMat, OUTSIDE_ONLY);
   const wedgeLines = wl.build(wedgeLineMat);
   wedgeLines.position.y = -z + 0.04;
   wedgeLines.rotation.y = yaw(d.rot);
@@ -501,9 +583,30 @@ function cameraView(d: CameraDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
     focus: () => g.getWorldPosition(new THREE.Vector3()),
   };
   pickable(head, view);
-  pickable(wedge, view);
+  // the cone on the ground is marked, so a tap on it inside a room can go to the room instead
+  wedge.userData.pick = { kind: 'device', view, wedge: true };
   return view;
 }
+
+/**
+ * Camera cones are drawn outside the house only: room floors write 1 into the stencil buffer
+ * (see ROOM_FLOOR_STENCIL) and the cones skip every pixel marked that way.
+ */
+const OUTSIDE_ONLY = {
+  stencilWrite: true,
+  stencilRef: 1,
+  stencilFunc: THREE.NotEqualStencilFunc,
+  stencilFail: THREE.KeepStencilOp,
+  stencilZFail: THREE.KeepStencilOp,
+  stencilZPass: THREE.KeepStencilOp,
+} as const;
+
+export const ROOM_FLOOR_STENCIL = {
+  stencilWrite: true,
+  stencilRef: 1,
+  stencilFunc: THREE.AlwaysStencilFunc,
+  stencilZPass: THREE.ReplaceStencilOp,
+} as const;
 
 /**
  * what a detection sensor reports: judged by its friendly name first (entity ids can lag

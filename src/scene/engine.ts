@@ -46,7 +46,7 @@ export class Engine {
     readonly host: HTMLElement,
     private quality: 'low' | 'high',
   ) {
-    this.renderer = new THREE.WebGLRenderer({ antialias: quality === 'high', alpha: false, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGLRenderer({ antialias: quality === 'high', alpha: false, stencil: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 2 : 1.25));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -92,7 +92,9 @@ export class Engine {
     this.composer = undefined;
     this.bloom = undefined;
     if (this.quality === 'low' && theme.name !== 'neon') return;
-    const composer = new EffectComposer(this.renderer);
+    // a stencil buffer lets camera cones skip the room floors (they are drawn outside only)
+    const target = new THREE.WebGLRenderTarget(this.width, this.height, { type: THREE.HalfFloatType, stencilBuffer: true });
+    const composer = new EffectComposer(this.renderer, target);
     composer.addPass(new RenderPass(this.scene, this.camera));
     const res = new THREE.Vector2(this.width, this.height).multiplyScalar(this.quality === 'high' ? 1 : 0.5);
     this.bloom = new UnrealBloomPass(res, theme.bloom.strength, theme.bloom.radius, theme.bloom.threshold);
@@ -220,8 +222,8 @@ export class Engine {
     return this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -y), new THREE.Vector3());
   }
 
-  /** the first object under a screen point that carries pick data */
-  pick(clientX: number, clientY: number): Pick | null {
+  /** the first object under a screen point that carries pick data (and that `accept` takes) */
+  pick(clientX: number, clientY: number, accept?: (data: any, point: THREE.Vector3) => boolean): Pick | null {
     const rect = this.renderer.domElement.getBoundingClientRect();
     const ndc = new THREE.Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.camera);
@@ -230,7 +232,7 @@ export class Engine {
       if (!visibleChain(hit.object)) continue;
       let o: THREE.Object3D | null = hit.object;
       while (o && !o.userData.pick) o = o.parent;
-      if (o) return { object: o, data: o.userData.pick, point: hit.point };
+      if (o && (!accept || accept(o.userData.pick, hit.point))) return { object: o, data: o.userData.pick, point: hit.point };
     }
     return null;
   }

@@ -5,10 +5,10 @@ import type { HomeAssistant, Plan, Vec2 } from '../types';
 import { layoutWalls, projectOnSegment } from './walls';
 
 const OPENING_TYPES = ['door', 'window', 'garage', 'gap'];
-const DEVICE_TYPES = ['light', 'camera', 'tv', 'climate', 'appliance', 'vacuum', 'sensor', 'car', 'sprinkler'];
+const DEVICE_TYPES = ['light', 'camera', 'tv', 'climate', 'appliance', 'vacuum', 'sensor', 'car', 'sprinkler', 'meter'];
 const OUTDOOR_KINDS = ['grass', 'paving', 'terrace', 'parking', 'water'];
 const FURNITURE_TYPES = [
-  'bed', 'wardrobe', 'dresser', 'desk', 'sofa', 'bookshelf', 'counter', 'cabinet', 'fridge', 'table', 'chair', 'bathtub', 'shower', 'box',
+  'bed', 'wardrobe', 'dresser', 'desk', 'sofa', 'bookshelf', 'counter', 'cabinet', 'fridge', 'table', 'chair', 'bathtub', 'shower', 'stove', 'box',
 ];
 const SIDES = ['up', 'down', 'left', 'right'];
 
@@ -119,12 +119,16 @@ export function missingEntities(plan: Plan, hass: HomeAssistant): string[] {
   for (const f of plan.floors ?? []) {
     for (const d of f.devices ?? []) {
       ids.add(d.entity);
-      for (const k of ['power', 'presence', 'stream'] as const) if ((d as any)[k]) ids.add((d as any)[k]);
+      for (const k of ['power', 'presence', 'stream', 'index'] as const) if ((d as any)[k]) ids.add((d as any)[k]);
       for (const m of (d as any).motion ?? []) ids.add(m);
     }
     for (const o of f.openings ?? []) if (o.entity) ids.add(o.entity);
     for (const r of f.rooms ?? []) for (const k of ['temperature', 'humidity'] as const) if (r[k]) ids.add(r[k]!);
   }
   if (plan.weather_entity) ids.add(plan.weather_entity);
+  for (const b of plan.bills ?? []) {
+    ids.add(b.entity);
+    if (b.due && /^[a-z_]+\.[a-z0-9_]+$/.test(b.due)) ids.add(b.due);
+  }
   return [...ids].filter((id) => id && !hass.states[id]).map((id) => `Entity "${id}" is not in Home Assistant (renamed or removed?).`);
 }

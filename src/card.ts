@@ -9,7 +9,7 @@ import { MotionTrail } from './scene/trail';
 import { STYLES } from './ui/styles';
 import { missingEntities, validatePlan } from './plan/validate';
 import { findIssues, type Issue } from './attention';
-import { TOGGLEABLE, cameraUrl, isOn, isUnavailable, moreInfo, nameOf, num, stateOf, toggle } from './ha';
+import { TOGGLEABLE, cameraUrl, isOn, isUnavailable, moreInfo, nameOf, navigate, num, stateOf, toggle } from './ha';
 import type { CameraDevice, CardConfig, HassEntity, HomeAssistant, Plan, ThemeName, Vec2 } from './types';
 
 const VERSION = '0.2.0';
@@ -312,6 +312,8 @@ export class NeonHouseCard extends HTMLElement {
         if (!view) continue;
         fv.devices.add(view.object);
         this.devices.push(view);
+        // a camera's name tag opens its live view
+        if (d.type === 'camera' && view.badge) view.badge.el.onclick = () => this.openCockpit(view);
         for (const e of view.entities) {
           if (!this.byEntity.has(e)) this.byEntity.set(e, []);
           this.byEntity.get(e)!.push(view);
@@ -707,6 +709,8 @@ export class NeonHouseCard extends HTMLElement {
     for (const fv of [...this.floors].reverse())
       chips.push(`<button class="nh-chip ${this.selectedFloor === fv.floor.id ? 'on' : ''}" data-floor="${fv.floor.id}">${escapeHtml(fv.floor.name)}</button>`);
     chips.push(`<span class="nh-spacer"></span>`);
+    for (const l of this.config?.links ?? [])
+      chips.push(`<button class="nh-chip nh-link" data-link="${escapeHtml(l.path)}">${escapeHtml(l.name)} ↗</button>`);
     if (this.config?.attention !== false) chips.push(this.attentionChip());
     chips.push(
       `<span class="nh-seg">${(['neon', 'blueprint', 'day'] as const)
@@ -720,6 +724,7 @@ export class NeonHouseCard extends HTMLElement {
     );
     el.innerHTML = chips.join('');
     el.querySelectorAll<HTMLElement>('[data-floor]').forEach((b) => (b.onclick = () => this.selectFloor(b.dataset.floor || null)));
+    el.querySelectorAll<HTMLElement>('[data-link]').forEach((b) => (b.onclick = () => navigate(b.dataset.link!)));
     el.querySelectorAll<HTMLElement>('[data-theme]').forEach(
       (b) =>
         (b.onclick = () => {
@@ -801,6 +806,7 @@ export class NeonHouseCard extends HTMLElement {
   private renderAttention() {
     const groups: [string, Issue['kind']][] = [
       ['Problems', 'problem'],
+      ['Bills', 'bill'],
       ['Batteries', 'battery'],
       ['Unavailable on the plan', 'offline'],
     ];
@@ -1073,6 +1079,8 @@ export class NeonHouseCard extends HTMLElement {
     let down: { x: number; y: number; t: number; id: number } | null = null;
     let pressTimer = 0;
     stage.addEventListener('pointerdown', (e) => {
+      // clickable labels (a camera's name tag) handle their own clicks
+      if ((e.target as HTMLElement).closest?.('.nh-cam, .nh-floor')) return;
       down = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
       clearTimeout(pressTimer);
       pressTimer = window.setTimeout(() => {
@@ -1112,8 +1120,14 @@ export class NeonHouseCard extends HTMLElement {
     el.classList.add('show');
   }
 
+  /** is a world point over a room (on any floor)? */
+  private overRoom(p: THREE.Vector3): boolean {
+    return this.floors.some((fv) => fv.group.visible && fv.floor.rooms.some((r) => pointInPolygon([p.x, p.z], r.polygon)));
+  }
+
   private tap(x: number, y: number) {
-    const hit = this.engine?.pick(x, y);
+    // a camera cone reaching over the house must not swallow taps meant for the rooms
+    const hit = this.engine?.pick(x, y, (data, point) => !(data.wedge && this.overRoom(point)));
     const hass = this._hass;
     if (!hit || !hass) {
       if (this.panelArea) this.closePanel();

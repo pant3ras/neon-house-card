@@ -3,7 +3,7 @@
 
 import type { HassEntity, HomeAssistant, Plan } from './types';
 
-export type IssueKind = 'problem' | 'battery' | 'offline';
+export type IssueKind = 'problem' | 'bill' | 'battery' | 'offline';
 
 export interface Issue {
   kind: IssueKind;
@@ -27,13 +27,42 @@ function age(s: HassEntity): string {
   return `${Math.round(ms / (24 * HOUR))} days`;
 }
 
+/** "208,24 lei", "1.234,56", "73.3", 12 → a number */
+export function parseMoney(v: unknown): number {
+  if (typeof v === 'number') return v;
+  let s = String(v ?? '').replace(/[^0-9,.\-]/g, '');
+  if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
+  else s = s.replace(',', '.');
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+/** a due date from an attribute of the bill's entity or from another entity */
+function dueDate(hass: HomeAssistant, s: HassEntity, due?: string): { text: string; date?: Date } | null {
+  if (!due) return null;
+  const raw = /^[a-z_]+\.[a-z0-9_]+$/.test(due) ? hass.states[due]?.state : s.attributes[due];
+  if (raw == null || raw === '' || raw === 'unknown' || raw === 'unavailable') return null;
+  const text = String(raw);
+  const iso = Date.parse(text);
+  if (!Number.isNaN(iso) && /^\d{4}-\d{2}-\d{2}/.test(text)) {
+    const date = new Date(iso);
+    return { text: date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }), date };
+  }
+  const ro = text.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/); // 31.10.2026 or 31/10/2026
+  if (ro) {
+    const date = new Date(Number(ro[3]), Number(ro[2]) - 1, Number(ro[1]));
+    return { text: date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }), date };
+  }
+  return { text };
+}
+
 /** every entity the plan shows, so a device going unavailable there is noticed */
 export function planEntities(plan: Plan): Set<string> {
   const ids = new Set<string>();
   for (const f of plan.floors ?? []) {
     for (const d of f.devices ?? []) {
       ids.add(d.entity);
-      for (const k of ['power', 'presence', 'stream']) if ((d as any)[k]) ids.add((d as any)[k]);
+      for (const k of ['power', 'presence', 'stream', 'index']) if ((d as any)[k]) ids.add((d as any)[k]);
       for (const m of (d as any).motion ?? []) ids.add(m);
     }
     for (const o of f.openings ?? []) if (o.entity) ids.add(o.entity);
@@ -77,6 +106,27 @@ export function findIssues(hass: HomeAssistant, plan: Plan | undefined, opts: At
     if (domain === 'binary_sensor' && PROBLEM_CLASSES.has(dc) && s.state === 'on') {
       add(id, 'problem', s.attributes.friendly_name ?? id, 4);
     }
+  }
+
+  // utility bills with something owed
+  for (const b of plan?.bills ?? []) {
+    const s = hass.states[b.entity];
+    if (!s || DEAD(s)) continue;
+    if (['nu', 'no', 'off', 'false'].includes(s.state.toLowerCase())) continue; // "nothing owed"
+    const raw = b.attribute ? s.attributes[b.attribute] : s.state;
+    const amount = parseMoney(raw);
+    if (!(amount > 0.005)) continue;
+    const unit = s.attributes.unit_of_measurement ?? (/lei|ron/i.test(String(raw)) ? 'lei' : '');
+    const due = dueDate(hass, s, b.due);
+    const late = due && due.date && due.date.getTime() < Date.now() - 24 * HOUR;
+    found.push({
+      kind: 'bill',
+      entity: b.entity,
+      name: b.name,
+      detail: `${amount.toFixed(2)} ${unit} owed${due ? ` · ${late ? 'was due' : 'due'} ${due.text}` : ''}`.replace(/\s+/g, ' '),
+      severity: late ? 3 : 2,
+      device: `bill:${b.name}`,
+    });
   }
 
   // devices shown on the plan that dropped out

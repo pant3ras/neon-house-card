@@ -50,6 +50,16 @@ export function kelvinToColor(k: number): THREE.Color {
 /** 0..1 brightness of a light that is on */
 export const brightness = (s?: HassEntity) => (isOn(s) ? (s!.attributes.brightness ?? 255) / 255 : 0);
 
+/** go to another dashboard/view inside Home Assistant without reloading the page */
+export function navigate(path: string) {
+  if (/^https?:/.test(path)) {
+    window.open(path, '_blank', 'noopener');
+    return;
+  }
+  history.pushState(null, '', path);
+  window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
+}
+
 /** opens Home Assistant's own dialog for an entity (live camera, history, settings) */
 export function moreInfo(from: HTMLElement, entityId: string) {
   from.dispatchEvent(new CustomEvent('hass-more-info', { detail: { entityId }, bubbles: true, composed: true }));

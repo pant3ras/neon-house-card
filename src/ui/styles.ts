@@ -57,10 +57,13 @@ export const STYLES = `
   backdrop-filter: blur(6px);
 }
 .nh-badge .ico { color: var(--nh-accent); font-size: 10px; }
+.nh-labels > .nh-badge.nh-cam { pointer-events: auto; cursor: pointer; }
+.nh-badge.nh-cam:hover { border-color: var(--nh-accent); }
 .nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }
 .nh-badge.alarm .ico { color: #fff; }
 .nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }
 .nh-badge.off { opacity: .55; }
+.nh-badge .sub { color: var(--nh-muted); font-weight: 500; }
 .nh-trail {
   padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;
   background: rgba(255,90,60,.85); color: #fff;

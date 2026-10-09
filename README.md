@@ -66,6 +66,7 @@ For a full-screen 3D view, put it alone in a **Panel** view with `fill: true`.
 | `attention` | `true` | The "needs attention" chip. |
 | `attention_exclude_label` | `no_battery_alerts` | Label that keeps an entity out of battery warnings. |
 | `battery_low` | `20` | Battery percentage counted as low. |
+| `links` | – | Buttons to other dashboards: `[{ name: Utilities, path: /my-dashboard/utilities }]`. |
 | `stats` | `false` | Frame rate. |
 
 ## The plan
@@ -146,6 +147,10 @@ All devices have `type`, `entity`, `pos: [x, y]`, and optionally `rot` (facing: 
 | `vacuum` | `pos` is the dock |
 | `car` | `presence` (drawn while on/home), `length`, `width` |
 | `sprinkler` | `entity` is a valve (or switch); `radius`, `arc` (degrees, centred on `rot`). Sprays while open; a tap opens HA's dialog rather than the water |
+| `meter` | `kind`: `electricity`, `gas`, `water`; `entity` = the figure on its label (e.g. this month), `index` = a second figure, `unit` to label a unitless sensor, `underground` (default for water: a lid in the ground) |
+
+Camera cones are drawn outside the house only, and a tap on a room under a cone selects the room –
+open a camera by tapping the camera or its name tag.
 
 ### Furniture
 
@@ -157,11 +162,27 @@ A piece is a rectangle between two opposite corners, under the floor's `"furnitu
 ```
 
 Types: `bed`, `wardrobe`, `dresser`, `desk`, `sofa`, `bookshelf`, `counter`, `cabinet`, `fridge`,
-`table`, `chair`, `bathtub`, `shower`, `box`. The side against the wall (a bed's head) is found from
+`stove`, `table`, `chair`, `bathtub`, `shower`, `box`. The side against the wall (a bed's head) is found from
 the nearest wall; set `back` (`up`/`down`/`left`/`right`) to override. Optional: `height`, `arms`
 (sofas: which short ends get an armrest), `upper` (counters: `false` for no wall cabinets, `2` for two
 rows up to the ceiling), `round: true` (tables), `monitor: false` (desks), `z` (stand on something, e.g.
 `0.08` on a terrace slab), `name`. Outdoor furniture has no wall nearby – give it a `back`.
+
+### Bills
+
+Utility bills join "needs attention" when something is owed:
+
+```json
+"bills": [
+  { "name": "Electricity", "entity": "sensor.electricity_balance" },
+  { "name": "Gas", "entity": "sensor.gas_account", "attribute": "Balance", "due": "Due date" },
+  { "name": "Internet", "entity": "sensor.isp_unpaid_total", "due": "sensor.isp_due_date" }
+]
+```
+
+The amount comes from the state or an `attribute` (`"208,24 lei"` and `"1.234,56"` are understood); a
+state of `Nu`/`No`/`off` means nothing is owed. `due` is an attribute or an entity; past due turns the
+row red.
 
 ### Outside, roof, sun
 

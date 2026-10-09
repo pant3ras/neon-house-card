@@ -15,6 +15,7 @@ import {
 } from './geo';
 import type { Theme } from './theme';
 import { buildFurniture } from './furniture';
+import { ROOM_FLOOR_STENCIL } from './devices';
 
 export const CUT_HEIGHT = 1.05;
 const SLAB = 0.18;
@@ -93,6 +94,7 @@ export function buildFloor(floor: Floor, theme: Theme, cut: boolean): FloorView 
       roughness: 0.85,
       metalness: 0.05,
       emissive: 0x000000,
+      ...ROOM_FLOOR_STENCIL, // marks "inside", so camera cones stay outside
     });
     const slab = new THREE.Mesh(slabGeometry(room.polygon, 0, SLAB), material);
     slab.receiveShadow = true;

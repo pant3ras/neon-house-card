@@ -46,7 +46,7 @@ const PALETTES: Record<Theme['name'], Palette> = {
 
 const DEFAULT_HEIGHT: Record<string, number> = {
   bed: 1.0, wardrobe: 2.2, dresser: 0.85, desk: 0.76, sofa: 0.82, bookshelf: 2.0,
-  counter: 0.9, cabinet: 2.0, fridge: 1.85, table: 0.76, chair: 0.9, bathtub: 0.55, shower: 2.05, box: 0.8,
+  counter: 0.9, cabinet: 2.0, fridge: 1.85, table: 0.76, chair: 0.9, bathtub: 0.55, shower: 2.05, stove: 0.9, box: 0.8,
 };
 
 /** the side of a rectangle closest to a wall; beds pick from their short sides, others from their long sides */
@@ -221,6 +221,25 @@ export function buildFurniture(floor: Floor, walls: LaidWall[], theme: Theme, ma
         box(L * 0.4, L, D - 0.03, D, 0.05, H, glass, 0, true);
         box(0.12, 0.16, 0.02, 0.06, 0.05, H, pal.metal, 0, false);
         box(0.04, 0.24, 0.04, 0.3, H - 0.04, H, pal.metal, pal.screen, false);
+        break;
+      }
+      case 'stove': {
+        // a free-standing cooker: glass hob with four rings, oven door with a handle
+        box(0, L, 0, D, 0, H - 0.03, pal.white);
+        box(0, L, 0, D, H - 0.03, H, 0x0a0f1a, 0, true);
+        if (H <= maxHeight) {
+          for (const [fu, fv, r] of [[0.28, 0.3, 0.09], [0.72, 0.3, 0.07], [0.28, 0.72, 0.07], [0.72, 0.72, 0.09]]) {
+            const ring: THREE.Vector3[] = [];
+            for (let i = 0; i < 24; i++) {
+              const a = (i / 24) * Math.PI * 2;
+              ring.push(P(L * fu + Math.cos(a) * r, D * fv + Math.sin(a) * r, H + 0.003));
+            }
+            edges.loop(ring);
+          }
+        }
+        frontLine(0.04, H * 0.12, L - 0.04, H * 0.12);
+        frontLine(0.04, H * 0.78, L - 0.04, H * 0.78);
+        frontLine(L * 0.2, H * 0.72, L * 0.8, H * 0.72);
         break;
       }
       case 'dresser': {

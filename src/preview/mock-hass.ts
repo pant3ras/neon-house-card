@@ -51,6 +51,11 @@ function guess(id: string, role: string, n: number): HassEntity {
   const [domain, obj] = id.split('.');
   const name = titleOf(id);
   const a: Attrs = { friendly_name: name };
+  if (role.startsWith('meter-')) {
+    const kind = role.slice(6);
+    const unit = kind === 'electricity' ? 'kWh' : 'm³';
+    return entity(id, String(kind === 'electricity' ? 184 + n : 3.2 + n / 10), { ...a, unit_of_measurement: unit });
+  }
   switch (domain) {
     case 'light': {
       const colours = [[120, 60, 255], [255, 140, 60], [60, 200, 255]];
@@ -117,6 +122,11 @@ export function createMockHass(plan: Plan): MockHass {
     const roomArea = (p: Vec2) => f.rooms?.find((r) => r.area && Array.isArray(r.polygon) && inside(p, r.polygon))?.area;
     for (const d of f.devices ?? []) {
       const area = Array.isArray(d.pos) ? roomArea(d.pos) : undefined;
+      if (d.type === 'meter') {
+        add(d.entity, `meter-${d.kind}`, area);
+        add(d.index, `meter-${d.kind}`, area);
+        continue;
+      }
       add(d.entity, (d as any).kind, area);
       for (const k of ['power', 'presence', 'stream']) add((d as any)[k], k, area);
       for (const m of (d as any).motion ?? []) add(m, 'motion', area);
@@ -130,6 +140,18 @@ export function createMockHass(plan: Plan): MockHass {
       add(r.humidity, 'humidity', r.area);
     }
   }
+
+  // bills: everything paid except the first one, so "needs attention" has something to show
+  (plan.bills ?? []).forEach((b, i) => {
+    const owed = i === 0;
+    states[b.entity] = entity(
+      b.entity,
+      b.attribute ? (owed ? 'Da' : 'Nu') : owed ? '123.45' : '0',
+      b.attribute ? { friendly_name: b.name, [b.attribute]: owed ? '123,45 lei' : '0,00 lei' } : { friendly_name: b.name, unit_of_measurement: 'RON' },
+    );
+    if (b.due && /^[a-z_]+\.[a-z0-9_]+$/.test(b.due)) states[b.due] = entity(b.due, '2026-10-31', { friendly_name: `${b.name} due` });
+    else if (b.due) states[b.entity].attributes[b.due] = '31.10.2026';
+  });
 
   const entities: NonNullable<HomeAssistant['entities']> = {};
   for (const id of Object.keys(states)) entities[id] = { entity_id: id, area_id: areaOf[id] };
