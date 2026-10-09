@@ -10,9 +10,11 @@ import { STYLES } from './ui/styles';
 import { missingEntities, validatePlan } from './plan/validate';
 import { findIssues, type Issue } from './attention';
 import { TOGGLEABLE, cameraUrl, isOn, isUnavailable, moreInfo, nameOf, num, stateOf, toggle } from './ha';
-import type { CameraDevice, CardConfig, HassEntity, HomeAssistant, Plan, ThemeName } from './types';
+import type { CameraDevice, CardConfig, HassEntity, HomeAssistant, Plan, ThemeName, Vec2 } from './types';
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
+/** the URL this module was loaded from (HACS adds ?hacstag=<version>) */
+const LOADED_FROM = import.meta.url;
 const APART_GAP = 3.2;
 const PREFS_KEY = 'neon-house-prefs';
 
@@ -75,6 +77,7 @@ export class NeonHouseCard extends HTMLElement {
   private panelArea?: { title: string; area?: string; room?: RoomInfo; attention?: boolean };
   private issues: Issue[] = [];
   private attentionTimer = 0;
+  private updateChecked = false;
   private cockpit?: DeviceView;
   private cockpitTimer = 0;
   private seen = new Map<string, HassEntity | undefined>();
@@ -133,6 +136,10 @@ export class NeonHouseCard extends HTMLElement {
   set hass(hass: HomeAssistant) {
     this._hass = hass;
     this.ctx.hass = hass;
+    if (!this.updateChecked) {
+      this.updateChecked = true;
+      void this.checkForUpdate();
+    }
     if (!this.built) this.maybeBuild();
     // the first states after a build get the full treatment (room sensors, weather …)
     else this.applyHass(this.seen.size === 0);
@@ -317,7 +324,7 @@ export class NeonHouseCard extends HTMLElement {
     this.rooms = this.floors.flatMap((fv) =>
       fv.rooms.map((rv) => ({
         view: rv,
-        lights: this.devices.filter((d) => d.floor === fv.floor && d.device.type === 'light' && pointInPolygon(d.device.pos, rv.room.polygon)),
+        lights: this.devices.filter((d) => d.floor === fv.floor && d.device.type === 'light' && insideRoom(d, rv.room.polygon)),
         temperature: rv.room.temperature,
         humidity: rv.room.humidity,
       })),
@@ -735,6 +742,28 @@ export class NeonHouseCard extends HTMLElement {
     this.bindAttentionChip();
   }
 
+  /**
+   * After a HACS update the browser can keep running the old copy until a full reload. The
+   * registered resource URL carries the new version, so compare it with the URL we came from.
+   */
+  private async checkForUpdate() {
+    try {
+      const resources = await this._hass!.callWS<{ url: string }[]>({ type: 'lovelace/resources' });
+      const mine = resources.find((r) => r.url.includes('neon-house-card.js'));
+      if (!mine) return;
+      const want = new URL(mine.url, location.origin);
+      const have = new URL(LOADED_FROM);
+      if (want.pathname !== have.pathname || want.search === have.search) return;
+      const el = document.createElement('button');
+      el.className = 'nh-update';
+      el.textContent = '⟳ Neon House was updated – tap to reload';
+      el.onclick = () => location.reload();
+      this.els.root.appendChild(el);
+    } catch {
+      /* not an admin, or not in Home Assistant: no check */
+    }
+  }
+
   // ---------- needs attention ----------
 
   private attentionChip(): string {
@@ -920,7 +949,7 @@ export class NeonHouseCard extends HTMLElement {
     if (p.attention) return this.renderAttention();
     const ids = new Set<string>(p.area ? this.areaEntities(p.area) : []);
     // devices drawn in this room count too, even if their HA area differs
-    if (p.room) for (const d of this.devices) if (d.floor === p.room.view.floor && pointInPolygon(d.device.pos, p.room.view.room.polygon)) ids.add(d.device.entity);
+    if (p.room) for (const d of this.devices) if (d.floor === p.room.view.floor && insideRoom(d, p.room.view.room.polygon)) ids.add(d.device.entity);
     const groups: Record<string, string[]> = { Controls: [], Cameras: [], Sensors: [], Other: [] };
     for (const id of ids) {
       const domain = id.split('.')[0];
@@ -1132,6 +1161,9 @@ export class NeonHouseCard extends HTMLElement {
 }
 
 // ---------- helpers ----------
+
+/** string lights have a path instead of a position and belong to no room */
+const insideRoom = (d: DeviceView, poly: Vec2[]) => Array.isArray(d.device.pos) && pointInPolygon(d.device.pos, poly);
 
 function tempColor(t: number): THREE.Color {
   // 16° blue → 21° green → 24° amber → 28° red

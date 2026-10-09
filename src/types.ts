@@ -122,9 +122,20 @@ interface DeviceBase {
 
 export interface LightDevice extends DeviceBase {
   type: 'light';
-  kind?: 'bulb' | 'strip' | 'flood' | 'lamp';
+  /** `desk` stands on a desk; `string` is fairy/Christmas lights along `path` */
+  kind?: 'bulb' | 'strip' | 'flood' | 'lamp' | 'desk' | 'string';
   /** strips: length in metres */
   length?: number;
+  /** string lights: the corners they run along (e.g. round the roof eaves) */
+  path?: Vec2[];
+  /** string lights: join the last corner back to the first (default true) */
+  closed?: boolean;
+  /** string lights: red, green, blue, yellow, pink bulbs instead of the light's colour */
+  multicolor?: boolean;
+  /** string lights: metres between bulbs (default 0.3) */
+  spacing?: number;
+  /** string lights: gentle twinkle while on (keeps the view animating) */
+  twinkle?: boolean;
 }
 
 export interface CameraDevice extends DeviceBase {

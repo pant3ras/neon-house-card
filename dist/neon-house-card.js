@@ -14338,7 +14338,7 @@ var $f = class {
 			antialias: t === "high",
 			alpha: !1,
 			powerPreference: "high-performance"
-		}), this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, t === "high" ? 2 : 1.25)), this.renderer.outputColorSpace = Ie, this.renderer.toneMapping = 4, this.renderer.toneMappingExposure = 1.05, this.renderer.shadowMap.enabled = t === "high", this.renderer.shadowMap.type = 2, this.renderer.domElement.className = "nh-canvas", e.appendChild(this.renderer.domElement), this.labels = new vf(), this.labels.domElement.className = "nh-labels", e.appendChild(this.labels.domElement), this.camera = new Ss(38, 1, .1, 400), this.camera.position.set(18, 16, 22), this.controls = new Rd(this.camera, this.renderer.domElement), this.controls.enableDamping = !0, this.controls.dampingFactor = .08, this.controls.maxPolarAngle = Math.PI * .49, this.controls.minDistance = 2, this.controls.maxDistance = 120, this.controls.screenSpacePanning = !0, this.controls.addEventListener("change", () => this.requestRender()), this.controls.addEventListener("start", () => this.flight = void 0), this.raycaster.camera = this.camera;
+		}), this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, t === "high" ? 2 : 1.25)), this.renderer.outputColorSpace = Ie, this.renderer.toneMapping = 4, this.renderer.toneMappingExposure = 1.05, this.renderer.shadowMap.enabled = t === "high", this.renderer.shadowMap.type = 2, this.renderer.domElement.className = "nh-canvas", e.appendChild(this.renderer.domElement), this.labels = new vf(), this.labels.domElement.className = "nh-labels", e.appendChild(this.labels.domElement), this.camera = new Ss(38, 1, .1, 400), this.camera.position.set(18, 16, 22), this.controls = new Rd(this.camera, this.renderer.domElement), this.controls.enableDamping = !0, this.controls.dampingFactor = .08, this.controls.maxPolarAngle = Math.PI * .49, this.controls.minDistance = 2, this.controls.maxDistance = 120, this.controls.screenSpacePanning = !0, this.controls.addEventListener("change", () => this.requestRender()), this.controls.addEventListener("start", () => this.flight = void 0), this.raycaster.camera = this.camera, this.raycaster.params.Points = { threshold: .2 };
 	}
 	applyTheme(e) {
 		this.scene.background = new Y(e.background), this.scene.fog = new jn(e.fog, 60, 180), this.renderer.toneMapping = e.name === "day" ? 4 : 6, this.renderer.toneMappingExposure = e.name === "day" ? 1 : 1.35, this.setupComposer(e), this.requestRender();
@@ -15591,16 +15591,16 @@ function im(e, t, n, r, i = 1.2) {
 	return o.dispose(), a.build(qf(r, i));
 }
 function am(e, t, n) {
-	if (!e?.entity || !Array.isArray(e.pos)) return null;
+	if (!e?.entity || !Array.isArray(e.pos) && !Array.isArray(e.path)) return null;
 	switch (e.type) {
 		case "light": return sm(e, t, n);
-		case "camera": return um(e, t, n);
-		case "tv": return fm(e, t, n);
-		case "climate": return mm(e, t, n);
-		case "appliance": return hm(e, t, n);
-		case "vacuum": return gm(e, t, n);
-		case "sensor": return _m(e, t, n);
-		case "car": return vm(e, t, n);
+		case "camera": return dm(e, t, n);
+		case "tv": return pm(e, t, n);
+		case "climate": return hm(e, t, n);
+		case "appliance": return gm(e, t, n);
+		case "vacuum": return _m(e, t, n);
+		case "sensor": return vm(e, t, n);
+		case "car": return ym(e, t, n);
 		case "sprinkler": return om(e, t, n);
 		default: return null;
 	}
@@ -15648,7 +15648,7 @@ function om(e, t, n) {
 		badge: _,
 		update(t) {
 			let n = Vp(t.hass, e.entity);
-			v = Hp(n), _.important = v, _.el.classList.toggle("active", v), _.el.classList.toggle("off", Up(n)), _.el.innerHTML = `<span class="ico">💧</span>${ym(e.name ?? n?.attributes.friendly_name ?? e.entity)}${v ? " · watering" : ""}`;
+			v = Hp(n), _.important = v, _.el.classList.toggle("active", v), _.el.classList.toggle("off", Up(n)), _.el.innerHTML = `<span class="ico">💧</span>${bm(e.name ?? n?.attributes.friendly_name ?? e.entity)}${v ? " · watering" : ""}`;
 		},
 		tick(e) {
 			let t = +!!v;
@@ -15666,60 +15666,127 @@ function om(e, t, n) {
 	return nm(s, S), S;
 }
 function sm(e, t, n) {
-	let r = e.kind ?? "bulb", i = new Cn(), a = e.z ?? (r === "strip" ? .9 : r === "flood" ? 2.6 : r === "lamp" ? 1.3 : t.height - .15);
+	let r = e.kind ?? "bulb";
+	if (r === "string" && Array.isArray(e.path) && e.path.length >= 2) return cm(e, t, n);
+	let i = new Cn(), a = e.z ?? (r === "strip" ? .9 : r === "flood" ? 2.6 : r === "lamp" ? 1.3 : r === "desk" ? 1.15 : t.height - .15);
 	i.position.copy(Hf(e.pos, a)), i.rotation.y = em(e.rot);
 	let o = new Po({
 		color: 2238515,
 		emissive: 0,
 		roughness: .4
 	}), s;
-	if (s = r === "strip" ? new Z(new Ki(e.length ?? 1.2, .03, .03), o) : r === "flood" ? new Z(new Ki(.18, .1, .08), o) : new Z(new bo(r === "lamp" ? .12 : .09, 18, 12), o), i.add(s), r === "lamp") {
-		let e = new Z(new Ji(.015, .015, a, 8), new Po({ color: n.theme.device }));
+	s = r === "strip" ? new Z(new Ki(e.length ?? 1.2, .03, .03), o) : r === "flood" ? new Z(new Ki(.18, .1, .08), o) : new Z(new bo(r === "lamp" ? .12 : r === "desk" ? .075 : .09, 18, 12), o), i.add(s);
+	let c = new Po({ color: n.theme.device });
+	if (r === "lamp") {
+		let e = new Z(new Ji(.015, .015, a, 8), c);
 		e.position.y = -a / 2, i.add(e);
 	}
-	let c = new ws(16777215, 0, r === "flood" ? 9 : r === "strip" ? 4.5 : 6.5, 1.6);
-	c.position.y = r === "strip" ? .15 : -.05, r === "flood" && c.position.set(0, -.3, -.6), i.add(c);
-	let l = new Yr(new Fr({
-		map: lm(),
+	if (r === "desk") {
+		let e = new Z(new Ji(.012, .012, .36, 8), c);
+		e.position.y = -.2;
+		let t = new Z(new Ji(.075, .08, .02, 20), c);
+		t.position.y = -.38, i.add(e, t);
+	}
+	let l = new ws(16777215, 0, r === "flood" ? 9 : r === "strip" ? 4.5 : r === "desk" ? 3.5 : 6.5, 1.6);
+	l.position.y = r === "strip" ? .15 : -.05, r === "flood" && l.position.set(0, -.3, -.6), i.add(l);
+	let u = new Yr(new Fr({
+		map: um(),
 		color: 16777215,
 		transparent: !0,
 		opacity: 0,
 		depthWrite: !1,
 		blending: 2
 	}));
-	l.scale.setScalar(r === "strip" ? Math.min(1.4, (e.length ?? 1.2) * .9) : .7), i.add(l);
-	let u = new Y(16767392), d = 0, f = 0, p = {
+	u.scale.setScalar(r === "strip" ? Math.min(1.4, (e.length ?? 1.2) * .9) : r === "desk" ? .45 : .7), i.add(u);
+	let d = new Y(16767392), f = 0, p = 0, m = {
 		device: e,
 		floor: t,
 		object: i,
 		entities: [e.entity],
 		update(t) {
 			let n = Vp(t.hass, e.entity);
-			u = Kp(n), d = Jp(n), o.color.set(Up(n) ? 3817290 : 2765120), l.material.color.copy(u);
+			d = Kp(n), f = Jp(n), o.color.set(Up(n) ? 3817290 : 2765120), u.material.color.copy(d);
 		},
 		tick(e) {
-			let t = d - f;
-			return Math.abs(t) < .003 ? f = d : f += t * Math.min(1, e * 8), c.color.copy(u), c.intensity = f * (r === "flood" ? 10 : r === "strip" ? 3 : 3.5) * (n.theme.name === "day" ? .6 : 1), o.emissive.copy(u).multiplyScalar(f * 1.6), l.material.opacity = f * (n.theme.name === "day" ? .3 : .85), f !== d;
+			let t = f - p;
+			return Math.abs(t) < .003 ? p = f : p += t * Math.min(1, e * 8), l.color.copy(d), l.intensity = p * (r === "flood" ? 10 : r === "strip" ? 3 : r === "desk" ? 2 : 3.5) * (n.theme.name === "day" ? .6 : 1), o.emissive.copy(d).multiplyScalar(p * 1.6), u.material.opacity = p * (n.theme.name === "day" ? .3 : .85), p !== f;
 		},
 		glow() {
-			return d > 0 ? {
-				color: u,
-				amount: d
+			return f > 0 ? {
+				color: d,
+				amount: f
 			} : null;
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return nm(i, p), p;
+	return nm(i, m), m;
 }
-var cm = null;
-function lm() {
-	if (cm) return cm;
+function cm(e, t, n) {
+	let r = e.path, i = e.closed ?? !0, a = e.z ?? t.height - .05, o = Math.max(.1, e.spacing ?? .3), s = new Cn(), c = i ? [...r, r[0]] : r, l = new Wf(), u = [];
+	for (let e = 0; e < c.length - 1; e++) {
+		let t = Hf(c[e], a), n = Hf(c[e + 1], a);
+		l.seg(t, n);
+		let r = Math.max(1, Math.round(t.distanceTo(n) / o));
+		for (let e = 0; e < r; e++) u.push(t.clone().lerp(n, e / r).add(new K(0, e % 2 ? -.07 : -.03, 0)));
+	}
+	i || u.push(Hf(r[r.length - 1], a)), s.add(l.build(qf(n.theme.name === "day" ? 2831168 : 1451071, 1, .8)));
+	let d = e.multicolor ? [
+		16726855,
+		4063098,
+		3909887,
+		16765499,
+		16735984
+	].map((e) => new Y(e)) : null, f = new Float32Array(u.length * 3), p = new Float32Array(u.length * 3), m = u.map((e, t) => d ? d[t % d.length] : new Y(16767392));
+	u.forEach((e, t) => e.toArray(f, t * 3));
+	let h = new Tr();
+	h.setAttribute("position", new dr(f, 3)), h.setAttribute("color", new dr(p, 3));
+	let g = new zi(h, new Pi({
+		size: .32,
+		map: um(),
+		vertexColors: !0,
+		transparent: !0,
+		depthWrite: !1,
+		blending: n.theme.name === "day" ? 1 : 2
+	}));
+	s.add(g);
+	let _ = !1, v = 0, y = 0, b = () => {
+		for (let t = 0; t < m.length; t++) {
+			let n = e.twinkle ? .65 + .35 * Math.sin(y * 2.2 + t * 1.7) : 1, r = .12 + 1.8 * v * n;
+			p[t * 3] = m[t].r * r, p[t * 3 + 1] = m[t].g * r, p[t * 3 + 2] = m[t].b * r;
+		}
+		h.attributes.color.needsUpdate = !0;
+	};
+	b();
+	let x = {
+		device: e,
+		floor: t,
+		object: s,
+		entities: [e.entity],
+		update(t) {
+			let n = Vp(t.hass, e.entity);
+			if (_ = Hp(n), !d) {
+				let e = Kp(n);
+				m.forEach((t) => t.copy(e));
+			}
+		},
+		tick(t) {
+			y += t;
+			let n = +!!_;
+			return v += (n - v) * Math.min(1, t * 5), Math.abs(v - n) < .01 && (v = n), b(), v !== n || _ && !!e.twinkle;
+		},
+		focus: () => u[0].clone().add(s.getWorldPosition(new K()))
+	};
+	return nm(g, x), x;
+}
+var lm = null;
+function um() {
+	if (lm) return lm;
 	let e = document.createElement("canvas");
 	e.width = e.height = 64;
 	let t = e.getContext("2d"), n = t.createRadialGradient(32, 32, 0, 32, 32, 32);
-	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.25, "rgba(255,255,255,.55)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), cm = new Hi(e), cm;
+	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.25, "rgba(255,255,255,.55)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), lm = new Hi(e), lm;
 }
-function um(e, t, n) {
+function dm(e, t, n) {
 	let r = n.theme, i = new Cn(), a = e.z ?? 2.5;
 	i.position.copy(Hf(e.pos, a));
 	let o = new Cn();
@@ -15775,8 +15842,8 @@ function um(e, t, n) {
 			w = n.length > 0;
 			let i = Vp(t.hass, e.entity), a = e.name ?? i?.attributes.friendly_name?.replace(/ (live view|hd stream|sd stream)$/i, "") ?? e.entity;
 			E.el.classList.toggle("alarm", w), E.el.classList.toggle("off", Up(i));
-			let o = n.map((e) => dm(e, t.hass));
-			E.el.innerHTML = `<span class="ico">◉</span>${ym(a)}${w ? ` · <b>${ym([...new Set(o)].join(", ") || "motion")}</b>` : ""}`;
+			let o = n.map((e) => fm(e, t.hass));
+			E.el.innerHTML = `<span class="ico">◉</span>${bm(a)}${w ? ` · <b>${bm([...new Set(o)].join(", ") || "motion")}</b>` : ""}`;
 			let c = w ? r.alert : r.wallEdge;
 			g.color.set(c), y.color.set(c), s.emissive.set(w ? r.alert : 0), w || (g.opacity = .09, s.emissiveIntensity = 0);
 		},
@@ -15794,7 +15861,7 @@ function um(e, t, n) {
 	};
 	return nm(o, D), nm(_, D), D;
 }
-function dm(e, t) {
+function fm(e, t) {
 	for (let n of [t?.states[e]?.attributes.friendly_name, e]) {
 		let e = String(n ?? "").toLowerCase();
 		if (/person|people|human/.test(e)) return "person";
@@ -15804,7 +15871,7 @@ function dm(e, t) {
 	}
 	return "motion";
 }
-function fm(e, t, n) {
+function pm(e, t, n) {
 	let r = n.theme, i = e.width ?? 1.23, a = 9 / 16 * i, o = new Cn();
 	o.position.copy(Hf(e.pos, e.z ?? 1.25)), o.rotation.y = em(e.rot);
 	let s = new Po({
@@ -15844,17 +15911,17 @@ function fm(e, t, n) {
 					e.colorSpace = Ie, l.map?.dispose(), l.map = e, l.color.set(16777215), l.needsUpdate = !0, t.requestRender();
 				});
 			}
-			(!p || !r) && (f = void 0, l.map && (l.map.dispose(), l.map = null, l.needsUpdate = !0)), l.map || l.color.set(p ? pm(n?.attributes.app_name ?? n?.attributes.source) : 329224), d.intensity = p ? 2.2 : 0, d.color.set(p ? pm(n?.attributes.app_name ?? n?.attributes.source) : 0);
+			(!p || !r) && (f = void 0, l.map && (l.map.dispose(), l.map = null, l.needsUpdate = !0)), l.map || l.color.set(p ? mm(n?.attributes.app_name ?? n?.attributes.source) : 329224), d.intensity = p ? 2.2 : 0, d.color.set(p ? mm(n?.attributes.app_name ?? n?.attributes.source) : 0);
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
 	return nm(o, h), h;
 }
-function pm(e) {
+function mm(e) {
 	let t = (e ?? "").toLowerCase();
 	return t.includes("netflix") ? 15010068 : t.includes("youtube") ? 16722474 : t.includes("disney") ? 2052056 : t.includes("prime") ? 43233 : t.includes("hbo") || t.includes("max") ? 7023871 : t.includes("spotify") ? 1947988 : t.includes("tv") || t.includes("hdmi") ? 3112447 : 3829247;
 }
-function mm(e, t, n) {
+function hm(e, t, n) {
 	let r = n.theme, i = new Cn();
 	i.position.copy(Hf(e.pos, e.z ?? t.height - .4)), i.rotation.y = em(e.rot);
 	let a = new Po({
@@ -15902,7 +15969,7 @@ function mm(e, t, n) {
 	};
 	return nm(i, m), m;
 }
-function hm(e, t, n) {
+function gm(e, t, n) {
 	let r = n.theme, i = e.kind ?? "plug", [a, o, s] = {
 		purifier: [
 			.32,
@@ -15959,7 +16026,7 @@ function hm(e, t, n) {
 	};
 	return nm(c, f), f;
 }
-function gm(e, t, n) {
+function _m(e, t, n) {
 	let r = n.theme, i = new Cn(), a = Hf(e.pos, .06);
 	i.position.copy(a);
 	let o = new Po({
@@ -15991,7 +16058,7 @@ function gm(e, t, n) {
 			let l = s === "error";
 			c.color.set(l ? r.alert : h ? r.ok : r.wallEdge), o.emissive.set(h ? r.ok : 0), o.emissiveIntensity = h ? .25 : 0;
 			let u = n?.attributes.battery_level;
-			m.el.innerHTML = `<span class="ico">⬤</span>${ym(s)}${u == null ? "" : ` · ${u}%`}`, m.important = h || l, h || i.position.copy(a);
+			m.el.innerHTML = `<span class="ico">⬤</span>${bm(s)}${u == null ? "" : ` · ${u}%`}`, m.important = h || l, h || i.position.copy(a);
 		},
 		tick(e) {
 			return h ? (g += e * .35, i.position.set(a.x + Math.sin(g) * 1.4, a.y, a.z + Math.sin(g * 2) * .8 + .9), !0) : !1;
@@ -16000,7 +16067,7 @@ function gm(e, t, n) {
 	};
 	return nm(p, _), _;
 }
-function _m(e, t, n) {
+function vm(e, t, n) {
 	let r = n.theme, i = new Cn();
 	i.position.copy(Hf(e.pos, e.z ?? 1.5));
 	let a = new Z(new Ji(.05, .05, .03, 16), new Po({
@@ -16025,7 +16092,7 @@ function _m(e, t, n) {
 	};
 	return nm(i, s), s;
 }
-function vm(e, t, n) {
+function ym(e, t, n) {
 	let r = n.theme, i = e.length ?? 4.6, a = e.width ?? 1.85, o = new Cn();
 	o.position.copy(Hf(e.pos, 0)), o.rotation.y = em(e.rot);
 	let s = new Cn(), c = new Po({
@@ -16078,7 +16145,7 @@ function vm(e, t, n) {
 	};
 	return nm(o, b), b;
 }
-function ym(e) {
+function bm(e) {
 	return e.replace(/[&<>"]/g, (e) => ({
 		"&": "&amp;",
 		"<": "&lt;",
@@ -16088,13 +16155,13 @@ function ym(e) {
 }
 //#endregion
 //#region src/scene/weather.ts
-var bm = /* @__PURE__ */ new Set([
+var xm = /* @__PURE__ */ new Set([
 	"rainy",
 	"pouring",
 	"lightning-rainy",
 	"snowy-rainy",
 	"hail"
-]), xm = /* @__PURE__ */ new Set(["snowy", "snowy-rainy"]), Sm = {
+]), Sm = /* @__PURE__ */ new Set(["snowy", "snowy-rainy"]), Cm = {
 	cloudy: .9,
 	partlycloudy: .45,
 	rainy: .9,
@@ -16108,7 +16175,7 @@ var bm = /* @__PURE__ */ new Set([
 	windy: .3,
 	"windy-variant": .6,
 	exceptional: .8
-}, Cm = class {
+}, wm = class {
 	area;
 	theme;
 	group = new Cn();
@@ -16149,7 +16216,7 @@ var bm = /* @__PURE__ */ new Set([
 		let a = new Tr();
 		a.setAttribute("position", new dr(this.snowPos, 3)), this.snow = new zi(a, new Pi({
 			size: .09,
-			map: Em(),
+			map: Dm(),
 			color: 16777215,
 			transparent: !0,
 			opacity: .9,
@@ -16157,7 +16224,7 @@ var bm = /* @__PURE__ */ new Set([
 		})), this.snow.frustumCulled = !1;
 		for (let t = 0; t < n; t++) this.snowPos[t * 3] = e.center.x + (Math.random() - .5) * r, this.snowPos[t * 3 + 1] = Math.random() * 14, this.snowPos[t * 3 + 2] = e.center.z + (Math.random() - .5) * r;
 		this.group.add(this.snow);
-		let o = Om();
+		let o = km();
 		for (let n = 0; n < 12; n++) {
 			let r = new Yr(new Fr({
 				map: o,
@@ -16169,13 +16236,13 @@ var bm = /* @__PURE__ */ new Set([
 			r.scale.set(i, i * .5, 1), r.userData.angle = n / 12 * Math.PI * 2 + Math.random() * .4, r.userData.dist = e.radius * 1.6 + 6 + Math.random() * 10, r.userData.height = 16 + Math.random() * 6, r.userData.speed = .01 + Math.random() * .015, this.placeCloud(r), this.clouds.push(r), this.group.add(r);
 		}
 		this.sunSprite = new Yr(new Fr({
-			map: Em(),
+			map: Dm(),
 			color: 16765562,
 			transparent: !0,
 			depthWrite: !1,
 			blending: 2
 		})), this.sunSprite.scale.setScalar(6), this.moonSprite = new Yr(new Fr({
-			map: Em(),
+			map: Dm(),
 			color: 12375295,
 			transparent: !0,
 			depthWrite: !1,
@@ -16205,14 +16272,14 @@ var bm = /* @__PURE__ */ new Set([
 	}
 	update(e) {
 		let t = e.weather;
-		this.condition = t?.state ?? "sunny", this.rainAmount = this.enabled && bm.has(this.condition) ? this.condition === "pouring" ? 1 : .6 : 0, this.snowAmount = this.enabled && xm.has(this.condition) ? 1 : 0, this.cloudAmount = this.enabled ? Sm[this.condition] ?? .1 : 0;
+		this.condition = t?.state ?? "sunny", this.rainAmount = this.enabled && xm.has(this.condition) ? this.condition === "pouring" ? 1 : .6 : 0, this.snowAmount = this.enabled && Sm.has(this.condition) ? 1 : 0, this.cloudAmount = this.enabled ? Cm[this.condition] ?? .1 : 0;
 		let n = Number(t?.attributes.wind_speed ?? 0), r = (Number(t?.attributes.wind_bearing ?? 0) + 180 - e.north) * Math.PI / 180, i = Math.min(1, n / 50);
 		this.wind.set(Math.sin(r) * i * 4, 0, -Math.cos(r) * i * 4);
 		let a = e.sun, o = Number(a?.attributes.elevation ?? 35), s = Number(a?.attributes.azimuth ?? 180);
 		this.night = a ? a.state === "below_horizon" : !1;
-		let c = wm(s - e.north, Math.max(o, 4));
+		let c = Tm(s - e.north, Math.max(o, 4));
 		this.sunSprite.position.copy(this.area.center).addScaledVector(c, 55);
-		let l = wm(s + 180 - e.north, 35);
+		let l = Tm(s + 180 - e.north, 35);
 		this.moonSprite.position.copy(this.area.center).addScaledVector(l, 55);
 		let u = this.night ? l : c;
 		this.sunLight.position.copy(this.area.center).addScaledVector(u, 30);
@@ -16288,21 +16355,21 @@ var bm = /* @__PURE__ */ new Set([
 		});
 	}
 };
-function wm(e, t) {
+function Tm(e, t) {
 	let n = e * Math.PI / 180, r = t * Math.PI / 180;
 	return new K(Math.sin(n) * Math.cos(r), Math.sin(r), -Math.cos(n) * Math.cos(r));
 }
-var Tm = null;
-function Em() {
-	if (Tm) return Tm;
+var Em = null;
+function Dm() {
+	if (Em) return Em;
 	let e = document.createElement("canvas");
 	e.width = e.height = 64;
 	let t = e.getContext("2d"), n = t.createRadialGradient(32, 32, 0, 32, 32, 32);
-	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.35, "rgba(255,255,255,.7)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), Tm = new Hi(e), Tm;
+	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.35, "rgba(255,255,255,.7)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), Em = new Hi(e), Em;
 }
-var Dm = null;
-function Om() {
-	if (Dm) return Dm;
+var Om = null;
+function km() {
+	if (Om) return Om;
 	let e = document.createElement("canvas");
 	e.width = 256, e.height = 128;
 	let t = e.getContext("2d");
@@ -16310,11 +16377,11 @@ function Om() {
 		let e = 40 + Math.random() * 176, n = 50 + Math.random() * 40, r = 18 + Math.random() * 30, i = t.createRadialGradient(e, n, 0, e, n, r);
 		i.addColorStop(0, "rgba(255,255,255,.35)"), i.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = i, t.beginPath(), t.arc(e, n, r, 0, Math.PI * 2), t.fill();
 	}
-	return Dm = new Hi(e), Dm;
+	return Om = new Hi(e), Om;
 }
 //#endregion
 //#region src/scene/trail.ts
-var km = class {
+var Am = class {
 	theme;
 	group = new Cn();
 	minutes = 30;
@@ -16351,7 +16418,7 @@ var km = class {
 					time: r,
 					entity: t,
 					camera: i,
-					kind: dm(t, e)
+					kind: fm(t, e)
 				}), s = n.s;
 			}
 		}
@@ -16363,7 +16430,7 @@ var km = class {
 		for (let a of e) {
 			let e = i.get(a.camera) ?? 0;
 			i.set(a.camera, e + 1);
-			let o = Am(a.camera, e);
+			let o = jm(a.camera, e);
 			r.push(o);
 			let s = (n - a.time) / (this.minutes * 6e4), c = 1 - Math.min(.85, s), l = new Cn();
 			l.position.copy(o);
@@ -16403,18 +16470,18 @@ var km = class {
 		this.markers = [], this.count = 0;
 	}
 };
-function Am(e, t) {
+function jm(e, t) {
 	let n = e.device, r = (n.rot ?? 0) * Math.PI / 180, i = (n.range ?? 7) * .45, a = r + (t % 5 - 2) * .22, o = n.z ?? 2.5, s = new K(Math.sin(a) * i, -o + .05, -Math.cos(a) * i);
 	return e.object.updateWorldMatrix(!0, !1), e.object.localToWorld(s);
 }
 //#endregion
 //#region src/ui/styles.ts
-var jm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n/* its own stacking context: 3D labels (z-indexed by depth) stay under panels and chips */\n.nh-stage { position: absolute; inset: 0; isolation: isolate; z-index: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-attn { font-weight: 800; }\n.nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }\n.nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }\n.nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }\n.nh-item.attn .name { white-space: normal; }\n.nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }\n.nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }\n.nh-item.attn.sev3 .dot, .nh-item.attn.sev4 .dot { background: #ff5a3c; box-shadow: 0 0 10px #ff5a3c; }\n.nh-item.attn.sev1 .dot { background: var(--nh-muted); box-shadow: none; }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", Mm = [
+var Mm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n/* its own stacking context: 3D labels (z-indexed by depth) stay under panels and chips */\n.nh-stage { position: absolute; inset: 0; isolation: isolate; z-index: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-attn { font-weight: 800; }\n.nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }\n.nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }\n.nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }\n.nh-item.attn .name { white-space: normal; }\n.nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }\n.nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }\n.nh-item.attn.sev3 .dot, .nh-item.attn.sev4 .dot { background: #ff5a3c; box-shadow: 0 0 10px #ff5a3c; }\n.nh-item.attn.sev1 .dot { background: var(--nh-muted); box-shadow: none; }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-update {\n  position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  border: 0; font: inherit; font-weight: 700; cursor: pointer; background: var(--nh-accent); color: var(--nh-on-accent);\n  box-shadow: 0 0 24px -4px var(--nh-accent); white-space: nowrap;\n}\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", Nm = [
 	"door",
 	"window",
 	"garage",
 	"gap"
-], Nm = [
+], Pm = [
 	"light",
 	"camera",
 	"tv",
@@ -16424,13 +16491,13 @@ var jm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflo
 	"sensor",
 	"car",
 	"sprinkler"
-], Pm = [
+], Fm = [
 	"grass",
 	"paving",
 	"terrace",
 	"parking",
 	"water"
-], Fm = [
+], Im = [
 	"bed",
 	"wardrobe",
 	"dresser",
@@ -16445,13 +16512,13 @@ var jm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflo
 	"bathtub",
 	"shower",
 	"box"
-], Im = [
+], Lm = [
 	"up",
 	"down",
 	"left",
 	"right"
-], Lm = (e) => Array.isArray(e) && e.length === 2 && e.every((e) => typeof e == "number" && Number.isFinite(e)), Rm = (e) => `[${e[0]}, ${e[1]}]`;
-function zm(e) {
+], Rm = (e) => Array.isArray(e) && e.length === 2 && e.every((e) => typeof e == "number" && Number.isFinite(e)), zm = (e) => `[${e[0]}, ${e[1]}]`;
+function Bm(e) {
 	let t = 0;
 	for (let n = 0; n < e.length; n++) {
 		let [r, i] = e[n], [a, o] = e[(n + 1) % e.length];
@@ -16459,7 +16526,7 @@ function zm(e) {
 	}
 	return Math.abs(t / 2);
 }
-function Bm(e) {
+function Vm(e) {
 	let t = [];
 	if (!e || !Array.isArray(e.floors) || !e.floors.length) return ["The plan has no \"floors\"."];
 	let n = /* @__PURE__ */ new Set();
@@ -16473,13 +16540,13 @@ function Bm(e) {
 				t.push(`${r}: "polygon" needs at least 3 corner points.`), o = !1;
 				return;
 			}
-			let s = e.polygon.findIndex((e) => !Lm(e));
-			s >= 0 ? (t.push(`${r}: corner #${s + 1} is not a [x, y] pair of numbers.`), o = !1) : zm(e.polygon) < .3 && t.push(`${r}: the polygon has (almost) no area – are two corners swapped?`);
+			let s = e.polygon.findIndex((e) => !Rm(e));
+			s >= 0 ? (t.push(`${r}: corner #${s + 1} is not a [x, y] pair of numbers.`), o = !1) : Bm(e.polygon) < .3 && t.push(`${r}: the polygon has (almost) no area – are two corners swapped?`);
 		}), e.rooms?.length || t.push(`${i}: has no rooms.`), o) {
 			let n = hp(e);
 			(e.openings ?? []).forEach((e, r) => {
-				let a = `${i}, opening #${r + 1} (${e.type ?? "?"}${Lm(e.at) ? ` at ${Rm(e.at)}` : ""})`;
-				if (Mm.includes(e.type) || t.push(`${a}: "type" must be one of ${Mm.join(", ")}.`), !Lm(e.at)) return t.push(`${a}: "at" must be a [x, y] point on a wall.`);
+				let a = `${i}, opening #${r + 1} (${e.type ?? "?"}${Rm(e.at) ? ` at ${zm(e.at)}` : ""})`;
+				if (Nm.includes(e.type) || t.push(`${a}: "type" must be one of ${Nm.join(", ")}.`), !Rm(e.at)) return t.push(`${a}: "at" must be a [x, y] point on a wall.`);
 				(typeof e.width != "number" || e.width <= 0) && t.push(`${a}: "width" in metres is missing.`);
 				let o = Infinity, s = 0;
 				for (let t of n) {
@@ -16488,23 +16555,25 @@ function Bm(e) {
 				}
 				o > .6 ? t.push(`${a}: not on a wall (nearest wall is ${o.toFixed(2)} m away) – it is left out.`) : e.width > s && t.push(`${a}: ${e.width} m wide but the wall is only ${s.toFixed(2)} m long.`);
 			}), (e.walls ?? []).forEach((e, n) => {
-				(!Lm(e.a) || !Lm(e.b)) && t.push(`${i}, wall #${n + 1}: "a" and "b" must be [x, y] points.`);
+				(!Rm(e.a) || !Rm(e.b)) && t.push(`${i}, wall #${n + 1}: "a" and "b" must be [x, y] points.`);
 			});
 		}
 		(e.furniture ?? []).forEach((e, n) => {
 			let r = `${i}, furniture #${n + 1} (${e.type ?? "?"})`;
-			if (Fm.includes(e.type) || t.push(`${r}: "type" must be one of ${Fm.join(", ")}.`), !Lm(e.from) || !Lm(e.to)) return t.push(`${r}: "from" and "to" must be [x, y] corners.`);
-			(Math.abs(e.from[0] - e.to[0]) < .05 || Math.abs(e.from[1] - e.to[1]) < .05) && t.push(`${r}: "from" ${Rm(e.from)} and "to" ${Rm(e.to)} must be opposite corners (different x and y).`), e.back && !Im.includes(e.back) && t.push(`${r}: "back" must be one of ${Im.join(", ")}.`);
+			if (Im.includes(e.type) || t.push(`${r}: "type" must be one of ${Im.join(", ")}.`), !Rm(e.from) || !Rm(e.to)) return t.push(`${r}: "from" and "to" must be [x, y] corners.`);
+			(Math.abs(e.from[0] - e.to[0]) < .05 || Math.abs(e.from[1] - e.to[1]) < .05) && t.push(`${r}: "from" ${zm(e.from)} and "to" ${zm(e.to)} must be opposite corners (different x and y).`), e.back && !Lm.includes(e.back) && t.push(`${r}: "back" must be one of ${Lm.join(", ")}.`);
 		}), (e.devices ?? []).forEach((e, n) => {
 			let r = `${i}, device #${n + 1} (${e.type ?? "?"} ${e.entity ?? ""})`;
-			Nm.includes(e.type) || t.push(`${r}: "type" must be one of ${Nm.join(", ")}.`), e.entity || t.push(`${r}: needs an "entity".`), Lm(e.pos) || t.push(`${r}: "pos" must be a [x, y] point.`);
+			Pm.includes(e.type) || t.push(`${r}: "type" must be one of ${Pm.join(", ")}.`), e.entity || t.push(`${r}: needs an "entity".`);
+			let a = e.path;
+			a !== void 0 && (!Array.isArray(a) || a.length < 2 || !a.every(Rm)) ? t.push(`${r}: "path" needs at least 2 [x, y] corners.`) : a === void 0 && !Rm(e.pos) && t.push(`${r}: "pos" must be a [x, y] point.`);
 		});
 	}), (e.outdoor ?? []).forEach((e, n) => {
 		let r = `Outdoor area "${e.name ?? `#${n + 1}`}"`;
-		Pm.includes(e.kind) || t.push(`${r}: "kind" must be one of ${Pm.join(", ")}.`), (!Array.isArray(e.polygon) || e.polygon.length < 3 || !e.polygon.every(Lm)) && t.push(`${r}: "polygon" needs at least 3 [x, y] points.`);
+		Fm.includes(e.kind) || t.push(`${r}: "kind" must be one of ${Fm.join(", ")}.`), (!Array.isArray(e.polygon) || e.polygon.length < 3 || !e.polygon.every(Rm)) && t.push(`${r}: "polygon" needs at least 3 [x, y] points.`);
 	}), t;
 }
-function Vm(e, t) {
+function Hm(e, t) {
 	let n = /* @__PURE__ */ new Set();
 	for (let t of e.floors ?? []) {
 		for (let e of t.devices ?? []) {
@@ -16523,7 +16592,7 @@ function Vm(e, t) {
 }
 //#endregion
 //#region src/attention.ts
-var Hm = /* @__PURE__ */ new Set([
+var Um = /* @__PURE__ */ new Set([
 	"problem",
 	"safety",
 	"smoke",
@@ -16534,12 +16603,12 @@ var Hm = /* @__PURE__ */ new Set([
 	"battery",
 	"heat",
 	"cold"
-]), Um = (e) => e.state === "unavailable" || e.state === "unknown", Wm = 36e5;
-function Gm(e) {
-	let t = Date.now() - Date.parse(e.last_changed);
-	return Number.isFinite(t) ? t < Wm ? `${Math.max(1, Math.round(t / 6e4))} min` : t < 48 * Wm ? `${Math.round(t / Wm)} h` : `${Math.round(t / (24 * Wm))} days` : "";
-}
+]), Wm = (e) => e.state === "unavailable" || e.state === "unknown", Gm = 36e5;
 function Km(e) {
+	let t = Date.now() - Date.parse(e.last_changed);
+	return Number.isFinite(t) ? t < Gm ? `${Math.max(1, Math.round(t / 6e4))} min` : t < 48 * Gm ? `${Math.round(t / Gm)} h` : `${Math.round(t / (24 * Gm))} days` : "";
+}
+function qm(e) {
 	let t = /* @__PURE__ */ new Set();
 	for (let n of e.floors ?? []) {
 		for (let e of n.devices ?? []) {
@@ -16555,7 +16624,7 @@ function Km(e) {
 	}
 	return t;
 }
-function qm(e, t, n) {
+function Jm(e, t, n) {
 	let r = [], i = e.entities ?? {}, a = (t) => {
 		let n = i[t]?.device_id ? e.devices?.[i[t].device_id] : void 0;
 		return n?.name_by_user || n?.name || e.states[t]?.attributes.friendly_name || t;
@@ -16571,11 +16640,11 @@ function qm(e, t, n) {
 		let e = t.entity_id, r = i[e];
 		if (r?.hidden) continue;
 		let a = e.split(".")[0], s = t.attributes.device_class;
-		a === "sensor" && (s === "battery" || e.endsWith("_battery_state") || e.endsWith("_battery_level")) && !(r?.labels ?? []).includes(n.excludeLabel) ? Um(t) ? Date.now() - Date.parse(t.last_changed) > 12 * Wm && o(e, "battery", `offline for ${Gm(t)} – battery dead?`, 3) : t.state === "low" ? o(e, "battery", "battery low", 2) : s === "battery" && Number(t.state) < n.batteryLow && o(e, "battery", `battery ${Math.round(Number(t.state))}%`, 2) : a === "binary_sensor" && Hm.has(s) && t.state === "on" && o(e, "problem", t.attributes.friendly_name ?? e, 4);
+		a === "sensor" && (s === "battery" || e.endsWith("_battery_state") || e.endsWith("_battery_level")) && !(r?.labels ?? []).includes(n.excludeLabel) ? Wm(t) ? Date.now() - Date.parse(t.last_changed) > 12 * Gm && o(e, "battery", `offline for ${Km(t)} – battery dead?`, 3) : t.state === "low" ? o(e, "battery", "battery low", 2) : s === "battery" && Number(t.state) < n.batteryLow && o(e, "battery", `battery ${Math.round(Number(t.state))}%`, 2) : a === "binary_sensor" && Um.has(s) && t.state === "on" && o(e, "problem", t.attributes.friendly_name ?? e, 4);
 	}
-	if (t) for (let n of Km(t)) {
+	if (t) for (let n of qm(t)) {
 		let t = e.states[n];
-		t ? Um(t) && Date.now() - Date.parse(t.last_changed) > 6e5 && o(n, "offline", `unavailable for ${Gm(t)}`, 1) : o(n, "offline", "missing from Home Assistant (renamed?)", 1);
+		t ? Wm(t) && Date.now() - Date.parse(t.last_changed) > 6e5 && o(n, "offline", `unavailable for ${Km(t)}`, 1) : o(n, "offline", "missing from Home Assistant (renamed?)", 1);
 	}
 	let s = /* @__PURE__ */ new Map();
 	for (let e of r) s.has(e.device) || s.set(e.device, []), s.get(e.device).push(e);
@@ -16595,7 +16664,7 @@ function qm(e, t, n) {
 }
 //#endregion
 //#region src/card.ts
-var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
+var Ym = "0.2.0", Xm = import.meta.url, Zm = 3.2, Qm = "neon-house-prefs", $m = {
 	theme: "neon",
 	markers: "important",
 	cut: !1,
@@ -16605,7 +16674,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 	weather: !0,
 	trail: !1,
 	heatmap: "none"
-}, Qm = class extends HTMLElement {
+}, eh = class extends HTMLElement {
 	config;
 	_hass;
 	plan;
@@ -16613,7 +16682,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 	shadow;
 	engine;
 	theme = tp.neon;
-	prefs = { ...Zm };
+	prefs = { ...$m };
 	floors = [];
 	devices = [];
 	byEntity = /* @__PURE__ */ new Map();
@@ -16630,6 +16699,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 	panelArea;
 	issues = [];
 	attentionTimer = 0;
+	updateChecked = !1;
 	cockpit;
 	cockpitTimer = 0;
 	seen = /* @__PURE__ */ new Map();
@@ -16645,7 +16715,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 		requestRender: () => this.engine?.requestRender()
 	};
 	constructor() {
-		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = ih();
+		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = sh();
 	}
 	static getStubConfig() {
 		return {
@@ -16656,10 +16726,10 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 	setConfig(e) {
 		if (!e.plan && !e.plan_url) throw Error("neon-house-card: set `plan` or `plan_url`");
 		let t = JSON.stringify(e) !== JSON.stringify(this.config);
-		this.config = e, e.theme && !rh() && (this.prefs.theme = e.theme), e.heatmap && !rh() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
+		this.config = e, e.theme && !oh() && (this.prefs.theme = e.theme), e.heatmap && !oh() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
 	}
 	set hass(e) {
-		this._hass = e, this.ctx.hass = e, this.built ? this.applyHass(this.seen.size === 0) : this.maybeBuild();
+		this._hass = e, this.ctx.hass = e, this.updateChecked || (this.updateChecked = !0, this.checkForUpdate()), this.built ? this.applyHass(this.seen.size === 0) : this.maybeBuild();
 	}
 	get hass() {
 		return this._hass;
@@ -16693,7 +16763,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 	ensureDom() {
 		if (this.els) return;
 		this.shadow.innerHTML = `
-      <style>${jm}</style>
+      <style>${Mm}</style>
       <div class="nh-root">
         <div class="nh-stage"></div>
         <div class="nh-top">
@@ -16738,7 +16808,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 			this.build();
 		} catch (e) {
 			console.error(e);
-			let t = Bm(this.plan);
+			let t = Vm(this.plan);
 			this.showError(`neon-house: ${e.message}${t.length ? `\n\nProblems in the plan:\n• ${t.join("\n• ")}` : ""}`);
 		}
 	}
@@ -16778,10 +16848,10 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 		}
 		if (this.indexOpenings(), this.rooms = this.floors.flatMap((e) => e.rooms.map((t) => ({
 			view: t,
-			lights: this.devices.filter((n) => n.floor === e.floor && n.device.type === "light" && Yf(n.device.pos, t.room.polygon)),
+			lights: this.devices.filter((n) => n.floor === e.floor && n.device.type === "light" && th(n, t.room.polygon)),
 			temperature: t.room.temperature,
 			humidity: t.room.humidity
-		}))), e.roof && o.length && (this.roof = Ip(o.at(-1), e.roof, this.theme), a.add(this.roof)), this.weather = new Cm({
+		}))), e.roof && o.length && (this.roof = Ip(o.at(-1), e.roof, this.theme), a.add(this.roof)), this.weather = new wm({
 			center: this.houseCenter.clone().setY(0),
 			radius: this.houseRadius
 		}, this.theme, n ? 1400 : 600), this.weather.setEnabled(this.prefs.weather), n) {
@@ -16797,7 +16867,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 				far: 90
 			}), e.shadow.bias = -5e-4;
 		}
-		a.add(this.weather.group), this.trail = new km(this.theme), a.add(this.trail.group), this.built = !0, this.seen.clear(), this.showWarnings(), this.renderModes(), this.applyHass(!0);
+		a.add(this.weather.group), this.trail = new Am(this.theme), a.add(this.trail.group), this.built = !0, this.seen.clear(), this.showWarnings(), this.renderModes(), this.applyHass(!0);
 		let c = this.config?.floor ?? this.mainFloor()?.floor.id ?? null;
 		this.selectFloor(r ? c : this.selectedFloor, !1), r && this.frameView(.01, 35), this.prefs.trail && this.reloadTrail();
 	}
@@ -16822,8 +16892,8 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 	}
 	showWarnings() {
 		if (!this.plan) return;
-		let e = Bm(this.plan);
-		this._hass && e.push(...Vm(this.plan, this._hass));
+		let e = Vm(this.plan);
+		this._hass && e.push(...Hm(this.plan, this._hass));
 		let t = this.els.warn;
 		if (t.classList.toggle("show", e.length > 0), e.length) {
 			t.querySelector("summary").textContent = `⚠ ${e.length} plan warning${e.length > 1 ? "s" : ""}`, t.querySelector("ul").innerHTML = e.map((e) => `<li>${zp(e)}</li>`).join("");
@@ -16891,7 +16961,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 			}
 			let a = n.view.material, o = new Y(t.floorFill), s = this.prefs.heatmap, c = Wp(Vp(e, s === "temperature" ? n.temperature : s === "humidity" ? n.humidity : void 0));
 			if (s !== "none" && c !== void 0) {
-				let e = s === "temperature" ? $m(c) : eh(c);
+				let e = s === "temperature" ? nh(c) : rh(c);
 				a.color.copy(o.lerp(e, .55)), a.emissive.copy(e).multiplyScalar(t.name === "day" ? .05 : .22);
 			} else {
 				a.color.set(t.floorFill);
@@ -16899,7 +16969,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 				a.emissive.copy(r.multiplyScalar(n / e));
 			}
 			let l = [], u = Vp(e, n.temperature), d = Vp(e, n.humidity);
-			u && !Up(u) && l.push(`${nh(u.state)}°`), d && !Up(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
+			u && !Up(u) && l.push(`${ah(u.state)}°`), d && !Up(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
 			let f = n.view.labelEl.querySelector(".nh-room-sub");
 			f && (f.textContent = l.join(" · "));
 		}
@@ -16938,11 +17008,11 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 		e && !this.floors.some((t) => t.floor.id === e) && (e = null), this.selectedFloor = e;
 		let n = e ? this.floors.findIndex((t) => t.floor.id === e) : -1, r = n < 0 && this.canPullApart() && this.prefs.apart, i = this.groundIndex();
 		this.floors.forEach((e, t) => {
-			e.group.position.y = e.floor.elevation + (r ? (t - i) * Ym : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
+			e.group.position.y = e.floor.elevation + (r ? (t - i) * Zm : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
 			for (let r of e.rooms) r.label.visible = this.prefs.names && (n === t || n < 0 && e === this.mainFloor());
 		}), this.ground && (this.ground.visible = n < 0 || this.floors[n].floor.elevation > -.5);
 		let a = this.ground?.getObjectByName("covers");
-		a && (a.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = r ? (this.floors.length - 1 - i) * Ym : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
+		a && (a.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = r ? (this.floors.length - 1 - i) * Zm : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
 	}
 	mainFloor() {
 		let e = this.floors.filter((e) => e.floor.elevation > -.5);
@@ -16994,10 +17064,20 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 			"important",
 			"all"
 		].map((e) => `<button class="nh-chip ${this.prefs.markers === e ? "on" : ""}" data-markers="${e}">${e[0].toUpperCase() + e.slice(1)}</button>`).join("")}</span>`), e.innerHTML = t.join(""), e.querySelectorAll("[data-floor]").forEach((e) => e.onclick = () => this.selectFloor(e.dataset.floor || null)), e.querySelectorAll("[data-theme]").forEach((e) => e.onclick = () => {
-			this.prefs.theme = e.dataset.theme, ah(this.prefs), this.built = !1, this.build();
+			this.prefs.theme = e.dataset.theme, ch(this.prefs), this.built = !1, this.build();
 		}), e.querySelectorAll("[data-markers]").forEach((e) => e.onclick = () => {
-			this.prefs.markers = e.dataset.markers, ah(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
+			this.prefs.markers = e.dataset.markers, ch(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
 		}), this.bindAttentionChip();
+	}
+	async checkForUpdate() {
+		try {
+			let e = (await this._hass.callWS({ type: "lovelace/resources" })).find((e) => e.url.includes("neon-house-card.js"));
+			if (!e) return;
+			let t = new URL(e.url, location.origin), n = new URL(Xm);
+			if (t.pathname !== n.pathname || t.search === n.search) return;
+			let r = document.createElement("button");
+			r.className = "nh-update", r.textContent = "⟳ Neon House was updated – tap to reload", r.onclick = () => location.reload(), this.els.root.appendChild(r);
+		} catch {}
 	}
 	attentionChip() {
 		let e = this.issues.length, t = this.issues.some((e) => e.severity >= 3);
@@ -17013,7 +17093,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 	scheduleAttention(e = !1) {
 		this.config?.attention !== !1 && this._hass && (!this.attentionTimer || e) && (clearTimeout(this.attentionTimer), this.attentionTimer = window.setTimeout(() => {
 			if (this.attentionTimer = 0, !this._hass) return;
-			this.issues = qm(this._hass, this.plan, {
+			this.issues = Jm(this._hass, this.plan, {
 				excludeLabel: this.config?.attention_exclude_label ?? "no_battery_alerts",
 				batteryLow: this.config?.battery_low ?? 20
 			});
@@ -17105,7 +17185,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 				this.engine?.animate((t) => e.tick(t));
 			}
 		}
-		ah(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
+		ch(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
 	}
 	toast(e) {
 		let t = this.els.toast;
@@ -17129,7 +17209,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 		if (!e || !t) return;
 		if (e.attention) return this.renderAttention();
 		let n = new Set(e.area ? this.areaEntities(e.area) : []);
-		if (e.room) for (let t of this.devices) t.floor === e.room.view.floor && Yf(t.device.pos, e.room.view.room.polygon) && n.add(t.device.entity);
+		if (e.room) for (let t of this.devices) t.floor === e.room.view.floor && th(t, e.room.view.room.polygon) && n.add(t.device.entity);
 		let r = {
 			Controls: [],
 			Cameras: [],
@@ -17148,7 +17228,7 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 				"image"
 			].includes(t) || r.Other.push(e);
 		}
-		let i = Vp(t, e.room?.temperature), a = Vp(t, e.room?.humidity), o = [i && !Up(i) ? `${nh(i.state)}°C` : "", a && !Up(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
+		let i = Vp(t, e.room?.temperature), a = Vp(t, e.room?.humidity), o = [i && !Up(i) ? `${ah(i.state)}°C` : "", a && !Up(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
 			let n = t.states[e], r = e.split(".")[0], i = Hp(n) && r !== "sensor", a = Zp.has(r) && !Up(n), o = n?.attributes.unit_of_measurement ? ` ${n.attributes.unit_of_measurement}` : "";
 			return `<div class="nh-item ${i ? "on" : ""}" data-id="${e}">
         <span class="dot"></span><span class="name">${zp(Gp(t, e))}</span>
@@ -17265,9 +17345,9 @@ var Jm = "0.1.0", Ym = 3.2, Xm = "neon-house-prefs", Zm = {
 		let n = this.engine?.pick(e, t);
 		n?.data.kind === "device" && Yp(this, n.data.view.device.entity);
 	}
-};
-function $m(e) {
-	return th([
+}, th = (e, t) => Array.isArray(e.device.pos) && Yf(e.device.pos, t);
+function nh(e) {
+	return ih([
 		[16, 3107839],
 		[19, 2541274],
 		[21, 3073674],
@@ -17275,15 +17355,15 @@ function $m(e) {
 		[28, 16727383]
 	], e);
 }
-function eh(e) {
-	return th([
+function rh(e) {
+	return ih([
 		[25, 16757053],
 		[40, 3073674],
 		[55, 2541274],
 		[70, 3107839]
 	], e);
 }
-function th(e, t) {
+function ih(e, t) {
 	if (t <= e[0][0]) return new Y(e[0][1]);
 	for (let n = 0; n < e.length - 1; n++) {
 		let [r, i] = e[n], [a, o] = e[n + 1];
@@ -17291,41 +17371,41 @@ function th(e, t) {
 	}
 	return new Y(e.at(-1)[1]);
 }
-var nh = (e) => {
+var ah = (e) => {
 	let t = Number(e);
 	return Number.isFinite(t) ? (Math.round(t * 10) / 10).toString() : e;
 };
-function rh() {
+function oh() {
 	try {
-		return !!localStorage.getItem(Xm);
+		return !!localStorage.getItem(Qm);
 	} catch {
 		return !1;
 	}
 }
-function ih() {
+function sh() {
 	try {
-		let e = localStorage.getItem(Xm);
+		let e = localStorage.getItem(Qm);
 		if (e) return {
-			...Zm,
+			...$m,
 			...JSON.parse(e)
 		};
 	} catch {}
-	return { ...Zm };
+	return { ...$m };
 }
-function ah(e) {
+function ch(e) {
 	try {
-		localStorage.setItem(Xm, JSON.stringify(e));
+		localStorage.setItem(Qm, JSON.stringify(e));
 	} catch {}
 }
 if (!customElements.get("neon-house-card")) {
-	customElements.define("neon-house-card", Qm);
+	customElements.define("neon-house-card", eh);
 	let e = window;
 	e.customCards = e.customCards || [], e.customCards.push({
 		type: "neon-house-card",
 		name: "Neon House",
 		description: "Your home as a neon 3D plan: lights, cameras, climate, weather – all local.",
 		preview: !1
-	}), console.info(`%c NEON-HOUSE %c ${Jm} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
+	}), console.info(`%c NEON-HOUSE %c ${Ym} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
 }
 //#endregion
-export { Qm as NeonHouseCard };
+export { eh as NeonHouseCard };

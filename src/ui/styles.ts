@@ -134,6 +134,11 @@ export const STYLES = `
 }
 .nh-alert.show { display: block; }
 @keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }
+.nh-update {
+  position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;
+  border: 0; font: inherit; font-weight: 700; cursor: pointer; background: var(--nh-accent); color: var(--nh-on-accent);
+  box-shadow: 0 0 24px -4px var(--nh-accent); white-space: nowrap;
+}
 .nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }
 .nh-coords {
   position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;

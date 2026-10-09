@@ -137,7 +137,7 @@ All devices have `type`, `entity`, `pos: [x, y]`, and optionally `rot` (facing: 
 
 | type | Extra fields |
 |---|---|
-| `light` | `kind`: `bulb` (default, ceiling), `strip` (+ `length`), `lamp`, `flood` |
+| `light` | `kind`: `bulb` (default, ceiling), `strip` (+ `length`), `lamp` (floor lamp), `desk` (on a desk), `flood`, `string` (fairy/Christmas lights along `path` instead of `pos`; `closed`, `multicolor`, `spacing`, `twinkle`). A switch entity works too – it lights warm white |
 | `camera` | `fov`, `range`, `motion: [binary sensors]`, `stream` (another camera entity for the live view) |
 | `tv` | `width`, `power` (plug/switch used when the TV is fully off) |
 | `climate` | – |

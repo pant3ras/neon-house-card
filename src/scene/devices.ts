@@ -77,7 +77,7 @@ function edgeBox(w: number, h: number, d: number, color: number, width = 1.2) {
 
 /** null for an unknown type (a typo in the plan; the plan warnings name it) */
 export function createDevice(device: Device, floor: Floor, ctx: DeviceCtx): DeviceView | null {
-  if (!device?.entity || !Array.isArray(device.pos)) return null;
+  if (!device?.entity || (!Array.isArray(device.pos) && !Array.isArray((device as LightDevice).path))) return null;
   switch (device.type) {
     case 'light':
       return lightView(device, floor, ctx);
@@ -201,8 +201,9 @@ function sprinklerView(d: SprinklerDevice, floor: Floor, ctx: DeviceCtx): Device
 
 function lightView(d: LightDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
   const kind = d.kind ?? 'bulb';
+  if (kind === 'string' && Array.isArray(d.path) && d.path.length >= 2) return stringLightView(d, floor, ctx);
   const g = new THREE.Group();
-  const z = d.z ?? (kind === 'strip' ? 0.9 : kind === 'flood' ? 2.6 : kind === 'lamp' ? 1.3 : floor.height - 0.15);
+  const z = d.z ?? (kind === 'strip' ? 0.9 : kind === 'flood' ? 2.6 : kind === 'lamp' ? 1.3 : kind === 'desk' ? 1.15 : floor.height - 0.15);
   g.position.copy(w3(d.pos, z));
   g.rotation.y = yaw(d.rot);
 
@@ -210,18 +211,24 @@ function lightView(d: LightDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
   let shape: THREE.Mesh;
   if (kind === 'strip') shape = new THREE.Mesh(new THREE.BoxGeometry(d.length ?? 1.2, 0.03, 0.03), mat);
   else if (kind === 'flood') shape = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.08), mat);
-  else shape = new THREE.Mesh(new THREE.SphereGeometry(kind === 'lamp' ? 0.12 : 0.09, 18, 12), mat);
+  else shape = new THREE.Mesh(new THREE.SphereGeometry(kind === 'lamp' ? 0.12 : kind === 'desk' ? 0.075 : 0.09, 18, 12), mat);
   g.add(shape);
+  const standMat = new THREE.MeshStandardMaterial({ color: ctx.theme.device });
   if (kind === 'lamp') {
-    const stand = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.015, 0.015, z, 8),
-      new THREE.MeshStandardMaterial({ color: ctx.theme.device }),
-    );
+    const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, z, 8), standMat);
     stand.position.y = -z / 2;
     g.add(stand);
   }
+  if (kind === 'desk') {
+    // a desk lamp: short stand on a round foot, standing on whatever is below (the desk)
+    const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.36, 8), standMat);
+    stand.position.y = -0.2;
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.08, 0.02, 20), standMat);
+    foot.position.y = -0.38;
+    g.add(stand, foot);
+  }
 
-  const light = new THREE.PointLight(0xffffff, 0, kind === 'flood' ? 9 : kind === 'strip' ? 4.5 : 6.5, 1.6);
+  const light = new THREE.PointLight(0xffffff, 0, kind === 'flood' ? 9 : kind === 'strip' ? 4.5 : kind === 'desk' ? 3.5 : 6.5, 1.6);
   light.position.y = kind === 'strip' ? 0.15 : -0.05;
   if (kind === 'flood') light.position.set(0, -0.3, -0.6);
   g.add(light);
@@ -231,7 +238,7 @@ function lightView(d: LightDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
     new THREE.SpriteMaterial({ map: haloTexture(), color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }),
   );
   // long strips (a string of fairy lights) would get a halo the size of a room: cap it
-  halo.scale.setScalar(kind === 'strip' ? Math.min(1.4, (d.length ?? 1.2) * 0.9) : 0.7);
+  halo.scale.setScalar(kind === 'strip' ? Math.min(1.4, (d.length ?? 1.2) * 0.9) : kind === 'desk' ? 0.45 : 0.7);
   g.add(halo);
 
   let color = new THREE.Color(0xffd9a0);
@@ -256,7 +263,7 @@ function lightView(d: LightDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
       if (Math.abs(diff) < 0.003) shown = level;
       else shown += diff * Math.min(1, dt * 8);
       light.color.copy(color);
-      light.intensity = shown * (kind === 'flood' ? 10 : kind === 'strip' ? 3 : 3.5) * (ctx.theme.name === 'day' ? 0.6 : 1);
+      light.intensity = shown * (kind === 'flood' ? 10 : kind === 'strip' ? 3 : kind === 'desk' ? 2 : 3.5) * (ctx.theme.name === 'day' ? 0.6 : 1);
       mat.emissive.copy(color).multiplyScalar(shown * 1.6);
       halo.material.opacity = shown * (ctx.theme.name === 'day' ? 0.3 : 0.85);
       return shown !== level;
@@ -267,6 +274,97 @@ function lightView(d: LightDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
     focus: () => g.getWorldPosition(new THREE.Vector3()),
   };
   pickable(g, view);
+  return view;
+}
+
+/**
+ * String lights (fairy lights, Christmas lights) along a path, e.g. all round the roof eaves:
+ * a thin wire with bulbs every `spacing` metres, multicoloured if asked, twinkling if asked.
+ * No real light sources – the bulbs glow through the bloom, which keeps a long string cheap.
+ */
+function stringLightView(d: LightDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
+  const path = d.path!;
+  const closed = d.closed ?? true;
+  const z = d.z ?? floor.height - 0.05;
+  const spacing = Math.max(0.1, d.spacing ?? 0.3);
+  const g = new THREE.Group();
+
+  const corners = closed ? [...path, path[0]] : path;
+  const wire = new LineBuilder();
+  const bulbs: THREE.Vector3[] = [];
+  for (let i = 0; i < corners.length - 1; i++) {
+    const a = w3(corners[i], z);
+    const b = w3(corners[i + 1], z);
+    wire.seg(a, b);
+    const n = Math.max(1, Math.round(a.distanceTo(b) / spacing));
+    // every other bulb hangs a little lower, which reads as a string rather than a ruler
+    for (let k = 0; k < n; k++) bulbs.push(a.clone().lerp(b, k / n).add(new THREE.Vector3(0, k % 2 ? -0.07 : -0.03, 0)));
+  }
+  if (!closed) bulbs.push(w3(path[path.length - 1], z));
+  g.add(wire.build(lineMaterial(ctx.theme.name === 'day' ? 0x2b3340 : 0x16243f, 1, 0.8)));
+
+  const palette = d.multicolor
+    ? [0xff3b47, 0x3dff7a, 0x3ba8ff, 0xffd23b, 0xff5ef0].map((c) => new THREE.Color(c))
+    : null;
+  const pos = new Float32Array(bulbs.length * 3);
+  const col = new Float32Array(bulbs.length * 3);
+  const base = bulbs.map((_, i) => (palette ? palette[i % palette.length] : new THREE.Color(0xffd9a0)));
+  bulbs.forEach((p, i) => p.toArray(pos, i * 3));
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.32,
+    map: haloTexture(),
+    vertexColors: true,
+    transparent: true,
+    depthWrite: false,
+    blending: ctx.theme.name === 'day' ? THREE.NormalBlending : THREE.AdditiveBlending,
+  });
+  const points = new THREE.Points(geo, mat);
+  g.add(points);
+
+  let on = false;
+  let shown = 0;
+  let time = 0;
+  const paint = () => {
+    for (let i = 0; i < base.length; i++) {
+      const twinkle = d.twinkle ? 0.65 + 0.35 * Math.sin(time * 2.2 + i * 1.7) : 1;
+      // switched off the bulbs stay faintly visible; switched on they go past 1 so the bloom picks them up
+      const k = 0.12 + 1.8 * shown * twinkle;
+      col[i * 3] = base[i].r * k;
+      col[i * 3 + 1] = base[i].g * k;
+      col[i * 3 + 2] = base[i].b * k;
+    }
+    geo.attributes.color.needsUpdate = true;
+  };
+  paint();
+
+  const view: DeviceView = {
+    device: d,
+    floor,
+    object: g,
+    entities: [d.entity],
+    update(c) {
+      const s = stateOf(c.hass, d.entity);
+      on = isOn(s);
+      if (!palette) {
+        const cl = lightColor(s);
+        base.forEach((b) => b.copy(cl));
+      }
+    },
+    tick(dt) {
+      time += dt;
+      const target = on ? 1 : 0;
+      shown += (target - shown) * Math.min(1, dt * 5);
+      if (Math.abs(shown - target) < 0.01) shown = target;
+      paint();
+      // keep running only while fading, or while twinkling
+      return shown !== target || (on && !!d.twinkle);
+    },
+    focus: () => bulbs[0].clone().add(g.getWorldPosition(new THREE.Vector3())),
+  };
+  pickable(points, view);
   return view;
 }
 

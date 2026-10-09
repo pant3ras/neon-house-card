@@ -74,6 +74,8 @@ export class Engine {
     this.controls.addEventListener('start', () => (this.flight = undefined));
 
     this.raycaster.camera = this.camera;
+    // point clouds (string lights) are picked only when tapped close to a bulb
+    this.raycaster.params.Points = { threshold: 0.2 };
   }
 
   applyTheme(theme: Theme) {

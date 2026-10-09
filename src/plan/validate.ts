@@ -98,7 +98,10 @@ export function validatePlan(plan: Plan): string[] {
       const dname = `${fname}, device #${di + 1} (${d.type ?? '?'} ${d.entity ?? ''})`;
       if (!DEVICE_TYPES.includes(d.type)) out.push(`${dname}: "type" must be one of ${DEVICE_TYPES.join(', ')}.`);
       if (!d.entity) out.push(`${dname}: needs an "entity".`);
-      if (!isPoint(d.pos)) out.push(`${dname}: "pos" must be a [x, y] point.`);
+      const path = (d as any).path;
+      if (path !== undefined && (!Array.isArray(path) || path.length < 2 || !path.every(isPoint)))
+        out.push(`${dname}: "path" needs at least 2 [x, y] corners.`);
+      else if (path === undefined && !isPoint(d.pos)) out.push(`${dname}: "pos" must be a [x, y] point.`);
     });
   });
 
