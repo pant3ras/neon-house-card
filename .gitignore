@@ -1,0 +1,9 @@
+node_modules/
+*.log
+.DS_Store
+
+# your own house stays on your machine: the floor plan, camera positions and
+# entity names are nobody else's business
+plans/*.json
+!plans/example.json
+TUTORIAL.md

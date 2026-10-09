@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "name": "Example house",
+  "weather_entity": "weather.home",
+  "north": 0,
+  "roof": { "type": "gable", "ridge": "x", "pitch": 30, "overhang": 0.45 },
+  "floors": [
+    {
+      "id": "ground",
+      "name": "Ground floor",
+      "elevation": 0,
+      "height": 2.7,
+      "rooms": [
+        { "id": "bedroom", "name": "Bedroom", "area": "bedroom", "polygon": [[0, 0], [4, 0], [4, 4.5], [0, 4.5]] },
+        { "id": "bath", "name": "Bathroom", "area": "bathroom", "polygon": [[0, 4.5], [4, 4.5], [4, 8], [0, 8]] },
+        { "id": "hall", "name": "Hall", "polygon": [[4, 0], [5.5, 0], [5.5, 8], [4, 8]] },
+        { "id": "kitchen", "name": "Kitchen", "area": "kitchen", "group": "day", "polygon": [[5.5, 0], [12, 0], [12, 3.2], [5.5, 3.2]] },
+        { "id": "living", "name": "Living Room", "area": "living_room", "group": "day", "polygon": [[5.5, 3.2], [12, 3.2], [12, 8], [5.5, 8]] }
+      ],
+      "openings": [
+        { "type": "door", "at": [4.75, 8], "width": 1.0, "entity": "binary_sensor.front_door", "hinge": "left", "swing": -1 },
+        { "type": "door", "at": [4, 2.5], "width": 0.8 },
+        { "type": "door", "at": [4, 6], "width": 0.8 },
+        { "type": "door", "at": [5.5, 1.5], "width": 0.9 },
+        { "type": "gap", "at": [5.5, 5.6], "width": 1.6 },
+        { "type": "window", "at": [2, 0], "width": 1.4 },
+        { "type": "window", "at": [0, 2.2], "width": 1.2 },
+        { "type": "window", "at": [2, 8], "width": 0.6, "sill": 1.5, "height": 0.6 },
+        { "type": "window", "at": [8.5, 0], "width": 1.4, "sill": 1.05, "height": 1.0 },
+        { "type": "window", "at": [12, 1.6], "width": 1.2 },
+        { "type": "window", "at": [12, 5.6], "width": 1.8 },
+        { "type": "window", "at": [8.75, 8], "width": 2.2, "sill": 0.1, "height": 2.1 }
+      ],
+      "devices": [
+        { "type": "light", "entity": "light.living_room", "pos": [8.75, 5.6] },
+        { "type": "light", "kind": "lamp", "entity": "light.reading_lamp", "pos": [11.5, 7.4] },
+        { "type": "light", "kind": "strip", "entity": "light.kitchen_counter", "pos": [9, 0.35], "rot": 180, "z": 1.4, "length": 2.4 },
+        { "type": "light", "entity": "light.bedroom", "pos": [2, 2.25] },
+        { "type": "tv", "entity": "media_player.living_room_tv", "power": "switch.tv_plug", "pos": [5.62, 5.6], "rot": 90, "z": 1.2 },
+        { "type": "climate", "entity": "climate.living_room", "pos": [11.85, 4.2], "rot": 270, "z": 2.3 },
+        { "type": "appliance", "kind": "plug", "entity": "switch.coffee_machine", "power": "sensor.coffee_machine_power", "active_watts": 10, "pos": [11.6, 2.8], "z": 0.95 },
+        { "type": "sensor", "entity": "sensor.bedroom_temperature", "pos": [3.85, 1.0], "z": 1.5 },
+        { "type": "sensor", "entity": "sensor.bathroom_humidity", "pos": [3.85, 7.0], "z": 1.6 },
+        { "type": "vacuum", "entity": "vacuum.robot", "pos": [4.75, 0.4], "rot": 180 },
+        { "type": "camera", "entity": "camera.front_door", "name": "Front door", "pos": [-0.15, 8.15], "z": 2.6, "rot": 135, "fov": 100, "range": 7,
+          "motion": ["binary_sensor.front_door_person"] },
+        { "type": "camera", "entity": "camera.garden", "name": "Garden", "pos": [12.15, -0.15], "z": 2.6, "rot": 45, "fov": 110, "range": 7,
+          "motion": ["binary_sensor.garden_motion"] },
+        { "type": "light", "kind": "flood", "entity": "light.garden_floodlight", "pos": [12.15, -0.15], "z": 2.45, "rot": 45 },
+        { "type": "car", "entity": "device_tracker.car", "presence": "device_tracker.car", "pos": [14.65, 4.8], "rot": 0 }
+      ]
+    }
+  ],
+  "outdoor": [
+    { "kind": "grass", "name": "Garden", "area": "garden", "polygon": [[-6, -10], [20, -10], [20, -0.3], [-6, -0.3]] },
+    { "kind": "grass", "name": "Front yard", "area": "front_yard", "polygon": [[-6, 8.3], [20, 8.3], [20, 16], [-6, 16]] },
+    { "kind": "terrace", "name": "Terrace", "area": "garden", "polygon": [[5.5, -3], [12, -3], [12, -0.2], [5.5, -0.2]] },
+    { "kind": "paving", "name": "Path", "polygon": [[4.2, 8.3], [5.3, 8.3], [5.3, 16], [4.2, 16]] },
+    { "kind": "parking", "name": "Parking", "area": "front_yard", "polygon": [[13.3, 1.5], [16, 1.5], [16, 8.3], [13.3, 8.3]] },
+    { "kind": "paving", "name": "Driveway", "polygon": [[13.3, 8.3], [16, 8.3], [16, 16], [13.3, 16]] }
+  ]
+}

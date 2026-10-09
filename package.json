@@ -1,0 +1,21 @@
+{
+  "name": "neon-house",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Neon 3D house card for Home Assistant – plan, lights, cameras, weather, all local.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  }
+}
