@@ -16777,24 +16777,32 @@ var Bm = "0.1.0", Vm = 3.2, Hm = "neon-house-prefs", Um = {
 	}
 	selectFloor(e, t = !0) {
 		e && !this.floors.some((t) => t.floor.id === e) && (e = null), this.selectedFloor = e;
-		let n = e ? this.floors.findIndex((t) => t.floor.id === e) : -1;
+		let n = e ? this.floors.findIndex((t) => t.floor.id === e) : -1, r = n < 0 && this.canPullApart() && this.prefs.apart, i = this.groundIndex();
 		this.floors.forEach((e, t) => {
-			let r = n < 0 && this.prefs.apart;
-			e.group.position.y = e.floor.elevation + (r ? t * Vm : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
+			e.group.position.y = e.floor.elevation + (r ? (t - i) * Vm : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
 			for (let r of e.rooms) r.label.visible = this.prefs.names && (n === t || n < 0 && e === this.mainFloor());
 		}), this.ground && (this.ground.visible = n < 0 || this.floors[n].floor.elevation > -.5);
-		let r = this.ground?.getObjectByName("covers");
-		r && (r.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = n < 0 && this.prefs.apart ? (this.floors.length - 1) * Vm : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
+		let a = this.ground?.getObjectByName("covers");
+		a && (a.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = r ? (this.floors.length - 1 - i) * Vm : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
 	}
 	mainFloor() {
 		let e = this.floors.filter((e) => e.floor.elevation > -.5);
 		return e.length === 1 ? e[0] : void 0;
 	}
+	groundIndex() {
+		let e = 0;
+		return this.floors.forEach((t, n) => {
+			Math.abs(t.floor.elevation) < Math.abs(this.floors[e].floor.elevation) && (e = n);
+		}), e;
+	}
+	canPullApart() {
+		return this.floors.filter((e) => e.floor.elevation > -.5).length > 1;
+	}
 	frameView(e, t) {
 		if (!this.engine) return;
 		let n = this.selectedFloor ? this.floors.findIndex((e) => e.floor.id === this.selectedFloor) : -1;
 		if (n < 0) {
-			let n = this.prefs.apart ? this.houseCenter.y + 2 : this.houseCenter.y * .6;
+			let n = this.prefs.apart && this.canPullApart() ? this.houseCenter.y + 2 : this.houseCenter.y * .6;
 			this.engine.flyTo(this.houseCenter.clone().setY(n), this.houseRadius * 2.6, t, 56, e);
 		} else {
 			let r = this.floors[n];
@@ -16859,7 +16867,7 @@ var Bm = "0.1.0", Vm = 3.2, Hm = "neon-house-prefs", Um = {
         <button class="nh-chip ${e.cut ? "" : "on"}" data-act="tall">Tall walls</button>
         <button class="nh-chip ${e.cut ? "on" : ""}" data-act="cut">Cut</button>
       </span>
-      ${this.floors.length > 1 ? `<button class="nh-chip ${e.apart ? "on" : ""}" data-act="apart">Apart</button>` : ""}
+      ${this.canPullApart() ? `<button class="nh-chip ${e.apart ? "on" : ""}" data-act="apart">Apart</button>` : ""}
       <button class="nh-chip ${e.names ? "on" : ""}" data-act="names">Room names</button>
       <button class="nh-chip ${e.heatmap === "none" ? "" : "on"}" data-act="heat">${t}</button>
       <button class="nh-chip ${e.cameras ? "on" : ""}" data-act="cameras">Cameras</button>

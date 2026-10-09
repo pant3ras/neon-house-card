@@ -601,9 +601,11 @@ export class NeonHouseCard extends HTMLElement {
     if (id && !this.floors.some((f) => f.floor.id === id)) id = null;
     this.selectedFloor = id;
     const sel = id ? this.floors.findIndex((f) => f.floor.id === id) : -1;
+    // pulled apart around the ground floor: it stays on the lawn, upper floors rise, cellars sink
+    const apart = sel < 0 && this.canPullApart() && this.prefs.apart;
+    const base = this.groundIndex();
     this.floors.forEach((fv, i) => {
-      const apart = sel < 0 && this.prefs.apart;
-      fv.group.position.y = fv.floor.elevation + (apart ? i * APART_GAP : 0);
+      fv.group.position.y = fv.floor.elevation + (apart ? (i - base) * APART_GAP : 0);
       if (sel < 0) {
         fv.group.visible = true;
         this.dimFloor(fv, false);
@@ -620,7 +622,7 @@ export class NeonHouseCard extends HTMLElement {
     if (covers) covers.visible = sel < 0 && !this.prefs.cut;
     if (this.roof) {
       this.roof.visible = sel < 0 && !this.prefs.cut;
-      this.roof.position.y = sel < 0 && this.prefs.apart ? (this.floors.length - 1) * APART_GAP : 0;
+      this.roof.position.y = apart ? (this.floors.length - 1 - base) * APART_GAP : 0;
     }
     this.renderFloorChips();
     this.renderRoomChips();
@@ -634,12 +636,26 @@ export class NeonHouseCard extends HTMLElement {
     return above.length === 1 ? above[0] : undefined;
   }
 
+  /** the floor nearest to ground level (floors are sorted by elevation) */
+  private groundIndex(): number {
+    let best = 0;
+    this.floors.forEach((f, i) => {
+      if (Math.abs(f.floor.elevation) < Math.abs(this.floors[best].floor.elevation)) best = i;
+    });
+    return best;
+  }
+
+  /** pulling floors apart only helps with two or more levels above ground (cellars stay hidden underground) */
+  private canPullApart(): boolean {
+    return this.floors.filter((f) => f.floor.elevation > -0.5).length > 1;
+  }
+
   /** fly to the whole house or the selected floor; `azimuth` only for the very first view */
   private frameView(duration: number, azimuth?: number) {
     if (!this.engine) return;
     const sel = this.selectedFloor ? this.floors.findIndex((f) => f.floor.id === this.selectedFloor) : -1;
     if (sel < 0) {
-      const y = this.prefs.apart ? this.houseCenter.y + 2 : this.houseCenter.y * 0.6;
+      const y = this.prefs.apart && this.canPullApart() ? this.houseCenter.y + 2 : this.houseCenter.y * 0.6;
       this.engine.flyTo(this.houseCenter.clone().setY(y), this.houseRadius * 2.6, azimuth, 56, duration);
     } else {
       const fv = this.floors[sel];
@@ -741,7 +757,7 @@ export class NeonHouseCard extends HTMLElement {
         <button class="nh-chip ${!p.cut ? 'on' : ''}" data-act="tall">Tall walls</button>
         <button class="nh-chip ${p.cut ? 'on' : ''}" data-act="cut">Cut</button>
       </span>
-      ${this.floors.length > 1 ? `<button class="nh-chip ${p.apart ? 'on' : ''}" data-act="apart">Apart</button>` : ''}
+      ${this.canPullApart() ? `<button class="nh-chip ${p.apart ? 'on' : ''}" data-act="apart">Apart</button>` : ''}
       <button class="nh-chip ${p.names ? 'on' : ''}" data-act="names">Room names</button>
       <button class="nh-chip ${p.heatmap !== 'none' ? 'on' : ''}" data-act="heat">${heatLabel}</button>
       <button class="nh-chip ${p.cameras ? 'on' : ''}" data-act="cameras">Cameras</button>
