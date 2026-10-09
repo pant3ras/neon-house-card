@@ -104,6 +104,18 @@ export const STYLES = `
 .nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }
 .nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }
 .nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }
+.nh-labels > .nh-badge.nh-tap { pointer-events: auto; cursor: pointer; }
+.nh-badge.nh-tap:hover { border-color: #ffd23b; }
+.nh-badge.nh-watt { font-size: 10px; padding: 1px 6px; border-color: #ffd23b; box-shadow: 0 0 10px -3px #ffd23b; }
+.nh-badge.nh-watt.est { border-style: dashed; box-shadow: none; }
+.nh-item.nh-load { position: relative; }
+.nh-item.nh-load::after {
+  content: ""; position: absolute; left: 28px; right: 8px; bottom: 3px; height: 2px; border-radius: 2px; opacity: .6;
+  background: linear-gradient(90deg, #ffd23b var(--share), transparent var(--share));
+}
+.nh-item.nh-load .dot { background: transparent; border: 1px dashed #ffd23b; box-sizing: border-box; }
+.nh-item.nh-load.on .dot { background: #ffd23b; border: 0; box-shadow: 0 0 10px #ffd23b; }
+.nh-note { color: var(--nh-muted); font-size: 11px; line-height: 1.45; padding: 10px 8px 2px; }
 .nh-item.attn .name { white-space: normal; }
 .nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }
 .nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }

@@ -15215,15 +15215,160 @@ function zp(e, t, n) {
 	return i.startsWith("http") || i.startsWith("data:") ? i : e.hassUrl(i);
 }
 //#endregion
+//#region src/energy.ts
+var Bp = {
+	bulb: 10,
+	lamp: 10,
+	desk: 6,
+	flood: 15,
+	tv: 90,
+	climate: 900,
+	dehumidifier: 200,
+	purifier: 35,
+	fan: 35,
+	washer: 500,
+	plug: 10,
+	vacuum: 5,
+	camera: 5
+}, Vp = (e) => e?.floors?.flatMap((e) => e.devices ?? []).find((e) => e.type === "meter" && e.kind === "electricity");
+function Hp(e) {
+	if (!e || kp(e)) return;
+	let t = parseFloat(e.state);
+	if (!Number.isFinite(t)) return;
+	let n = e.attributes.unit_of_measurement;
+	return n === "kW" ? t * 1e3 : n === "mW" ? t / 1e3 : n === "W" ? t : void 0;
+}
+var Up = (e) => e.entity_id.startsWith("sensor.") && e.attributes.device_class === "power" && [
+	"W",
+	"kW",
+	"mW"
+].includes(e.attributes.unit_of_measurement);
+function Wp(e) {
+	let t = e.path ?? [], n = 0;
+	for (let e = 1; e < t.length; e++) n += Math.hypot(t[e][0] - t[e - 1][0], t[e][1] - t[e - 1][1]);
+	return e.closed !== !1 && t.length > 2 && (n += Math.hypot(t[0][0] - t.at(-1)[0], t[0][1] - t.at(-1)[1])), n;
+}
+function Gp(e) {
+	switch (e.type) {
+		case "light": {
+			let t = e.kind ?? "bulb";
+			return t === "string" ? .35 * Wp(e) : t === "strip" ? 5 * (e.length ?? 1) : Bp[t] ?? Bp.bulb;
+		}
+		case "appliance": return Bp[e.kind ?? "plug"] ?? Bp.plug;
+		case "tv":
+		case "climate":
+		case "vacuum":
+		case "camera": return Bp[e.type];
+		default: return 0;
+	}
+}
+function Kp(e, t, n) {
+	if (!t || kp(t)) return 0;
+	switch (e.type) {
+		case "light": return Op(t) ? n * (t.attributes.brightness == null ? 1 : Math.max(.15, Pp(t))) : 0;
+		case "climate": {
+			let e = t.attributes.hvac_action;
+			return e ? [
+				"heating",
+				"cooling",
+				"preheating",
+				"defrosting"
+			].includes(e) ? n : e === "drying" ? n / 2 : e === "fan" ? 40 : e === "idle" ? 15 : 0 : [
+				"heat",
+				"cool",
+				"heat_cool",
+				"auto"
+			].includes(t.state) ? n : t.state === "dry" ? n / 2 : t.state === "fan_only" ? 40 : 0;
+		}
+		case "appliance": return Op(t) ? t.attributes.action === "idle" ? 5 : t.attributes.action === "off" ? 0 : n : 0;
+		case "tv": return Op(t) ? n : 0;
+		case "vacuum": return t.state === "docked" ? n : 0;
+		case "camera": return t.state === "off" ? 0 : n;
+		default: return 0;
+	}
+}
+var qp = (e, t) => jp(e, t).replace(/\s+(current consumption|current power|power)$/i, "") || t;
+function Jp(e, t) {
+	let n = /* @__PURE__ */ new Map(), r = /* @__PURE__ */ new Map();
+	for (let t of Object.values(e.states)) {
+		if (!Up(t)) continue;
+		let i = Hp(t);
+		i !== void 0 && i >= 0 && n.set(t.entity_id, i);
+		let a = e.entities?.[t.entity_id]?.device_id;
+		a && r.set(a, [...r.get(a) ?? [], t.entity_id]);
+	}
+	let i = (t) => {
+		let n = t ? e.entities?.[t]?.device_id : void 0;
+		return n ? r.get(n) ?? [] : [];
+	}, a = Vp(t), o = new Set(a?.power ? [a.power] : []), s = [], c = /* @__PURE__ */ new Set();
+	for (let r of t.floors ?? []) for (let t of r.devices ?? []) {
+		if (!t?.entity || c.has(t.entity) || [
+			"meter",
+			"sensor",
+			"sprinkler",
+			"car"
+		].includes(t.type)) continue;
+		c.add(t.entity);
+		let r = t.name ?? jp(e, t.entity), a = i(t.entity), l = t.type === "appliance" && t.power ? [t.power] : [], u = t.type === "tv" && t.power ? i(t.power) : [], d = (l.length ? l : u.length ? u : a).filter((e) => !o.has(e)), f = d.filter((e) => n.has(e));
+		for (let e of [...d, ...a]) o.add(e);
+		if (f.length) {
+			s.push({
+				name: r,
+				entity: f[0],
+				watts: f.reduce((e, t) => e + n.get(t), 0),
+				measured: !0,
+				device: t
+			});
+			continue;
+		}
+		let p = Kp(t, Dp(e, t.entity), t.watts ?? Gp(t));
+		p > 0 && s.push({
+			name: r,
+			entity: t.entity,
+			watts: p,
+			measured: !1,
+			device: t
+		});
+	}
+	for (let [t, r] of n) o.has(t) || s.push({
+		name: qp(e, t),
+		entity: t,
+		watts: r,
+		measured: !0
+	});
+	a?.base && s.push({
+		name: "Always on",
+		entity: a.entity,
+		watts: a.base,
+		measured: !1
+	}), s.sort((e, t) => t.watts - e.watts);
+	let l = s.filter((e) => e.measured).reduce((e, t) => e + t.watts, 0), u = s.filter((e) => !e.measured).reduce((e, t) => e + t.watts, 0), d = a?.power ? Hp(Dp(e, a.power)) : void 0;
+	return d !== void 0 && d > l + u + 1 && s.push({
+		name: "Everything else",
+		entity: a.power,
+		watts: d - l - u,
+		measured: !0
+	}), {
+		total: d ?? l + u,
+		measured: l,
+		estimated: u,
+		metered: d !== void 0,
+		rows: s
+	};
+}
+function Yp(e) {
+	return e >= 1e3 ? `${(e / 1e3).toFixed(e >= 1e4 ? 1 : 2)} kW` : `${Math.round(e)} W`;
+}
+//#endregion
 //#region src/scene/devices.ts
-var Bp = Math.PI / 180, Vp = (e = 0) => -e * Bp, Hp = (e = 0) => [Math.sin(e * Bp), -Math.cos(e * Bp)];
-function Up(e, t) {
+var Xp = Math.PI / 180, Zp = (e = 0) => -e * Xp, Qp = (e = 0) => [Math.sin(e * Xp), -Math.cos(e * Xp)];
+function $p(e, t) {
 	e.traverse((e) => e.userData.pick = {
 		kind: "device",
 		view: t
 	});
 }
-function Wp(e, t) {
+function em(e, t) {
 	let n = document.createElement("div");
 	return n.className = `nh-badge ${e}`, {
 		obj: new pf(n),
@@ -15231,38 +15376,38 @@ function Wp(e, t) {
 		important: t
 	};
 }
-function Gp(e, t, n, r, i = 1.2) {
+function tm(e, t, n, r, i = 1.2) {
 	let a = new Gf(), o = new ea(new qi(e, t, n)), s = o.getAttribute("position");
 	for (let e = 0; e < s.count; e += 2) a.seg(new K().fromBufferAttribute(s, e), new K().fromBufferAttribute(s, e + 1));
 	return o.dispose(), a.build(Jf(r, i));
 }
-function Kp(e, t, n) {
+function nm(e, t, n) {
 	if (!e?.entity || !Array.isArray(e.pos) && !Array.isArray(e.path)) return null;
 	switch (e.type) {
-		case "light": return Qp(e, t, n);
-		case "camera": return nm(e, t, n);
-		case "tv": return om(e, t, n);
-		case "climate": return cm(e, t, n);
-		case "appliance": return lm(e, t, n);
-		case "vacuum": return um(e, t, n);
-		case "sensor": return dm(e, t, n);
-		case "car": return fm(e, t, n);
-		case "sprinkler": return Zp(e, t, n);
-		case "meter": return Yp(e, t, n);
+		case "light": return cm(e, t, n);
+		case "camera": return fm(e, t, n);
+		case "tv": return gm(e, t, n);
+		case "climate": return vm(e, t, n);
+		case "appliance": return ym(e, t, n);
+		case "vacuum": return bm(e, t, n);
+		case "sensor": return xm(e, t, n);
+		case "car": return Sm(e, t, n);
+		case "sprinkler": return sm(e, t, n);
+		case "meter": return am(e, t, n);
 		default: return null;
 	}
 }
-var qp = {
+var rm = {
 	electricity: "⚡",
 	gas: "🔥",
 	water: "💧"
-}, Jp = {
+}, im = {
 	electricity: 16765499,
 	gas: 16747069,
 	water: 4172287
 };
-function Yp(e, t, n) {
-	let r = n.theme, i = Jp[e.kind] ?? r.wallEdge, a = e.underground ?? e.kind === "water", o = new wn(), s = new Fo({
+function am(e, t, n) {
+	let r = n.theme, i = im[e.kind] ?? r.wallEdge, a = e.underground ?? e.kind === "water", o = new wn(), s = new Fo({
 		color: r.name === "day" ? 15330802 : r.device,
 		roughness: .5
 	}), c = new ri({
@@ -15276,7 +15421,7 @@ function Yp(e, t, n) {
 		let n = new Z(new So(.3, .015, 6, 40), c);
 		n.rotation.x = Math.PI / 2, n.position.y = .025, o.add(n);
 	} else {
-		o.position.copy(Uf(e.pos, e.z ?? (e.kind === "electricity" ? 1.8 : .6))), o.rotation.y = Vp(e.rot);
+		o.position.copy(Uf(e.pos, e.z ?? (e.kind === "electricity" ? 1.8 : .6))), o.rotation.y = Zp(e.rot);
 		let [t, n, i] = e.kind === "electricity" ? [
 			.4,
 			.55,
@@ -15286,7 +15431,7 @@ function Yp(e, t, n) {
 			.26,
 			.2
 		];
-		o.add(new Z(new qi(t, n, i), s)), o.add(Gp(t, n, i, r.deviceEdge, 1));
+		o.add(new Z(new qi(t, n, i), s)), o.add(tm(t, n, i, r.deviceEdge, 1));
 		let a = new Z(new yo(t * .55, n * .18), c);
 		if (a.position.set(0, n * .18, -i / 2 - .002), a.rotation.y = Math.PI, o.add(a), e.kind === "gas") {
 			let e = new Fo({
@@ -15300,32 +15445,38 @@ function Yp(e, t, n) {
 			}
 		}
 	}
-	let l = Wp("nh-meter", !0);
-	l.obj.position.set(0, .45, 0), o.add(l.obj);
-	let u = {
+	let l = e.kind === "electricity", u = em(l ? "nh-meter nh-tap" : "nh-meter", !0);
+	u.obj.position.set(0, .45, 0), o.add(u.obj);
+	let d, f, p = () => {
+		let t = Dp(f, e.entity), n = Dp(f, e.index), r = (e, t) => {
+			if (!e || kp(e)) return "–";
+			let n = t ?? e.attributes.unit_of_measurement;
+			return `${om(e.state)}${n ? ` ${n}` : ""}`;
+		}, i = [r(t, e.unit), ...n ? [r(n)] : []], a = `<span class="ico">${rm[e.kind] ?? "◆"}</span>`;
+		u.el.classList.toggle("off", kp(t) && !d), u.el.innerHTML = d ? `${a}${d.metered || !d.estimated ? "" : "≈ "}${Cm(Yp(d.total))}<span class="sub"> · ${Cm(i.join(" · "))}</span>` : `${a}${Cm(i[0])}${i[1] ? `<span class="sub"> · ${Cm(i[1])}</span>` : ""}`;
+	}, m = {
 		device: e,
 		floor: t,
 		object: o,
 		entities: [e.entity, ...e.index ? [e.index] : []],
-		badge: l,
-		update(t) {
-			let n = Dp(t.hass, e.entity), r = Dp(t.hass, e.index), i = (e, t) => {
-				if (!e || kp(e)) return "–";
-				let n = t ?? e.attributes.unit_of_measurement;
-				return `${Xp(e.state)}${n ? ` ${n}` : ""}`;
-			};
-			l.el.classList.toggle("off", kp(n)), l.el.innerHTML = `<span class="ico">${qp[e.kind] ?? "◆"}</span>${pm(i(n, e.unit))}${r ? `<span class="sub"> · ${pm(i(r))}</span>` : ""}`;
+		badge: u,
+		update(e) {
+			f = e.hass, p();
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
-	return Up(o, u), u;
+	return l && (m.setLoad = (e) => {
+		d = e;
+		let t = e ? .35 + .65 * Math.min(1, Math.log10(1 + e.total) / 3.5) : 1;
+		c.color.setHex(i).multiplyScalar(t), p();
+	}), $p(o, m), m;
 }
-var Xp = (e) => {
+var om = (e) => {
 	let t = Number(e);
 	return Number.isFinite(t) ? String(Math.round(t * 100) / 100) : e;
 };
-function Zp(e, t, n) {
-	let r = n.theme, i = e.radius ?? 4, a = Math.min(360, Math.max(10, e.arc ?? 360)) * Bp, o = new wn();
+function sm(e, t, n) {
+	let r = n.theme, i = e.radius ?? 4, a = Math.min(360, Math.max(10, e.arc ?? 360)) * Xp, o = new wn();
 	o.position.copy(Uf(e.pos, e.z ?? .02));
 	let s = new Z(new Yi(.05, .06, .1, 14), new Fo({
 		color: r.name === "day" ? 4016732 : 1715276,
@@ -15341,7 +15492,7 @@ function Zp(e, t, n) {
 		depthWrite: !1,
 		side: 2
 	}), u = new Z(c, l);
-	u.rotation.y = Math.PI / 2 - a / 2 - (e.rot ?? 0) * Bp, u.position.y = .01, o.add(u);
+	u.rotation.y = Math.PI / 2 - a / 2 - (e.rot ?? 0) * Xp, u.position.y = .01, o.add(u);
 	let d = n.high ? 220 : 120, f = new Float32Array(d * 3), p = Array.from({ length: d }, () => [
 		Math.random(),
 		Math.random(),
@@ -15357,9 +15508,9 @@ function Zp(e, t, n) {
 		blending: r.name === "day" ? 1 : 2
 	}), g = new Bi(m, h);
 	g.frustumCulled = !1, o.add(g);
-	let _ = Wp("nh-water", !1);
+	let _ = em("nh-water", !1);
 	_.obj.position.set(0, .6, 0), o.add(_.obj);
-	let v = !1, y = 0, b = 0, x = (e.rot ?? 0) * Bp, S = {
+	let v = !1, y = 0, b = 0, x = (e.rot ?? 0) * Xp, S = {
 		device: e,
 		floor: t,
 		object: o,
@@ -15367,7 +15518,7 @@ function Zp(e, t, n) {
 		badge: _,
 		update(t) {
 			let n = Dp(t.hass, e.entity);
-			v = Op(n), _.important = v, _.el.classList.toggle("active", v), _.el.classList.toggle("off", kp(n)), _.el.innerHTML = `<span class="ico">💧</span>${pm(e.name ?? n?.attributes.friendly_name ?? e.entity)}${v ? " · watering" : ""}`;
+			v = Op(n), _.important = v, _.el.classList.toggle("active", v), _.el.classList.toggle("off", kp(n)), _.el.innerHTML = `<span class="ico">💧</span>${Cm(e.name ?? n?.attributes.friendly_name ?? e.entity)}${v ? " · watering" : ""}`;
 		},
 		tick(e) {
 			let t = +!!v;
@@ -15382,13 +15533,13 @@ function Zp(e, t, n) {
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
-	return Up(s, S), S;
+	return $p(s, S), S;
 }
-function Qp(e, t, n) {
+function cm(e, t, n) {
 	let r = e.kind ?? "bulb";
-	if (r === "string" && Array.isArray(e.path) && e.path.length >= 2) return $p(e, t, n);
+	if (r === "string" && Array.isArray(e.path) && e.path.length >= 2) return lm(e, t, n);
 	let i = new wn(), a = e.z ?? (r === "strip" ? .9 : r === "flood" ? 2.6 : r === "lamp" ? 1.3 : r === "desk" ? 1.15 : t.height - .15);
-	i.position.copy(Uf(e.pos, a)), i.rotation.y = Vp(e.rot);
+	i.position.copy(Uf(e.pos, a)), i.rotation.y = Zp(e.rot);
 	let o = new Fo({
 		color: 2238515,
 		emissive: 0,
@@ -15409,7 +15560,7 @@ function Qp(e, t, n) {
 	let l = new Ts(16777215, 0, r === "flood" ? 9 : r === "strip" ? 4.5 : r === "desk" ? 3.5 : 6.5, 1.6);
 	l.position.y = r === "strip" ? .15 : -.05, r === "flood" && l.position.set(0, -.3, -.6), i.add(l);
 	let u = new Xr(new Ir({
-		map: tm(),
+		map: dm(),
 		color: 16777215,
 		transparent: !0,
 		opacity: 0,
@@ -15438,9 +15589,9 @@ function Qp(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return Up(i, m), m;
+	return $p(i, m), m;
 }
-function $p(e, t, n) {
+function lm(e, t, n) {
 	let r = e.path, i = e.closed ?? !0, a = e.z ?? t.height - .05, o = Math.max(.1, e.spacing ?? .3), s = new wn(), c = i ? [...r, r[0]] : r, l = new Gf(), u = [];
 	for (let e = 0; e < c.length - 1; e++) {
 		let t = Uf(c[e], a), n = Uf(c[e + 1], a);
@@ -15461,7 +15612,7 @@ function $p(e, t, n) {
 	h.setAttribute("position", new fr(f, 3)), h.setAttribute("color", new fr(p, 3));
 	let g = new Bi(h, new Fi({
 		size: .32,
-		map: tm(),
+		map: dm(),
 		vertexColors: !0,
 		transparent: !0,
 		depthWrite: !1,
@@ -15495,21 +15646,21 @@ function $p(e, t, n) {
 		},
 		focus: () => u[0].clone().add(s.getWorldPosition(new K()))
 	};
-	return Up(g, x), x;
+	return $p(g, x), x;
 }
-var em = null;
-function tm() {
-	if (em) return em;
+var um = null;
+function dm() {
+	if (um) return um;
 	let e = document.createElement("canvas");
 	e.width = e.height = 64;
 	let t = e.getContext("2d"), n = t.createRadialGradient(32, 32, 0, 32, 32, 32);
-	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.25, "rgba(255,255,255,.55)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), em = new Ui(e), em;
+	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.25, "rgba(255,255,255,.55)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), um = new Ui(e), um;
 }
-function nm(e, t, n) {
+function fm(e, t, n) {
 	let r = n.theme, i = new wn(), a = e.z ?? 2.5;
 	i.position.copy(Uf(e.pos, a));
 	let o = new wn();
-	o.rotation.y = Vp(e.rot), i.add(o);
+	o.rotation.y = Zp(e.rot), i.add(o);
 	let s = new Fo({
 		color: r.name === "day" ? 15922423 : 1714762,
 		emissive: 0
@@ -15520,8 +15671,8 @@ function nm(e, t, n) {
 		emissive: 1731839,
 		emissiveIntensity: .6
 	}));
-	l.rotation.x = Math.PI / 2, l.position.z = -.11, o.add(l), o.add(Gp(.14, .12, .2, r.deviceEdge, 1));
-	let u = (e.fov ?? 100) * Bp, d = e.range ?? 7, f = [];
+	l.rotation.x = Math.PI / 2, l.position.z = -.11, o.add(l), o.add(tm(.14, .12, .2, r.deviceEdge, 1));
+	let u = (e.fov ?? 100) * Xp, d = e.range ?? 7, f = [];
 	for (let e = 0; e <= 24; e++) {
 		let t = -u / 2 + u * e / 24;
 		f.push(new K(Math.sin(t) * d, 0, -Math.cos(t) * d));
@@ -15537,21 +15688,21 @@ function nm(e, t, n) {
 		opacity: .09,
 		depthWrite: !1,
 		side: 2,
-		...rm
+		...pm
 	}), _ = new Z(h, g);
-	_.position.y = -a + .035, _.rotation.y = Vp(e.rot), _.renderOrder = 4, i.add(_);
+	_.position.y = -a + .035, _.rotation.y = Zp(e.rot), _.renderOrder = 4, i.add(_);
 	let v = new Gf();
 	v.seg(new K(), f[0]), v.seg(new K(), f[24]);
 	for (let e = 0; e < 24; e++) v.seg(f[e], f[e + 1]);
 	let y = Jf(r.wallEdge, 1, .3);
-	Object.assign(y, rm);
+	Object.assign(y, pm);
 	let b = v.build(y);
-	b.position.y = -a + .04, b.rotation.y = Vp(e.rot), i.add(b);
+	b.position.y = -a + .04, b.rotation.y = Zp(e.rot), i.add(b);
 	let x = new Gf();
 	x.seg(new K(0, 0, 0), new K(0, -a + .04, 0));
 	let S = x.build(Jf(r.wallEdge, 1, .35));
 	i.add(S);
-	let C = e.motion ?? [], w = !1, T = 0, E = Wp("nh-cam", !0);
+	let C = e.motion ?? [], w = !1, T = 0, E = em("nh-cam", !0);
 	E.obj.position.set(0, .32, 0), i.add(E.obj);
 	let D = {
 		device: e,
@@ -15564,8 +15715,8 @@ function nm(e, t, n) {
 			w = n.length > 0;
 			let i = Dp(t.hass, e.entity), a = e.name ?? i?.attributes.friendly_name?.replace(/ (live view|hd stream|sd stream)$/i, "") ?? e.entity;
 			E.el.classList.toggle("alarm", w), E.el.classList.toggle("off", kp(i));
-			let o = n.map((e) => am(e, t.hass));
-			E.el.innerHTML = `<span class="ico">◉</span>${pm(a)}${w ? ` · <b>${pm([...new Set(o)].join(", ") || "motion")}</b>` : ""}`;
+			let o = n.map((e) => hm(e, t.hass));
+			E.el.innerHTML = `<span class="ico">◉</span>${Cm(a)}${w ? ` · <b>${Cm([...new Set(o)].join(", ") || "motion")}</b>` : ""}`;
 			let c = w ? r.alert : r.wallEdge;
 			g.color.set(c), y.color.set(c), s.emissive.set(w ? r.alert : 0), w || (g.opacity = .09, s.emissiveIntensity = 0);
 		},
@@ -15581,26 +15732,26 @@ function nm(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return Up(o, D), _.userData.pick = {
+	return $p(o, D), _.userData.pick = {
 		kind: "device",
 		view: D,
 		wedge: !0
 	}, D;
 }
-var rm = {
+var pm = {
 	stencilWrite: !0,
 	stencilRef: 1,
 	stencilFunc: 517,
 	stencilFail: Be,
 	stencilZFail: Be,
 	stencilZPass: Be
-}, im = {
+}, mm = {
 	stencilWrite: !0,
 	stencilRef: 1,
 	stencilFunc: 519,
 	stencilZPass: Ve
 };
-function am(e, t) {
+function hm(e, t) {
 	for (let n of [t?.states[e]?.attributes.friendly_name, e]) {
 		let e = String(n ?? "").toLowerCase();
 		if (/person|people|human/.test(e)) return "person";
@@ -15610,9 +15761,9 @@ function am(e, t) {
 	}
 	return "motion";
 }
-function om(e, t, n) {
+function gm(e, t, n) {
 	let r = n.theme, i = e.width ?? 1.23, a = 9 / 16 * i, o = new wn();
-	o.position.copy(Uf(e.pos, e.z ?? 1.25)), o.rotation.y = Vp(e.rot);
+	o.position.copy(Uf(e.pos, e.z ?? 1.25)), o.rotation.y = Zp(e.rot);
 	let s = new Fo({
 		color: 724242,
 		roughness: .3,
@@ -15623,7 +15774,7 @@ function om(e, t, n) {
 		color: 329224,
 		toneMapped: !1
 	}), u = new Z(new yo(i, a), l);
-	u.position.z = -.027, u.rotation.y = Math.PI, o.add(u), o.add(Gp(i + .04, a + .04, .05, r.deviceEdge, 1));
+	u.position.z = -.027, u.rotation.y = Math.PI, o.add(u), o.add(tm(i + .04, a + .04, .05, r.deviceEdge, 1));
 	let d = new Ts(5213183, 0, 4, 1.8);
 	d.position.z = -.6, o.add(d);
 	let f, p = !1, m = new ls();
@@ -15650,24 +15801,24 @@ function om(e, t, n) {
 					e.colorSpace = Ie, l.map?.dispose(), l.map = e, l.color.set(16777215), l.needsUpdate = !0, t.requestRender();
 				});
 			}
-			(!p || !r) && (f = void 0, l.map && (l.map.dispose(), l.map = null, l.needsUpdate = !0)), l.map || l.color.set(p ? sm(n?.attributes.app_name ?? n?.attributes.source) : 329224), d.intensity = p ? 2.2 : 0, d.color.set(p ? sm(n?.attributes.app_name ?? n?.attributes.source) : 0);
+			(!p || !r) && (f = void 0, l.map && (l.map.dispose(), l.map = null, l.needsUpdate = !0)), l.map || l.color.set(p ? _m(n?.attributes.app_name ?? n?.attributes.source) : 329224), d.intensity = p ? 2.2 : 0, d.color.set(p ? _m(n?.attributes.app_name ?? n?.attributes.source) : 0);
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
-	return Up(o, h), h;
+	return $p(o, h), h;
 }
-function sm(e) {
+function _m(e) {
 	let t = (e ?? "").toLowerCase();
 	return t.includes("netflix") ? 15010068 : t.includes("youtube") ? 16722474 : t.includes("disney") ? 2052056 : t.includes("prime") ? 43233 : t.includes("hbo") || t.includes("max") ? 7023871 : t.includes("spotify") ? 1947988 : t.includes("tv") || t.includes("hdmi") ? 3112447 : 3829247;
 }
-function cm(e, t, n) {
+function vm(e, t, n) {
 	let r = n.theme, i = new wn();
-	i.position.copy(Uf(e.pos, e.z ?? t.height - .4)), i.rotation.y = Vp(e.rot);
+	i.position.copy(Uf(e.pos, e.z ?? t.height - .4)), i.rotation.y = Zp(e.rot);
 	let a = new Fo({
 		color: r.name === "day" ? 16777215 : 1846348,
 		emissive: 0
 	});
-	i.add(new Z(new qi(.9, .28, .22), a)), i.add(Gp(.9, .28, .22, r.deviceEdge, 1));
+	i.add(new Z(new qi(.9, .28, .22), a)), i.add(tm(.9, .28, .22, r.deviceEdge, 1));
 	let o = new Er(), s = /* @__PURE__ */ new Float32Array(108), c = Array.from({ length: 36 }, () => Math.random());
 	o.setAttribute("position", new fr(s, 3));
 	let l = new Fi({
@@ -15679,7 +15830,7 @@ function cm(e, t, n) {
 		blending: 2
 	}), u = new Bi(o, l);
 	i.add(u);
-	let d = Wp("nh-climate", !0);
+	let d = em("nh-climate", !0);
 	d.obj.position.set(0, .35, 0), i.add(d.obj);
 	let f = !1, p = 0, m = {
 		device: e,
@@ -15706,9 +15857,9 @@ function cm(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return Up(i, m), m;
+	return $p(i, m), m;
 }
-function lm(e, t, n) {
+function ym(e, t, n) {
 	let r = n.theme, i = e.kind ?? "plug", [a, o, s] = {
 		purifier: [
 			.32,
@@ -15736,13 +15887,13 @@ function lm(e, t, n) {
 			.6
 		]
 	}[i], c = new wn();
-	c.position.copy(Uf(e.pos, e.z ?? (i === "plug" ? .3 : o / 2))), c.rotation.y = Vp(e.rot);
+	c.position.copy(Uf(e.pos, e.z ?? (i === "plug" ? .3 : o / 2))), c.rotation.y = Zp(e.rot);
 	let l = new Fo({
 		color: r.name === "day" ? 16054008 : r.device,
 		emissive: 0,
 		roughness: .5
 	});
-	c.add(new Z(new qi(a, o, s), l)), c.add(Gp(a, o, s, r.deviceEdge, 1));
+	c.add(new Z(new qi(a, o, s), l)), c.add(tm(a, o, s, r.deviceEdge, 1));
 	let u = new Z(new So(Math.min(a, s) * .38, .012, 6, 28), new ri({
 		color: r.ok,
 		transparent: !0,
@@ -15763,9 +15914,9 @@ function lm(e, t, n) {
 		},
 		focus: () => c.getWorldPosition(new K())
 	};
-	return Up(c, f), f;
+	return $p(c, f), f;
 }
-function um(e, t, n) {
+function bm(e, t, n) {
 	let r = n.theme, i = new wn(), a = Uf(e.pos, .06);
 	i.position.copy(a);
 	let o = new Fo({
@@ -15779,11 +15930,11 @@ function um(e, t, n) {
 		opacity: .9
 	}), l = new Z(new So(.17, .008, 6, 36), c);
 	l.rotation.x = Math.PI / 2, l.position.y = .046, i.add(l);
-	let u = new Z(new qi(.3, .12, .08), new Fo({ color: r.device })), [d, f] = Hp(e.rot);
-	u.position.copy(Uf([e.pos[0] - d * .24, e.pos[1] - f * .24], .06)), u.rotation.y = Vp(e.rot);
+	let u = new Z(new qi(.3, .12, .08), new Fo({ color: r.device })), [d, f] = Qp(e.rot);
+	u.position.copy(Uf([e.pos[0] - d * .24, e.pos[1] - f * .24], .06)), u.rotation.y = Zp(e.rot);
 	let p = new wn();
 	p.add(i, u);
-	let m = Wp("nh-vac", !1);
+	let m = em("nh-vac", !1);
 	m.obj.position.set(0, .3, 0), i.add(m.obj);
 	let h = !1, g = 0, _ = {
 		device: e,
@@ -15797,16 +15948,16 @@ function um(e, t, n) {
 			let l = s === "error";
 			c.color.set(l ? r.alert : h ? r.ok : r.wallEdge), o.emissive.set(h ? r.ok : 0), o.emissiveIntensity = h ? .25 : 0;
 			let u = n?.attributes.battery_level;
-			m.el.innerHTML = `<span class="ico">⬤</span>${pm(s)}${u == null ? "" : ` · ${u}%`}`, m.important = h || l, h || i.position.copy(a);
+			m.el.innerHTML = `<span class="ico">⬤</span>${Cm(s)}${u == null ? "" : ` · ${u}%`}`, m.important = h || l, h || i.position.copy(a);
 		},
 		tick(e) {
 			return h ? (g += e * .35, i.position.set(a.x + Math.sin(g) * 1.4, a.y, a.z + Math.sin(g * 2) * .8 + .9), !0) : !1;
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return Up(p, _), _;
+	return $p(p, _), _;
 }
-function dm(e, t, n) {
+function xm(e, t, n) {
 	let r = n.theme, i = new wn();
 	i.position.copy(Uf(e.pos, e.z ?? 1.5));
 	let a = new Z(new Yi(.05, .05, .03, 16), new Fo({
@@ -15815,7 +15966,7 @@ function dm(e, t, n) {
 		emissiveIntensity: .15
 	}));
 	a.rotation.x = Math.PI / 2, i.add(a);
-	let o = Wp("nh-sensor", !1);
+	let o = em("nh-sensor", !1);
 	o.obj.position.set(0, .18, 0), i.add(o.obj);
 	let s = {
 		device: e,
@@ -15829,11 +15980,11 @@ function dm(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return Up(i, s), s;
+	return $p(i, s), s;
 }
-function fm(e, t, n) {
+function Sm(e, t, n) {
 	let r = n.theme, i = e.length ?? 4.6, a = e.width ?? 1.85, o = new wn();
-	o.position.copy(Uf(e.pos, 0)), o.rotation.y = Vp(e.rot);
+	o.position.copy(Uf(e.pos, 0)), o.rotation.y = Zp(e.rot);
 	let s = new wn(), c = new Fo({
 		color: r.name === "day" ? 4016732 : 1780820,
 		metalness: .6,
@@ -15849,7 +16000,7 @@ function fm(e, t, n) {
 	u.position.y = .55;
 	let d = new Z(new qi(a * .86, .45, i * .5), l);
 	d.position.set(0, 1.03, i * .04), s.add(u, d);
-	let f = Gp(a, .55, i, r.deviceEdge, 1.2);
+	let f = tm(a, .55, i, r.deviceEdge, 1.2);
 	f.position.y = .55, s.add(f);
 	let p = new Fo({ color: 461069 });
 	for (let e of [-1, 1]) for (let t of [-1, 1]) {
@@ -15882,9 +16033,9 @@ function fm(e, t, n) {
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
-	return Up(o, b), b;
+	return $p(o, b), b;
 }
-function pm(e) {
+function Cm(e) {
 	return e.replace(/[&<>"]/g, (e) => ({
 		"&": "&amp;",
 		"<": "&lt;",
@@ -15894,12 +16045,12 @@ function pm(e) {
 }
 //#endregion
 //#region src/scene/builder.ts
-var mm = 1.05, hm = .18;
-function gm(e, t) {
+var wm = 1.05, Tm = .18;
+function Em(e, t) {
 	let n = document.createElement("div");
 	return n.className = e, n.innerHTML = t, [new pf(n), n];
 }
-function _m(e, t, n) {
+function Dm(e, t, n) {
 	let r = new wn();
 	r.name = `floor:${e.id}`, r.position.y = e.elevation;
 	let i = new Fo({
@@ -15918,14 +16069,14 @@ function _m(e, t, n) {
 			roughness: .85,
 			metalness: .05,
 			emissive: 0,
-			...im
-		}), a = new Z(Qf(n.polygon, 0, hm), i);
+			...mm
+		}), a = new Z(Qf(n.polygon, 0, Tm), i);
 		a.receiveShadow = !0, a.userData.pick = {
 			kind: "room",
 			floor: e.id,
 			room: n.id
 		}, r.add(a), c.loop(n.polygon.map((e) => Uf(e, .012)));
-		let o = Yf(n.polygon), [l, u] = gm("nh-room", `<b>${Om(n.name)}</b><span class="nh-room-sub"></span>`);
+		let o = Yf(n.polygon), [l, u] = Em("nh-room", `<b>${Rm(n.name)}</b><span class="nh-room-sub"></span>`);
 		l.position.copy(Uf(o, .25)), r.add(l), s.push({
 			room: n,
 			floor: e,
@@ -15943,7 +16094,7 @@ function _m(e, t, n) {
 	u.name = "devices", r.add(u);
 	let d = new wn();
 	d.name = "furniture", r.add(d);
-	let f = e.rooms.flatMap((e) => e.polygon), p = Zf(f.length ? f : [[0, 0]]), m = new K((p.minX + p.maxX) / 2, e.elevation + e.height / 2, (p.minY + p.maxY) / 2), h = Math.hypot(p.maxX - p.minX, p.maxY - p.minY) / 2 + 1, [g, _] = gm("nh-floor", `<b>${Om(e.name)}</b><span class="nh-floor-sub"></span>`);
+	let f = e.rooms.flatMap((e) => e.polygon), p = Zf(f.length ? f : [[0, 0]]), m = new K((p.minX + p.maxX) / 2, e.elevation + e.height / 2, (p.minY + p.maxY) / 2), h = Math.hypot(p.maxX - p.minX, p.maxY - p.minY) / 2 + 1, [g, _] = Em("nh-floor", `<b>${Rm(e.name)}</b><span class="nh-floor-sub"></span>`);
 	g.position.set(p.minX - .6, e.height * .6, (p.minY + p.maxY) / 2), r.add(g);
 	let v = {
 		floor: e,
@@ -15962,13 +16113,13 @@ function _m(e, t, n) {
 		devices: u,
 		furniture: d
 	};
-	return vm(v, t, n), v;
+	return Om(v, t, n), v;
 }
-function vm(e, t, n) {
+function Om(e, t, n) {
 	let { floor: r, walls: i } = e;
-	ym(i, e), ym(e.furniture, e), e.openings = [];
-	let a = n ? Math.min(mm, r.height) : r.height, o = gp(r, n ? mm : void 0);
-	e.furniture.add(wp(r, o, t, n ? mm : Infinity));
+	km(i, e), km(e.furniture, e), e.openings = [];
+	let a = n ? Math.min(wm, r.height) : r.height, o = gp(r, n ? wm : void 0);
+	e.furniture.add(wp(r, o, t, n ? wm : Infinity));
 	let s = new Wf(), c = new Gf(), l = new Wf();
 	for (let n of o) {
 		let o = Math.min(n.height ?? r.height, a);
@@ -15981,13 +16132,13 @@ function vm(e, t, n) {
 				yp(n, i, -o)
 			], e.y0, e.y1);
 		}
-		bm(n, o, c);
+		Am(n, o, c);
 		for (let r of n.openings) {
 			if (r.opening.type === "window" && r.top > r.bottom + .05) {
 				let e = yp(n, r.s, 0), t = yp(n, r.e, 0);
 				l.quad(Uf(e, r.bottom), Uf(t, r.bottom), Uf(t, r.top), Uf(e, r.top));
 			}
-			let a = xm(n, r, t);
+			let a = jm(n, r, t);
 			a && (i.add(a.pivot), e.openings.push(a));
 		}
 	}
@@ -16010,7 +16161,7 @@ function vm(e, t, n) {
 		n.renderOrder = 3, i.add(n);
 	}
 }
-function ym(e, t) {
+function km(e, t) {
 	for (let n of [...e.children]) e.remove(n), n.traverse((e) => {
 		let n = e;
 		n.geometry?.dispose?.();
@@ -16018,7 +16169,7 @@ function ym(e, t) {
 		for (let e of r) e !== t.wallMaterial && e !== t.edgeMaterial && e.dispose();
 	});
 }
-function bm(e, t, n) {
+function Am(e, t, n) {
 	let r = e.t / 2, i = (t, n, r) => Uf(yp(e, t, n), r);
 	for (let a of ["l", "r"]) {
 		let o = a === "l" ? r : -r, s = 0, c = [], l = [];
@@ -16042,7 +16193,7 @@ function bm(e, t, n) {
 		n.seg(i(e, r, 0), i(e, r, t)), n.seg(i(e, -r, 0), i(e, -r, t)), n.seg(i(e, r, t), i(e, -r, t));
 	}
 }
-function xm(e, t, n) {
+function jm(e, t, n) {
 	let r = t.opening.type;
 	if (r !== "door" && r !== "garage" || !t.opening.entity) return null;
 	let i = t.e - t.s, a = t.top - t.bottom, o = new Fo({
@@ -16082,7 +16233,7 @@ function xm(e, t, n) {
 		}
 	};
 }
-function Sm(e, t) {
+function Mm(e, t) {
 	let n = new wn();
 	n.name = "ground";
 	let r = e.floors.flatMap((e) => e.rooms.flatMap((e) => e.polygon)).concat((e.outdoor ?? []).flatMap((e) => e.polygon)), i = Zf(r.length ? r : [[0, 0]]), a = (i.minX + i.maxX) / 2, o = (i.minY + i.maxY) / 2, s = Math.max(i.maxX - i.minX, i.maxY - i.minY) * 3 + 30, c = new Z(new yo(s, s), new Fo({
@@ -16094,14 +16245,14 @@ function Sm(e, t) {
 	u.position.set(Math.round(a), -.01, Math.round(o));
 	let d = u.material;
 	d.transparent = !0, d.opacity = t.name === "day" ? .35 : .55, n.add(u);
-	for (let r of e.outdoor ?? []) n.add(wm(r, t));
+	for (let r of e.outdoor ?? []) n.add(Pm(r, t));
 	let f = new wn();
 	f.name = "covers";
 	let p = e.floors.filter((e) => Math.abs(e.elevation) < .5).flatMap((e) => e.rooms.map((e) => e.polygon));
-	for (let n of e.outdoor ?? []) n.roof && n.polygon?.length >= 3 && f.add(Cm(n, t, p));
+	for (let n of e.outdoor ?? []) n.roof && n.polygon?.length >= 3 && f.add(Nm(n, t, p));
 	return n.add(f), n;
 }
-function Cm(e, t, n) {
+function Nm(e, t, n) {
 	let r = new wn(), i = e.roof_height ?? 2.6, a = e.polygon, o = (e) => n.some((t) => t.some((n, r) => fp(e, n, t[(r + 1) % t.length]).dist < .35)), s = new Fo({
 		color: t.device,
 		roughness: .6,
@@ -16127,7 +16278,7 @@ function Cm(e, t, n) {
 	}), d = new Z(Qf(a, i + .1, .1), u);
 	return d.castShadow = !0, r.add(d), c.loop(a.map((e) => Uf(e, i + .1))), c.loop(a.map((e) => Uf(e, i))), r.add(c.build(Jf(t.roofEdge, 1.3))), r;
 }
-function wm(e, t) {
+function Pm(e, t) {
 	let n = new wn(), r = {
 		grass: .012,
 		water: .008,
@@ -16152,7 +16303,7 @@ function wm(e, t) {
 	}
 	return n;
 }
-function Tm(e, t, n) {
+function Fm(e, t, n) {
 	let r = new wn();
 	r.name = "roof";
 	let i = e.rooms.flatMap((e) => e.polygon);
@@ -16207,7 +16358,7 @@ function Tm(e, t, n) {
 				[f, o]
 			]) v.seg(e, i);
 		}
-		t.solar && Em(r, t, n, {
+		t.solar && Im(r, t, n, {
 			x0: s,
 			x1: c,
 			z0: l,
@@ -16228,7 +16379,7 @@ function Tm(e, t, n) {
 	}), S = new Z(_.geometry(), x);
 	return S.castShadow = !0, S.userData.pick = { kind: "roof" }, r.add(S), r.add(v.build(Jf(n.roofEdge, 1.4))), r;
 }
-function Em(e, t, n, r) {
+function Im(e, t, n, r) {
 	let i = t.solar, a = new Fo({
 		color: 662074,
 		emissive: n.name === "neon" ? 666202 : 0,
@@ -16276,10 +16427,10 @@ function Em(e, t, n, r) {
 		entity: i.power
 	}, e.add(g);
 }
-function Dm(e) {
+function Lm(e) {
 	$f(e.group);
 }
-function Om(e) {
+function Rm(e) {
 	return e.replace(/[&<>"]/g, (e) => ({
 		"&": "&amp;",
 		"<": "&lt;",
@@ -16289,13 +16440,13 @@ function Om(e) {
 }
 //#endregion
 //#region src/scene/weather.ts
-var km = /* @__PURE__ */ new Set([
+var zm = /* @__PURE__ */ new Set([
 	"rainy",
 	"pouring",
 	"lightning-rainy",
 	"snowy-rainy",
 	"hail"
-]), Am = /* @__PURE__ */ new Set(["snowy", "snowy-rainy"]), jm = {
+]), Bm = /* @__PURE__ */ new Set(["snowy", "snowy-rainy"]), Vm = {
 	cloudy: .9,
 	partlycloudy: .45,
 	rainy: .9,
@@ -16309,7 +16460,7 @@ var km = /* @__PURE__ */ new Set([
 	windy: .3,
 	"windy-variant": .6,
 	exceptional: .8
-}, Mm = class {
+}, Hm = class {
 	area;
 	theme;
 	group = new wn();
@@ -16350,7 +16501,7 @@ var km = /* @__PURE__ */ new Set([
 		let a = new Er();
 		a.setAttribute("position", new fr(this.snowPos, 3)), this.snow = new Bi(a, new Fi({
 			size: .09,
-			map: Fm(),
+			map: Gm(),
 			color: 16777215,
 			transparent: !0,
 			opacity: .9,
@@ -16358,7 +16509,7 @@ var km = /* @__PURE__ */ new Set([
 		})), this.snow.frustumCulled = !1;
 		for (let t = 0; t < n; t++) this.snowPos[t * 3] = e.center.x + (Math.random() - .5) * r, this.snowPos[t * 3 + 1] = Math.random() * 14, this.snowPos[t * 3 + 2] = e.center.z + (Math.random() - .5) * r;
 		this.group.add(this.snow);
-		let o = Lm();
+		let o = qm();
 		for (let n = 0; n < 12; n++) {
 			let r = new Xr(new Ir({
 				map: o,
@@ -16370,13 +16521,13 @@ var km = /* @__PURE__ */ new Set([
 			r.scale.set(i, i * .5, 1), r.userData.angle = n / 12 * Math.PI * 2 + Math.random() * .4, r.userData.dist = e.radius * 1.6 + 6 + Math.random() * 10, r.userData.height = 16 + Math.random() * 6, r.userData.speed = .01 + Math.random() * .015, this.placeCloud(r), this.clouds.push(r), this.group.add(r);
 		}
 		this.sunSprite = new Xr(new Ir({
-			map: Fm(),
+			map: Gm(),
 			color: 16765562,
 			transparent: !0,
 			depthWrite: !1,
 			blending: 2
 		})), this.sunSprite.scale.setScalar(6), this.moonSprite = new Xr(new Ir({
-			map: Fm(),
+			map: Gm(),
 			color: 12375295,
 			transparent: !0,
 			depthWrite: !1,
@@ -16406,14 +16557,14 @@ var km = /* @__PURE__ */ new Set([
 	}
 	update(e) {
 		let t = e.weather;
-		this.condition = t?.state ?? "sunny", this.rainAmount = this.enabled && km.has(this.condition) ? this.condition === "pouring" ? 1 : .6 : 0, this.snowAmount = this.enabled && Am.has(this.condition) ? 1 : 0, this.cloudAmount = this.enabled ? jm[this.condition] ?? .1 : 0;
+		this.condition = t?.state ?? "sunny", this.rainAmount = this.enabled && zm.has(this.condition) ? this.condition === "pouring" ? 1 : .6 : 0, this.snowAmount = this.enabled && Bm.has(this.condition) ? 1 : 0, this.cloudAmount = this.enabled ? Vm[this.condition] ?? .1 : 0;
 		let n = Number(t?.attributes.wind_speed ?? 0), r = (Number(t?.attributes.wind_bearing ?? 0) + 180 - e.north) * Math.PI / 180, i = Math.min(1, n / 50);
 		this.wind.set(Math.sin(r) * i * 4, 0, -Math.cos(r) * i * 4);
 		let a = e.sun, o = Number(a?.attributes.elevation ?? 35), s = Number(a?.attributes.azimuth ?? 180);
 		this.night = a ? a.state === "below_horizon" : !1;
-		let c = Nm(s - e.north, Math.max(o, 4));
+		let c = Um(s - e.north, Math.max(o, 4));
 		this.sunSprite.position.copy(this.area.center).addScaledVector(c, 55);
-		let l = Nm(s + 180 - e.north, 35);
+		let l = Um(s + 180 - e.north, 35);
 		this.moonSprite.position.copy(this.area.center).addScaledVector(l, 55);
 		let u = this.night ? l : c;
 		this.sunLight.position.copy(this.area.center).addScaledVector(u, 30);
@@ -16489,21 +16640,21 @@ var km = /* @__PURE__ */ new Set([
 		});
 	}
 };
-function Nm(e, t) {
+function Um(e, t) {
 	let n = e * Math.PI / 180, r = t * Math.PI / 180;
 	return new K(Math.sin(n) * Math.cos(r), Math.sin(r), -Math.cos(n) * Math.cos(r));
 }
-var Pm = null;
-function Fm() {
-	if (Pm) return Pm;
+var Wm = null;
+function Gm() {
+	if (Wm) return Wm;
 	let e = document.createElement("canvas");
 	e.width = e.height = 64;
 	let t = e.getContext("2d"), n = t.createRadialGradient(32, 32, 0, 32, 32, 32);
-	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.35, "rgba(255,255,255,.7)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), Pm = new Ui(e), Pm;
+	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.35, "rgba(255,255,255,.7)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), Wm = new Ui(e), Wm;
 }
-var Im = null;
-function Lm() {
-	if (Im) return Im;
+var Km = null;
+function qm() {
+	if (Km) return Km;
 	let e = document.createElement("canvas");
 	e.width = 256, e.height = 128;
 	let t = e.getContext("2d");
@@ -16511,11 +16662,11 @@ function Lm() {
 		let e = 40 + Math.random() * 176, n = 50 + Math.random() * 40, r = 18 + Math.random() * 30, i = t.createRadialGradient(e, n, 0, e, n, r);
 		i.addColorStop(0, "rgba(255,255,255,.35)"), i.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = i, t.beginPath(), t.arc(e, n, r, 0, Math.PI * 2), t.fill();
 	}
-	return Im = new Ui(e), Im;
+	return Km = new Ui(e), Km;
 }
 //#endregion
 //#region src/scene/trail.ts
-var Rm = class {
+var Jm = class {
 	theme;
 	group = new wn();
 	minutes = 30;
@@ -16552,7 +16703,7 @@ var Rm = class {
 					time: r,
 					entity: t,
 					camera: i,
-					kind: am(t, e)
+					kind: hm(t, e)
 				}), s = n.s;
 			}
 		}
@@ -16564,7 +16715,7 @@ var Rm = class {
 		for (let a of e) {
 			let e = i.get(a.camera) ?? 0;
 			i.set(a.camera, e + 1);
-			let o = zm(a.camera, e);
+			let o = Ym(a.camera, e);
 			r.push(o);
 			let s = (n - a.time) / (this.minutes * 6e4), c = 1 - Math.min(.85, s), l = new wn();
 			l.position.copy(o);
@@ -16604,18 +16755,18 @@ var Rm = class {
 		this.markers = [], this.count = 0;
 	}
 };
-function zm(e, t) {
+function Ym(e, t) {
 	let n = e.device, r = (n.rot ?? 0) * Math.PI / 180, i = (n.range ?? 7) * .45, a = r + (t % 5 - 2) * .22, o = n.z ?? 2.5, s = new K(Math.sin(a) * i, -o + .05, -Math.cos(a) * i);
 	return e.object.updateWorldMatrix(!0, !1), e.object.localToWorld(s);
 }
 //#endregion
 //#region src/ui/styles.ts
-var Bm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n/* its own stacking context: 3D labels (z-indexed by depth) stay under panels and chips */\n.nh-stage { position: absolute; inset: 0; isolation: isolate; z-index: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-labels > .nh-badge.nh-cam { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-cam:hover { border-color: var(--nh-accent); }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-badge .sub { color: var(--nh-muted); font-weight: 500; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-attn { font-weight: 800; }\n.nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }\n.nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }\n.nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }\n.nh-item.attn .name { white-space: normal; }\n.nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }\n.nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }\n.nh-item.attn.sev3 .dot, .nh-item.attn.sev4 .dot { background: #ff5a3c; box-shadow: 0 0 10px #ff5a3c; }\n.nh-item.attn.sev1 .dot { background: var(--nh-muted); box-shadow: none; }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-update {\n  position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  border: 0; font: inherit; font-weight: 700; cursor: pointer; background: var(--nh-accent); color: var(--nh-on-accent);\n  box-shadow: 0 0 24px -4px var(--nh-accent); white-space: nowrap;\n}\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", Vm = [
+var Xm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n/* its own stacking context: 3D labels (z-indexed by depth) stay under panels and chips */\n.nh-stage { position: absolute; inset: 0; isolation: isolate; z-index: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-labels > .nh-badge.nh-cam { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-cam:hover { border-color: var(--nh-accent); }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-badge .sub { color: var(--nh-muted); font-weight: 500; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-attn { font-weight: 800; }\n.nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }\n.nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }\n.nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }\n.nh-labels > .nh-badge.nh-tap { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-tap:hover { border-color: #ffd23b; }\n.nh-badge.nh-watt { font-size: 10px; padding: 1px 6px; border-color: #ffd23b; box-shadow: 0 0 10px -3px #ffd23b; }\n.nh-badge.nh-watt.est { border-style: dashed; box-shadow: none; }\n.nh-item.nh-load { position: relative; }\n.nh-item.nh-load::after {\n  content: \"\"; position: absolute; left: 28px; right: 8px; bottom: 3px; height: 2px; border-radius: 2px; opacity: .6;\n  background: linear-gradient(90deg, #ffd23b var(--share), transparent var(--share));\n}\n.nh-item.nh-load .dot { background: transparent; border: 1px dashed #ffd23b; box-sizing: border-box; }\n.nh-item.nh-load.on .dot { background: #ffd23b; border: 0; box-shadow: 0 0 10px #ffd23b; }\n.nh-note { color: var(--nh-muted); font-size: 11px; line-height: 1.45; padding: 10px 8px 2px; }\n.nh-item.attn .name { white-space: normal; }\n.nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }\n.nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }\n.nh-item.attn.sev3 .dot, .nh-item.attn.sev4 .dot { background: #ff5a3c; box-shadow: 0 0 10px #ff5a3c; }\n.nh-item.attn.sev1 .dot { background: var(--nh-muted); box-shadow: none; }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-update {\n  position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  border: 0; font: inherit; font-weight: 700; cursor: pointer; background: var(--nh-accent); color: var(--nh-on-accent);\n  box-shadow: 0 0 24px -4px var(--nh-accent); white-space: nowrap;\n}\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", Zm = [
 	"door",
 	"window",
 	"garage",
 	"gap"
-], Hm = [
+], Qm = [
 	"light",
 	"camera",
 	"tv",
@@ -16626,13 +16777,13 @@ var Bm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflo
 	"car",
 	"sprinkler",
 	"meter"
-], Um = [
+], $m = [
 	"grass",
 	"paving",
 	"terrace",
 	"parking",
 	"water"
-], Wm = [
+], eh = [
 	"bed",
 	"wardrobe",
 	"dresser",
@@ -16648,13 +16799,13 @@ var Bm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflo
 	"shower",
 	"stove",
 	"box"
-], Gm = [
+], th = [
 	"up",
 	"down",
 	"left",
 	"right"
-], Km = (e) => Array.isArray(e) && e.length === 2 && e.every((e) => typeof e == "number" && Number.isFinite(e)), qm = (e) => `[${e[0]}, ${e[1]}]`;
-function Jm(e) {
+], nh = (e) => Array.isArray(e) && e.length === 2 && e.every((e) => typeof e == "number" && Number.isFinite(e)), rh = (e) => `[${e[0]}, ${e[1]}]`;
+function ih(e) {
 	let t = 0;
 	for (let n = 0; n < e.length; n++) {
 		let [r, i] = e[n], [a, o] = e[(n + 1) % e.length];
@@ -16662,7 +16813,7 @@ function Jm(e) {
 	}
 	return Math.abs(t / 2);
 }
-function Ym(e) {
+function ah(e) {
 	let t = [];
 	if (!e || !Array.isArray(e.floors) || !e.floors.length) return ["The plan has no \"floors\"."];
 	let n = /* @__PURE__ */ new Set();
@@ -16676,13 +16827,13 @@ function Ym(e) {
 				t.push(`${r}: "polygon" needs at least 3 corner points.`), o = !1;
 				return;
 			}
-			let s = e.polygon.findIndex((e) => !Km(e));
-			s >= 0 ? (t.push(`${r}: corner #${s + 1} is not a [x, y] pair of numbers.`), o = !1) : Jm(e.polygon) < .3 && t.push(`${r}: the polygon has (almost) no area – are two corners swapped?`);
+			let s = e.polygon.findIndex((e) => !nh(e));
+			s >= 0 ? (t.push(`${r}: corner #${s + 1} is not a [x, y] pair of numbers.`), o = !1) : ih(e.polygon) < .3 && t.push(`${r}: the polygon has (almost) no area – are two corners swapped?`);
 		}), e.rooms?.length || t.push(`${i}: has no rooms.`), o) {
 			let n = gp(e);
 			(e.openings ?? []).forEach((e, r) => {
-				let a = `${i}, opening #${r + 1} (${e.type ?? "?"}${Km(e.at) ? ` at ${qm(e.at)}` : ""})`;
-				if (Vm.includes(e.type) || t.push(`${a}: "type" must be one of ${Vm.join(", ")}.`), !Km(e.at)) return t.push(`${a}: "at" must be a [x, y] point on a wall.`);
+				let a = `${i}, opening #${r + 1} (${e.type ?? "?"}${nh(e.at) ? ` at ${rh(e.at)}` : ""})`;
+				if (Zm.includes(e.type) || t.push(`${a}: "type" must be one of ${Zm.join(", ")}.`), !nh(e.at)) return t.push(`${a}: "at" must be a [x, y] point on a wall.`);
 				(typeof e.width != "number" || e.width <= 0) && t.push(`${a}: "width" in metres is missing.`);
 				let o = Infinity, s = 0;
 				for (let t of n) {
@@ -16691,25 +16842,25 @@ function Ym(e) {
 				}
 				o > .6 ? t.push(`${a}: not on a wall (nearest wall is ${o.toFixed(2)} m away) – it is left out.`) : e.width > s && t.push(`${a}: ${e.width} m wide but the wall is only ${s.toFixed(2)} m long.`);
 			}), (e.walls ?? []).forEach((e, n) => {
-				(!Km(e.a) || !Km(e.b)) && t.push(`${i}, wall #${n + 1}: "a" and "b" must be [x, y] points.`);
+				(!nh(e.a) || !nh(e.b)) && t.push(`${i}, wall #${n + 1}: "a" and "b" must be [x, y] points.`);
 			});
 		}
 		(e.furniture ?? []).forEach((e, n) => {
 			let r = `${i}, furniture #${n + 1} (${e.type ?? "?"})`;
-			if (Wm.includes(e.type) || t.push(`${r}: "type" must be one of ${Wm.join(", ")}.`), !Km(e.from) || !Km(e.to)) return t.push(`${r}: "from" and "to" must be [x, y] corners.`);
-			(Math.abs(e.from[0] - e.to[0]) < .05 || Math.abs(e.from[1] - e.to[1]) < .05) && t.push(`${r}: "from" ${qm(e.from)} and "to" ${qm(e.to)} must be opposite corners (different x and y).`), e.back && !Gm.includes(e.back) && t.push(`${r}: "back" must be one of ${Gm.join(", ")}.`);
+			if (eh.includes(e.type) || t.push(`${r}: "type" must be one of ${eh.join(", ")}.`), !nh(e.from) || !nh(e.to)) return t.push(`${r}: "from" and "to" must be [x, y] corners.`);
+			(Math.abs(e.from[0] - e.to[0]) < .05 || Math.abs(e.from[1] - e.to[1]) < .05) && t.push(`${r}: "from" ${rh(e.from)} and "to" ${rh(e.to)} must be opposite corners (different x and y).`), e.back && !th.includes(e.back) && t.push(`${r}: "back" must be one of ${th.join(", ")}.`);
 		}), (e.devices ?? []).forEach((e, n) => {
 			let r = `${i}, device #${n + 1} (${e.type ?? "?"} ${e.entity ?? ""})`;
-			Hm.includes(e.type) || t.push(`${r}: "type" must be one of ${Hm.join(", ")}.`), e.entity || t.push(`${r}: needs an "entity".`);
+			Qm.includes(e.type) || t.push(`${r}: "type" must be one of ${Qm.join(", ")}.`), e.entity || t.push(`${r}: needs an "entity".`);
 			let a = e.path;
-			a !== void 0 && (!Array.isArray(a) || a.length < 2 || !a.every(Km)) ? t.push(`${r}: "path" needs at least 2 [x, y] corners.`) : a === void 0 && !Km(e.pos) && t.push(`${r}: "pos" must be a [x, y] point.`);
+			a !== void 0 && (!Array.isArray(a) || a.length < 2 || !a.every(nh)) ? t.push(`${r}: "path" needs at least 2 [x, y] corners.`) : a === void 0 && !nh(e.pos) && t.push(`${r}: "pos" must be a [x, y] point.`);
 		});
 	}), (e.outdoor ?? []).forEach((e, n) => {
 		let r = `Outdoor area "${e.name ?? `#${n + 1}`}"`;
-		Um.includes(e.kind) || t.push(`${r}: "kind" must be one of ${Um.join(", ")}.`), (!Array.isArray(e.polygon) || e.polygon.length < 3 || !e.polygon.every(Km)) && t.push(`${r}: "polygon" needs at least 3 [x, y] points.`);
+		$m.includes(e.kind) || t.push(`${r}: "kind" must be one of ${$m.join(", ")}.`), (!Array.isArray(e.polygon) || e.polygon.length < 3 || !e.polygon.every(nh)) && t.push(`${r}: "polygon" needs at least 3 [x, y] points.`);
 	}), t;
 }
-function Xm(e, t) {
+function oh(e, t) {
 	let n = /* @__PURE__ */ new Set();
 	for (let t of e.floors ?? []) {
 		for (let e of t.devices ?? []) {
@@ -16731,7 +16882,7 @@ function Xm(e, t) {
 }
 //#endregion
 //#region src/attention.ts
-var Zm = /* @__PURE__ */ new Set([
+var sh = /* @__PURE__ */ new Set([
 	"problem",
 	"safety",
 	"smoke",
@@ -16742,19 +16893,19 @@ var Zm = /* @__PURE__ */ new Set([
 	"battery",
 	"heat",
 	"cold"
-]), Qm = (e) => e.state === "unavailable" || e.state === "unknown", $m = 36e5;
-function eh(e) {
+]), ch = (e) => e.state === "unavailable" || e.state === "unknown", lh = 36e5;
+function uh(e) {
 	let t = Date.now() - Date.parse(e.last_changed);
-	return Number.isFinite(t) ? t < $m ? `${Math.max(1, Math.round(t / 6e4))} min` : t < 48 * $m ? `${Math.round(t / $m)} h` : `${Math.round(t / (24 * $m))} days` : "";
+	return Number.isFinite(t) ? t < lh ? `${Math.max(1, Math.round(t / 6e4))} min` : t < 48 * lh ? `${Math.round(t / lh)} h` : `${Math.round(t / (24 * lh))} days` : "";
 }
-function th(e) {
+function dh(e) {
 	if (typeof e == "number") return e;
 	let t = String(e ?? "").replace(/[^0-9,.\-]/g, "");
 	t = t.includes(",") && t.includes(".") ? t.replace(/\./g, "").replace(",", ".") : t.replace(",", ".");
 	let n = parseFloat(t);
 	return Number.isFinite(n) ? n : NaN;
 }
-function nh(e, t, n) {
+function fh(e, t, n) {
 	if (!n) return null;
 	let r = /^[a-z_]+\.[a-z0-9_]+$/.test(n) ? e.states[n]?.state : t.attributes[n];
 	if (r == null || r === "" || r === "unknown" || r === "unavailable") return null;
@@ -16782,7 +16933,7 @@ function nh(e, t, n) {
 	}
 	return { text: i };
 }
-function rh(e) {
+function ph(e) {
 	let t = /* @__PURE__ */ new Set();
 	for (let n of e.floors ?? []) {
 		for (let e of n.devices ?? []) {
@@ -16799,7 +16950,7 @@ function rh(e) {
 	}
 	return t;
 }
-function ih(e, t, n) {
+function mh(e, t, n) {
 	let r = [], i = e.entities ?? {}, a = (t) => {
 		let n = i[t]?.device_id ? e.devices?.[i[t].device_id] : void 0;
 		return n?.name_by_user || n?.name || e.states[t]?.attributes.friendly_name || t;
@@ -16815,19 +16966,19 @@ function ih(e, t, n) {
 		let e = t.entity_id, r = i[e];
 		if (r?.hidden) continue;
 		let a = e.split(".")[0], s = t.attributes.device_class;
-		a === "sensor" && (s === "battery" || e.endsWith("_battery_state") || e.endsWith("_battery_level")) && !(r?.labels ?? []).includes(n.excludeLabel) ? Qm(t) ? Date.now() - Date.parse(t.last_changed) > 12 * $m && o(e, "battery", `offline for ${eh(t)} – battery dead?`, 3) : t.state === "low" ? o(e, "battery", "battery low", 2) : s === "battery" && Number(t.state) < n.batteryLow && o(e, "battery", `battery ${Math.round(Number(t.state))}%`, 2) : a === "binary_sensor" && Zm.has(s) && t.state === "on" && o(e, "problem", t.attributes.friendly_name ?? e, 4);
+		a === "sensor" && (s === "battery" || e.endsWith("_battery_state") || e.endsWith("_battery_level")) && !(r?.labels ?? []).includes(n.excludeLabel) ? ch(t) ? Date.now() - Date.parse(t.last_changed) > 12 * lh && o(e, "battery", `offline for ${uh(t)} – battery dead?`, 3) : t.state === "low" ? o(e, "battery", "battery low", 2) : s === "battery" && Number(t.state) < n.batteryLow && o(e, "battery", `battery ${Math.round(Number(t.state))}%`, 2) : a === "binary_sensor" && sh.has(s) && t.state === "on" && o(e, "problem", t.attributes.friendly_name ?? e, 4);
 	}
 	for (let n of t?.bills ?? []) {
 		let t = e.states[n.entity];
-		if (!t || Qm(t) || [
+		if (!t || ch(t) || [
 			"nu",
 			"no",
 			"off",
 			"false"
 		].includes(t.state.toLowerCase())) continue;
-		let i = n.attribute ? t.attributes[n.attribute] : t.state, a = th(i);
+		let i = n.attribute ? t.attributes[n.attribute] : t.state, a = dh(i);
 		if (!(a > .005)) continue;
-		let o = t.attributes.unit_of_measurement ?? (/lei|ron/i.test(String(i)) ? "lei" : ""), s = nh(e, t, n.due), c = s && s.date && s.date.getTime() < Date.now() - 24 * $m;
+		let o = t.attributes.unit_of_measurement ?? (/lei|ron/i.test(String(i)) ? "lei" : ""), s = fh(e, t, n.due), c = s && s.date && s.date.getTime() < Date.now() - 24 * lh;
 		r.push({
 			kind: "bill",
 			entity: n.entity,
@@ -16837,9 +16988,9 @@ function ih(e, t, n) {
 			device: `bill:${n.name}`
 		});
 	}
-	if (t) for (let n of rh(t)) {
+	if (t) for (let n of ph(t)) {
 		let t = e.states[n];
-		t ? Qm(t) && Date.now() - Date.parse(t.last_changed) > 6e5 && o(n, "offline", `unavailable for ${eh(t)}`, 1) : o(n, "offline", "missing from Home Assistant (renamed?)", 1);
+		t ? ch(t) && Date.now() - Date.parse(t.last_changed) > 6e5 && o(n, "offline", `unavailable for ${uh(t)}`, 1) : o(n, "offline", "missing from Home Assistant (renamed?)", 1);
 	}
 	let s = /* @__PURE__ */ new Map();
 	for (let e of r) s.has(e.device) || s.set(e.device, []), s.get(e.device).push(e);
@@ -16858,8 +17009,112 @@ function ih(e, t, n) {
 	return c.sort((e, t) => t.severity - e.severity || e.name.localeCompare(t.name));
 }
 //#endregion
-//#region src/card.ts
-var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = {
+//#region node_modules/three/examples/jsm/lines/LineGeometry.js
+var hh = class extends Sf {
+	constructor() {
+		super(), this.isLineGeometry = !0, this.type = "LineGeometry";
+	}
+	setPositions(e) {
+		let t = e.length - 3, n = new Float32Array(2 * t);
+		for (let r = 0; r < t; r += 3) n[2 * r] = e[r], n[2 * r + 1] = e[r + 1], n[2 * r + 2] = e[r + 2], n[2 * r + 3] = e[r + 3], n[2 * r + 4] = e[r + 4], n[2 * r + 5] = e[r + 5];
+		return super.setPositions(n), this;
+	}
+	setColors(e) {
+		let t = e.length - 3, n = new Float32Array(2 * t);
+		for (let r = 0; r < t; r += 3) n[2 * r] = e[r], n[2 * r + 1] = e[r + 1], n[2 * r + 2] = e[r + 2], n[2 * r + 3] = e[r + 3], n[2 * r + 4] = e[r + 4], n[2 * r + 5] = e[r + 5];
+		return super.setColors(n), this;
+	}
+	setFromPoints(e) {
+		let t = e.length - 1, n = new Float32Array(6 * t);
+		for (let r = 0; r < t; r++) n[6 * r] = e[r].x, n[6 * r + 1] = e[r].y, n[6 * r + 2] = e[r].z || 0, n[6 * r + 3] = e[r + 1].x, n[6 * r + 4] = e[r + 1].y, n[6 * r + 5] = e[r + 1].z || 0;
+		return super.setPositions(n), this;
+	}
+	fromLine(e) {
+		let t = e.geometry;
+		return this.setPositions(t.attributes.position.array), this;
+	}
+}, gh = class extends Hf {
+	constructor(e = new hh(), t = new Cf({ color: Math.random() * 16777215 })) {
+		super(e, t), this.isLine2 = !0, this.type = "Line2";
+	}
+}, _h = class {
+	color;
+	group = new wn();
+	wires = /* @__PURE__ */ new Map();
+	from = new K();
+	ceiling = 0;
+	constructor(e) {
+		this.color = e, this.group.name = "power-flow";
+	}
+	get active() {
+		return this.wires.size > 0;
+	}
+	set(e, t, n) {
+		(!e.equals(this.from) || t !== this.ceiling) && (this.clear(), this.from.copy(e), this.ceiling = t);
+		let r = new Set(n.map((e) => e.key));
+		for (let e of [...this.wires.keys()]) r.has(e) || this.remove(e);
+		for (let e of n) {
+			let t = this.wires.get(e.key) ?? this.add(e), n = Math.min(1, Math.log10(1 + e.watts) / 3.3);
+			t.material.linewidth = 1.6 + 2.6 * n, t.material.opacity = (e.measured ? .6 : .4) + .4 * n, t.speed = .5 + 2.5 * n, t.label.element.textContent = e.label, t.label.element.classList.toggle("est", !e.measured);
+		}
+	}
+	clear() {
+		for (let e of [...this.wires.keys()]) this.remove(e);
+	}
+	tick(e) {
+		for (let t of this.wires.values()) t.material.dashOffset -= t.speed * e;
+		return this.active;
+	}
+	add(e) {
+		let t = this.from, n = e.to, r = this.ceiling, i = [
+			t.x,
+			t.y,
+			t.z,
+			t.x,
+			r,
+			t.z,
+			n.x,
+			r,
+			t.z,
+			n.x,
+			r,
+			n.z,
+			n.x,
+			n.y,
+			n.z
+		], a = new hh();
+		a.setPositions(i);
+		let o = new Cf({
+			color: this.color,
+			linewidth: 2,
+			transparent: !0,
+			opacity: .8,
+			dashed: !0,
+			dashSize: .16,
+			gapSize: .28,
+			depthTest: !1,
+			worldUnits: !1
+		});
+		o.toneMapped = !1, o.resolution.copy(qf), Kf.add(o);
+		let s = new gh(a, o);
+		s.computeLineDistances(), s.renderOrder = 5, s.raycast = () => {}, this.group.add(s);
+		let c = document.createElement("div");
+		c.className = "nh-badge nh-watt";
+		let l = new pf(c);
+		l.position.copy(n).add(new K(0, .32, 0)), this.group.add(l);
+		let u = {
+			line: s,
+			material: o,
+			label: l,
+			speed: 1
+		};
+		return this.wires.set(e.key, u), u;
+	}
+	remove(e) {
+		let t = this.wires.get(e);
+		t && (this.group.remove(t.line, t.label), $f(t.line), this.wires.delete(e));
+	}
+}, vh = "0.2.0", yh = import.meta.url, bh = 3.2, xh = "neon-house-prefs", Sh = {
 	theme: "neon",
 	markers: "important",
 	cut: !1,
@@ -16869,7 +17124,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	weather: !0,
 	trail: !1,
 	heatmap: "none"
-}, uh = class extends HTMLElement {
+}, Ch = class extends HTMLElement {
 	config;
 	_hass;
 	plan;
@@ -16877,7 +17132,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	shadow;
 	engine;
 	theme = np.neon;
-	prefs = { ...lh };
+	prefs = { ...Sh };
 	floors = [];
 	devices = [];
 	byEntity = /* @__PURE__ */ new Map();
@@ -16894,6 +17149,10 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	panelArea;
 	issues = [];
 	attentionTimer = 0;
+	load;
+	energyTimer = 0;
+	flow;
+	flowAnim = (e) => this.flow?.tick(e) ?? !1;
 	updateChecked = !1;
 	cockpit;
 	cockpitTimer = 0;
@@ -16910,7 +17169,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 		requestRender: () => this.engine?.requestRender()
 	};
 	constructor() {
-		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = _h();
+		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = Ah();
 	}
 	static getStubConfig() {
 		return {
@@ -16921,7 +17180,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	setConfig(e) {
 		if (!e.plan && !e.plan_url) throw Error("neon-house-card: set `plan` or `plan_url`");
 		let t = JSON.stringify(e) !== JSON.stringify(this.config);
-		this.config = e, e.theme && !gh() && (this.prefs.theme = e.theme), e.heatmap && !gh() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
+		this.config = e, e.theme && !kh() && (this.prefs.theme = e.theme), e.heatmap && !kh() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
 	}
 	set hass(e) {
 		this._hass = e, this.ctx.hass = e, this.updateChecked || (this.updateChecked = !0, this.checkForUpdate()), this.built ? this.applyHass(this.seen.size === 0) : this.maybeBuild();
@@ -16958,7 +17217,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	ensureDom() {
 		if (this.els) return;
 		this.shadow.innerHTML = `
-      <style>${Bm}</style>
+      <style>${Xm}</style>
       <div class="nh-root">
         <div class="nh-stage"></div>
         <div class="nh-top">
@@ -16996,14 +17255,14 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 		this.els.root.style.height = this.hasAttribute("fill") ? "100%" : this.config?.fill ? "calc(100vh - var(--header-height, 56px) - env(safe-area-inset-top, 0px))" : `${e ?? 560}px`;
 	}
 	showError(e) {
-		this.els.stage.innerHTML = `<div class="nh-error">${Om(e)}</div>`;
+		this.els.stage.innerHTML = `<div class="nh-error">${Rm(e)}</div>`;
 	}
 	maybeBuild() {
 		if (!this.built && this.plan && this.config && this.isConnected) try {
 			this.build();
 		} catch (e) {
 			console.error(e);
-			let t = Ym(this.plan);
+			let t = ah(this.plan);
 			this.showError(`neon-house: ${e.message}${t.length ? `\n\nProblems in the plan:\n• ${t.join("\n• ")}` : ""}`);
 		}
 	}
@@ -17024,9 +17283,9 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 		let i = this.engine;
 		i.applyTheme(this.theme);
 		let a = i.scene;
-		this.hemi = new ds(this.theme.ambient, this.theme.background, this.theme.ambientIntensity), a.add(this.hemi), this.ground = Sm(e, this.theme), a.add(this.ground);
+		this.hemi = new ds(this.theme.ambient, this.theme.background, this.theme.ambientIntensity), a.add(this.hemi), this.ground = Mm(e, this.theme), a.add(this.ground);
 		let o = [...e.floors].sort((e, t) => e.elevation - t.elevation);
-		this.floors = o.map((e) => _m(e, this.theme, this.prefs.cut));
+		this.floors = o.map((e) => Dm(e, this.theme, this.prefs.cut));
 		for (let e of this.floors) a.add(e.group), e.labelEl.onclick = () => this.selectFloor(e.floor.id);
 		let s = o.flatMap((e) => e.rooms.flatMap((e) => e.polygon));
 		if (s.length) {
@@ -17035,18 +17294,18 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 		}
 		this.devices = [], this.byEntity.clear();
 		for (let e of this.floors) for (let t of e.floor.devices ?? []) {
-			let n = Kp(t, e.floor, this.ctx);
+			let n = nm(t, e.floor, this.ctx);
 			if (n) {
-				e.devices.add(n.object), this.devices.push(n), t.type === "camera" && n.badge && (n.badge.el.onclick = () => this.openCockpit(n));
+				e.devices.add(n.object), this.devices.push(n), t.type === "camera" && n.badge && (n.badge.el.onclick = () => this.openCockpit(n)), n.setLoad && n.badge && (n.badge.el.onclick = () => this.toggleEnergy());
 				for (let e of n.entities) this.byEntity.has(e) || this.byEntity.set(e, []), this.byEntity.get(e).push(n);
 			}
 		}
 		if (this.indexOpenings(), this.rooms = this.floors.flatMap((e) => e.rooms.map((t) => ({
 			view: t,
-			lights: this.devices.filter((n) => n.floor === e.floor && n.device.type === "light" && dh(n, t.room.polygon)),
+			lights: this.devices.filter((n) => n.floor === e.floor && n.device.type === "light" && wh(n, t.room.polygon)),
 			temperature: t.room.temperature,
 			humidity: t.room.humidity
-		}))), e.roof && o.length && (this.roof = Tm(o.at(-1), e.roof, this.theme), a.add(this.roof)), this.weather = new Mm({
+		}))), e.roof && o.length && (this.roof = Fm(o.at(-1), e.roof, this.theme), a.add(this.roof)), this.weather = new Hm({
 			center: this.houseCenter.clone().setY(0),
 			radius: this.houseRadius
 		}, this.theme, n ? 1400 : 600), this.weather.setEnabled(this.prefs.weather), n) {
@@ -17062,20 +17321,20 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 				far: 90
 			}), e.shadow.bias = -5e-4;
 		}
-		a.add(this.weather.group), this.trail = new Rm(this.theme), a.add(this.trail.group), this.built = !0, this.seen.clear(), this.showWarnings(), this.renderModes(), this.applyHass(!0);
+		a.add(this.weather.group), this.trail = new Jm(this.theme), a.add(this.trail.group), this.flow = new _h(16765499), a.add(this.flow.group), this.built = !0, this.seen.clear(), this.showWarnings(), this.renderModes(), this.applyHass(!0);
 		let c = this.config?.floor ?? this.mainFloor()?.floor.id ?? null;
 		this.selectFloor(r ? c : this.selectedFloor, !1), r && this.frameView(.01, 35), this.prefs.trail && this.reloadTrail();
 	}
 	teardownScene() {
 		let e = this.engine?.scene;
 		if (e) {
-			for (let t of this.floors) e.remove(t.group), Dm(t);
+			for (let t of this.floors) e.remove(t.group), Lm(t);
 			for (let t of [
 				this.ground,
 				this.roof,
 				this.hemi
 			]) t && (e.remove(t), $f(t));
-			this.weather && (e.remove(this.weather.group), this.weather.dispose()), this.trail && (this.trail.clear(), e.remove(this.trail.group)), this.floors = [], this.roof = void 0, this.els.stage.querySelectorAll(".nh-labels > *").forEach((e) => e.remove());
+			this.weather && (e.remove(this.weather.group), this.weather.dispose()), this.trail && (this.trail.clear(), e.remove(this.trail.group)), this.flow &&= (this.flow.clear(), e.remove(this.flow.group), void 0), this.floors = [], this.roof = void 0, this.els.stage.querySelectorAll(".nh-labels > *").forEach((e) => e.remove());
 		}
 	}
 	indexOpenings() {
@@ -17087,11 +17346,11 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	}
 	showWarnings() {
 		if (!this.plan) return;
-		let e = Ym(this.plan);
-		this._hass && e.push(...Xm(this.plan, this._hass));
+		let e = ah(this.plan);
+		this._hass && e.push(...oh(this.plan, this._hass));
 		let t = this.els.warn;
 		if (t.classList.toggle("show", e.length > 0), e.length) {
-			t.querySelector("summary").textContent = `⚠ ${e.length} plan warning${e.length > 1 ? "s" : ""}`, t.querySelector("ul").innerHTML = e.map((e) => `<li>${Om(e)}</li>`).join("");
+			t.querySelector("summary").textContent = `⚠ ${e.length} plan warning${e.length > 1 ? "s" : ""}`, t.querySelector("ul").innerHTML = e.map((e) => `<li>${Rm(e)}</li>`).join("");
 			for (let t of e) console.warn(`neon-house: ${t}`);
 		}
 	}
@@ -17107,7 +17366,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	applyHass(e) {
 		let t = this._hass;
 		if (!t || !this.built || !this.engine) return;
-		e && (this.autoRoomSensors(), this.showWarnings()), this.scheduleAttention(e);
+		e && (this.autoRoomSensors(), this.showWarnings()), this.scheduleAttention(e), this.scheduleEnergy(e);
 		let n = /* @__PURE__ */ new Set();
 		for (let r of this.watched()) {
 			let i = t.states[r];
@@ -17156,7 +17415,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 			}
 			let a = n.view.material, o = new Y(t.floorFill), s = this.prefs.heatmap, c = Ap(Dp(e, s === "temperature" ? n.temperature : s === "humidity" ? n.humidity : void 0));
 			if (s !== "none" && c !== void 0) {
-				let e = s === "temperature" ? fh(c) : ph(c);
+				let e = s === "temperature" ? Th(c) : Eh(c);
 				a.color.copy(o.lerp(e, .55)), a.emissive.copy(e).multiplyScalar(t.name === "day" ? .05 : .22);
 			} else {
 				a.color.set(t.floorFill);
@@ -17164,7 +17423,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 				a.emissive.copy(r.multiplyScalar(n / e));
 			}
 			let l = [], u = Dp(e, n.temperature), d = Dp(e, n.humidity);
-			u && !kp(u) && l.push(`${hh(u.state)}°`), d && !kp(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
+			u && !kp(u) && l.push(`${Oh(u.state)}°`), d && !kp(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
 			let f = n.view.labelEl.querySelector(".nh-room-sub");
 			f && (f.textContent = l.join(" · "));
 		}
@@ -17203,11 +17462,11 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 		e && !this.floors.some((t) => t.floor.id === e) && (e = null), this.selectedFloor = e;
 		let n = e ? this.floors.findIndex((t) => t.floor.id === e) : -1, r = n < 0 && this.canPullApart() && this.prefs.apart, i = this.groundIndex();
 		this.floors.forEach((e, t) => {
-			e.group.position.y = e.floor.elevation + (r ? (t - i) * sh : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
+			e.group.position.y = e.floor.elevation + (r ? (t - i) * bh : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
 			for (let r of e.rooms) r.label.visible = this.prefs.names && (n === t || n < 0 && e === this.mainFloor());
 		}), this.ground && (this.ground.visible = n < 0 || this.floors[n].floor.elevation > -.5);
 		let a = this.ground?.getObjectByName("covers");
-		a && (a.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = r ? (this.floors.length - 1 - i) * sh : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
+		a && (a.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = r ? (this.floors.length - 1 - i) * bh : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
 	}
 	mainFloor() {
 		let e = this.floors.filter((e) => e.floor.elevation > -.5);
@@ -17249,9 +17508,9 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	renderFloorChips() {
 		let e = this.els.floors, t = ["<span class=\"nh-title\">Neon<i>House</i></span>"];
 		t.push(`<button class="nh-chip ${this.selectedFloor === null ? "on" : ""}" data-floor="">${this.mainFloor() ? "House" : "All floors"}</button>`);
-		for (let e of [...this.floors].reverse()) t.push(`<button class="nh-chip ${this.selectedFloor === e.floor.id ? "on" : ""}" data-floor="${e.floor.id}">${Om(e.floor.name)}</button>`);
+		for (let e of [...this.floors].reverse()) t.push(`<button class="nh-chip ${this.selectedFloor === e.floor.id ? "on" : ""}" data-floor="${e.floor.id}">${Rm(e.floor.name)}</button>`);
 		t.push("<span class=\"nh-spacer\"></span>");
-		for (let e of this.config?.links ?? []) t.push(`<button class="nh-chip nh-link" data-link="${Om(e.path)}">${Om(e.name)} ↗</button>`);
+		for (let e of this.config?.links ?? []) t.push(`<button class="nh-chip nh-link" data-link="${Rm(e.path)}">${Rm(e.name)} ↗</button>`);
 		this.config?.attention !== !1 && t.push(this.attentionChip()), t.push(`<span class="nh-seg">${[
 			"neon",
 			"blueprint",
@@ -17261,16 +17520,16 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 			"important",
 			"all"
 		].map((e) => `<button class="nh-chip ${this.prefs.markers === e ? "on" : ""}" data-markers="${e}">${e[0].toUpperCase() + e.slice(1)}</button>`).join("")}</span>`), e.innerHTML = t.join(""), e.querySelectorAll("[data-floor]").forEach((e) => e.onclick = () => this.selectFloor(e.dataset.floor || null)), e.querySelectorAll("[data-link]").forEach((e) => e.onclick = () => Fp(e.dataset.link)), e.querySelectorAll("[data-theme]").forEach((e) => e.onclick = () => {
-			this.prefs.theme = e.dataset.theme, vh(this.prefs), this.built = !1, this.build();
+			this.prefs.theme = e.dataset.theme, jh(this.prefs), this.built = !1, this.build();
 		}), e.querySelectorAll("[data-markers]").forEach((e) => e.onclick = () => {
-			this.prefs.markers = e.dataset.markers, vh(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
+			this.prefs.markers = e.dataset.markers, jh(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
 		}), this.bindAttentionChip();
 	}
 	async checkForUpdate() {
 		try {
 			let e = (await this._hass.callWS({ type: "lovelace/resources" })).find((e) => e.url.includes("neon-house-card.js"));
 			if (!e) return;
-			let t = new URL(e.url, location.origin), n = new URL(oh);
+			let t = new URL(e.url, location.origin), n = new URL(yh);
 			if (t.pathname !== n.pathname || t.search === n.search) return;
 			let r = document.createElement("button");
 			r.className = "nh-update", r.textContent = "⟳ Neon House was updated – tap to reload", r.onclick = () => location.reload(), this.els.root.appendChild(r);
@@ -17290,7 +17549,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	scheduleAttention(e = !1) {
 		this.config?.attention !== !1 && this._hass && (!this.attentionTimer || e) && (clearTimeout(this.attentionTimer), this.attentionTimer = window.setTimeout(() => {
 			if (this.attentionTimer = 0, !this._hass) return;
-			this.issues = ih(this._hass, this.plan, {
+			this.issues = mh(this._hass, this.plan, {
 				excludeLabel: this.config?.attention_exclude_label ?? "no_battery_alerts",
 				batteryLow: this.config?.battery_low ?? 20
 			});
@@ -17306,21 +17565,73 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 			["Unavailable on the plan", "offline"]
 		].map(([e, t]) => {
 			let n = this.issues.filter((e) => e.kind === t);
-			return n.length ? `<div class="nh-section">${e}</div>${n.map((e) => `<div class="nh-item attn sev${e.severity}" data-id="${Om(e.entity)}">
-              <span class="dot"></span><span class="name">${Om(e.name)}<small>${Om(e.detail)}</small></span>
+			return n.length ? `<div class="nh-section">${e}</div>${n.map((e) => `<div class="nh-item attn sev${e.severity}" data-id="${Rm(e.entity)}">
+              <span class="dot"></span><span class="name">${Rm(e.name)}<small>${Rm(e.detail)}</small></span>
             </div>`).join("")}` : "";
 		}).join("");
 		this.els.panel.innerHTML = `
       <header><div style="flex:1"><h3>Needs attention</h3><div class="sub">${this.issues.length ? `${this.issues.length} thing${this.issues.length > 1 ? "s" : ""} to look at` : "All good"}</div></div><button class="nh-x" data-close>✕</button></header>
       <div class="nh-list">${e || "<div class=\"nh-section\">Nothing needs attention ✓</div>"}</div>`, this.els.panel.querySelector("[data-close]").onclick = () => this.closePanel(), this.els.panel.querySelectorAll("[data-id]").forEach((e) => e.onclick = () => Ip(this, e.dataset.id));
 	}
+	scheduleEnergy(e = !1) {
+		this._hass && this.devices.some((e) => e.setLoad) && (!this.energyTimer || e) && (clearTimeout(this.energyTimer), this.energyTimer = window.setTimeout(() => {
+			if (this.energyTimer = 0, this._hass && this.plan) {
+				this.load = Jp(this._hass, this.plan);
+				for (let e of this.devices) e.setLoad?.(this.load);
+				this.panelArea?.energy && (this.renderPanel(), this.updateFlow()), this.engine?.requestRender();
+			}
+		}, e ? 50 : 1500));
+	}
+	toggleEnergy() {
+		if (this.panelArea?.energy) return this.closePanel();
+		this.openPanel({
+			title: "Electricity now",
+			energy: !0
+		});
+	}
+	updateFlow() {
+		let e = this.flow;
+		if (!e) return;
+		let t = this.devices.find((e) => e.setLoad), n = t && this.floors.find((e) => e.floor === t.floor);
+		if (!this.panelArea?.energy || !this.load || !t || !n) {
+			e.active && (e.clear(), this.engine?.requestRender());
+			return;
+		}
+		let r = this.load.rows.flatMap((e) => {
+			let t = e.device && e.watts >= .5 ? this.devices.find((t) => t.device === e.device) : void 0;
+			return t ? [{
+				key: e.device.entity,
+				to: t.focus(),
+				watts: e.watts,
+				measured: e.measured,
+				label: `${e.measured ? "" : "~"}${Yp(e.watts)}`
+			}] : [];
+		});
+		e.set(t.focus(), n.group.position.y + n.floor.height - .12, r), this.engine?.animate(this.flowAnim);
+	}
+	renderEnergy() {
+		let e = this._hass, t = this.load, n = Vp(this.plan), r = Math.max(1, ...t?.rows.map((e) => e.watts) ?? []), i = (e) => `<div class="nh-item nh-load ${e.measured ? "on" : ""}" data-id="${Rm(e.entity)}" style="--share:${(100 * e.watts / r).toFixed(1)}%">
+        <span class="dot"></span><span class="name">${Rm(e.name)}</span><span class="state">${e.measured ? "" : "~"}${Yp(e.watts)}</span>
+      </div>`, a = (t, r) => {
+			let i = e.states[t], a = i?.attributes.unit_of_measurement ?? (t === n?.entity ? n?.unit : void 0);
+			return `<div class="nh-item" data-id="${Rm(t)}"><span class="dot"></span><span class="name">${r}</span>
+        <span class="state">${Rm(i && !kp(i) ? `${i.state}${a ? ` ${a}` : ""}` : "–")}</span></div>`;
+		}, o = t?.rows.filter((e) => e.measured && e.watts >= .5) ?? [], s = t?.rows.filter((e) => !e.measured && e.watts >= .5) ?? [], c = [
+			o.length ? `<div class="nh-section">Measured</div>${o.map(i).join("")}` : "",
+			s.length ? `<div class="nh-section">Estimated – typical use</div>${s.map(i).join("")}` : "",
+			n ? `<div class="nh-section">Meter</div>${a(n.entity, "This month")}${n.index ? a(n.index, "Meter reading") : ""}` : ""
+		], l = t ? `⚡ ${t.metered || !t.estimated ? "" : "≈ "}${Yp(t.total)} now` : "⚡ Electricity now", u = t ? t.metered ? "From the house meter" : `${Yp(t.measured)} measured · ~${Yp(t.estimated)} estimated` : "Counting…", d = t && !t.metered && t.estimated ? `<div class="nh-note">"~" figures are typical wattages for what is switched on, not readings.${n?.base ? "" : " The fridge, the boiler and anything Home Assistant can't see aren't counted."}</div>` : "", f = this.els.panel.querySelector(".nh-list")?.scrollTop ?? 0;
+		this.els.panel.innerHTML = `
+      <header><div style="flex:1"><h3>${l}</h3><div class="sub">${u}</div></div><button class="nh-x" data-close>✕</button></header>
+      <div class="nh-list">${c.join("")}${d}</div>`, this.els.panel.querySelector(".nh-list").scrollTop = f, this.els.panel.querySelector("[data-close]").onclick = () => this.closePanel(), this.els.panel.querySelectorAll("[data-id]").forEach((e) => e.onclick = () => Ip(this, e.dataset.id));
+	}
 	renderRoomChips(e) {
 		let t = this.els.rooms, n = [], r = this.selectedFloor ? this.floors.filter((e) => e.floor.id === this.selectedFloor) : [...this.floors].reverse();
 		for (let t of r) {
-			!this.selectedFloor && this.floors.length > 1 && n.push(`<span class="nh-group-label">${Om(t.floor.name)}</span>`);
+			!this.selectedFloor && this.floors.length > 1 && n.push(`<span class="nh-group-label">${Rm(t.floor.name)}</span>`);
 			for (let r of this.rooms.filter((e) => e.view.floor === t.floor)) {
 				let i = `${t.floor.id}/${r.view.room.id}`;
-				n.push(`<button class="nh-chip ${e === r ? "on" : ""}" data-room="${i}">${Om(r.view.room.name)}</button>`);
+				n.push(`<button class="nh-chip ${e === r ? "on" : ""}" data-room="${i}">${Rm(r.view.room.name)}</button>`);
 			}
 		}
 		t.innerHTML = n.join(""), t.querySelectorAll("[data-room]").forEach((e) => {
@@ -17355,7 +17666,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 			case "tall":
 			case "cut":
 				t.cut = e === "cut";
-				for (let e of this.floors) vm(e, this.theme, t.cut);
+				for (let e of this.floors) Om(e, this.theme, t.cut);
 				this.indexOpenings(), this.seen.clear(), this.applyHass(!0);
 				break;
 			case "apart":
@@ -17383,7 +17694,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 				this.engine?.animate((t) => e.tick(t));
 			}
 		}
-		vh(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
+		jh(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
 	}
 	toast(e) {
 		let t = this.els.toast;
@@ -17397,17 +17708,18 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 		return n;
 	}
 	openPanel(e) {
-		this.panelArea = e, this.renderPanel(), this.els.panel.classList.add("open");
+		this.panelArea = e, this.renderPanel(), this.els.panel.classList.add("open"), this.updateFlow();
 	}
 	closePanel() {
-		this.panelArea = void 0, this.els.panel.classList.remove("open"), this.renderRoomChips();
+		this.panelArea = void 0, this.els.panel.classList.remove("open"), this.renderRoomChips(), this.updateFlow();
 	}
 	renderPanel() {
 		let e = this.panelArea, t = this._hass;
 		if (!e || !t) return;
 		if (e.attention) return this.renderAttention();
+		if (e.energy) return this.renderEnergy();
 		let n = new Set(e.area ? this.areaEntities(e.area) : []);
-		if (e.room) for (let t of this.devices) t.floor === e.room.view.floor && dh(t, e.room.view.room.polygon) && n.add(t.device.entity);
+		if (e.room) for (let t of this.devices) t.floor === e.room.view.floor && wh(t, e.room.view.room.polygon) && n.add(t.device.entity);
 		let r = {
 			Controls: [],
 			Cameras: [],
@@ -17426,15 +17738,15 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 				"image"
 			].includes(t) || r.Other.push(e);
 		}
-		let i = Dp(t, e.room?.temperature), a = Dp(t, e.room?.humidity), o = [i && !kp(i) ? `${hh(i.state)}°C` : "", a && !kp(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
+		let i = Dp(t, e.room?.temperature), a = Dp(t, e.room?.humidity), o = [i && !kp(i) ? `${Oh(i.state)}°C` : "", a && !kp(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
 			let n = t.states[e], r = e.split(".")[0], i = Op(n) && r !== "sensor", a = Rp.has(r) && !kp(n), o = n?.attributes.unit_of_measurement ? ` ${n.attributes.unit_of_measurement}` : "";
 			return `<div class="nh-item ${i ? "on" : ""}" data-id="${e}">
-        <span class="dot"></span><span class="name">${Om(jp(t, e))}</span>
-        ${a ? `<span class="nh-toggle ${i ? "on" : ""}" data-toggle="${e}"></span>` : `<span class="state">${Om(n ? n.state + o : "–")}</span>`}
+        <span class="dot"></span><span class="name">${Rm(jp(t, e))}</span>
+        ${a ? `<span class="nh-toggle ${i ? "on" : ""}" data-toggle="${e}"></span>` : `<span class="state">${Rm(n ? n.state + o : "–")}</span>`}
       </div>`;
 		}, c = Object.entries(r).filter(([, e]) => e.length).map(([e, n]) => `<div class="nh-section">${e}</div>${n.sort((e, n) => jp(t, e).localeCompare(jp(t, n))).map(s).join("")}`).join("");
 		this.els.panel.innerHTML = `
-      <header><div style="flex:1"><h3>${Om(e.title)}</h3>${o ? `<div class="sub">${o}</div>` : ""}</div><button class="nh-x" data-close>✕</button></header>
+      <header><div style="flex:1"><h3>${Rm(e.title)}</h3>${o ? `<div class="sub">${o}</div>` : ""}</div><button class="nh-x" data-close>✕</button></header>
       <div class="nh-list">${c || `<div class="nh-section">No entities${e.area ? "" : " – set an HA area for this room"}</div>`}</div>`, this.els.panel.querySelector("[data-close]").onclick = () => this.closePanel(), this.els.panel.querySelectorAll("[data-id]").forEach((e) => {
 			e.onclick = (n) => {
 				let r = n.target;
@@ -17454,7 +17766,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 		this.closeCockpit(!1), this.cockpit = e, this.selectedFloor && this.selectedFloor !== e.floor.id && this.selectFloor(e.floor.id, !1);
 		let r = n.stream ?? n.entity, i = n.name ?? jp(t, n.entity).replace(/ (live view|hd stream|sd stream)$/i, ""), a = this.els.cockpit;
 		a.innerHTML = `
-      <header><b>◉ ${Om(i)}</b><button class="nh-x" data-close>✕</button></header>
+      <header><b>◉ ${Rm(i)}</b><button class="nh-x" data-close>✕</button></header>
       <div class="live"><img alt=""><span class="rec">LIVE</span></div>
       <div class="acts">
         <button class="nh-chip" data-act="ha">Open in Home Assistant</button>
@@ -17483,7 +17795,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 	bindPointer() {
 		let e = this.els.stage, t = null, n = 0;
 		e.addEventListener("pointerdown", (e) => {
-			e.target.closest?.(".nh-cam, .nh-floor") || (t = {
+			e.target.closest?.(".nh-cam, .nh-tap, .nh-floor") || (t = {
 				x: e.clientX,
 				y: e.clientY,
 				t: performance.now(),
@@ -17519,6 +17831,7 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 		if (i.kind === "device") {
 			let e = i.view, t = e.device;
 			if (t.type === "camera") return this.openCockpit(e);
+			if (e.setLoad) return this.toggleEnergy();
 			if (t.type === "sensor" || t.type === "sprinkler") return Ip(this, t.entity);
 			if (t.type === "car") return Ip(this, t.presence ?? t.entity);
 			if (t.type === "tv") {
@@ -17546,9 +17859,9 @@ var ah = "0.2.0", oh = import.meta.url, sh = 3.2, ch = "neon-house-prefs", lh = 
 		let n = this.engine?.pick(e, t);
 		n?.data.kind === "device" && Ip(this, n.data.view.device.entity);
 	}
-}, dh = (e, t) => Array.isArray(e.device.pos) && Xf(e.device.pos, t);
-function fh(e) {
-	return mh([
+}, wh = (e, t) => Array.isArray(e.device.pos) && Xf(e.device.pos, t);
+function Th(e) {
+	return Dh([
 		[16, 3107839],
 		[19, 2541274],
 		[21, 3073674],
@@ -17556,15 +17869,15 @@ function fh(e) {
 		[28, 16727383]
 	], e);
 }
-function ph(e) {
-	return mh([
+function Eh(e) {
+	return Dh([
 		[25, 16757053],
 		[40, 3073674],
 		[55, 2541274],
 		[70, 3107839]
 	], e);
 }
-function mh(e, t) {
+function Dh(e, t) {
 	if (t <= e[0][0]) return new Y(e[0][1]);
 	for (let n = 0; n < e.length - 1; n++) {
 		let [r, i] = e[n], [a, o] = e[n + 1];
@@ -17572,41 +17885,41 @@ function mh(e, t) {
 	}
 	return new Y(e.at(-1)[1]);
 }
-var hh = (e) => {
+var Oh = (e) => {
 	let t = Number(e);
 	return Number.isFinite(t) ? (Math.round(t * 10) / 10).toString() : e;
 };
-function gh() {
+function kh() {
 	try {
-		return !!localStorage.getItem(ch);
+		return !!localStorage.getItem(xh);
 	} catch {
 		return !1;
 	}
 }
-function _h() {
+function Ah() {
 	try {
-		let e = localStorage.getItem(ch);
+		let e = localStorage.getItem(xh);
 		if (e) return {
-			...lh,
+			...Sh,
 			...JSON.parse(e)
 		};
 	} catch {}
-	return { ...lh };
+	return { ...Sh };
 }
-function vh(e) {
+function jh(e) {
 	try {
-		localStorage.setItem(ch, JSON.stringify(e));
+		localStorage.setItem(xh, JSON.stringify(e));
 	} catch {}
 }
 if (!customElements.get("neon-house-card")) {
-	customElements.define("neon-house-card", uh);
+	customElements.define("neon-house-card", Ch);
 	let e = window;
 	e.customCards = e.customCards || [], e.customCards.push({
 		type: "neon-house-card",
 		name: "Neon House",
 		description: "Your home as a neon 3D plan: lights, cameras, climate, weather – all local.",
 		preview: !1
-	}), console.info(`%c NEON-HOUSE %c ${ah} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
+	}), console.info(`%c NEON-HOUSE %c ${vh} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
 }
 //#endregion
-export { uh as NeonHouseCard };
+export { Ch as NeonHouseCard };

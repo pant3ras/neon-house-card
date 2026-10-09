@@ -30,6 +30,10 @@ Assistant: no cloud, no account, no licence key.
   leak, overheated …) and plan devices that went unavailable; tap it for the list. Entities labelled
   `no_battery_alerts` are left out of the battery check.
 - **Irrigation** – sprinklers spray over their lawn while their valve is open.
+- **Electricity now** – the electricity meter shows what the house draws right now: every power
+  sensor in Home Assistant (smart plugs, a whole-house meter) plus a typical-wattage estimate for
+  devices that are on but measured by nothing. Tap it for the breakdown and neon wires running from
+  the meter to everything drawing power.
 - **Looks** – Neon, Blueprint and Day. House / floor views, cut-away walls, floors pulled apart.
 - **Plan checks** – mistakes in the plan show as plain-language warnings on the card.
 
@@ -134,7 +138,8 @@ of the opening on the wall's centre line (up to 60 cm off is forgiven). Optional
 ### Devices
 
 All devices have `type`, `entity`, `pos: [x, y]`, and optionally `rot` (facing: degrees clockwise,
-`0` = up the plan, `90` = right), `z` (height above the floor) and `name`.
+`0` = up the plan, `90` = right), `z` (height above the floor), `name` and `watts` (what it draws while
+on, for the electricity estimate when nothing measures it; `0` leaves it out).
 
 | type | Extra fields |
 |---|---|
@@ -147,7 +152,15 @@ All devices have `type`, `entity`, `pos: [x, y]`, and optionally `rot` (facing: 
 | `vacuum` | `pos` is the dock |
 | `car` | `presence` (drawn while on/home), `length`, `width` |
 | `sprinkler` | `entity` is a valve (or switch); `radius`, `arc` (degrees, centred on `rot`). Sprays while open; a tap opens HA's dialog rather than the water |
-| `meter` | `kind`: `electricity`, `gas`, `water`; `entity` = the figure on its label (e.g. this month), `index` = a second figure, `unit` to label a unitless sensor, `underground` (default for water: a lid in the ground) |
+| `meter` | `kind`: `electricity`, `gas`, `water`; `entity` = the figure on its label (e.g. this month), `index` = a second figure, `unit` to label a unitless sensor, `underground` (default for water: a lid in the ground). Electricity: `power` (a whole-house power sensor, if you have one), `base` (watts always drawn by things Home Assistant can't see – fridge, router, standby) |
+
+**Electricity now.** With an electricity meter on the plan, its label shows the house's power draw. A
+power sensor counts for the plan device it belongs to (same Home Assistant device, the `power` sensor of
+an appliance, or the smart plug in a TV's `power`); a TV's own reading behind its plug isn't counted
+twice. Power sensors on no plan device are added as they are. Devices that are on but measured by nothing
+get a typical figure (bulb 10 W, LED strip 5 W/m, TV 90 W, AC 900 W while heating or cooling,
+dehumidifier 200 W, camera 5 W …) shown with `~`; set `watts` on a device to correct it. With a
+whole-house `power` sensor the total is that reading and the rest shows as "Everything else".
 
 Camera cones are drawn outside the house only, and a tap on a room under a cone selects the room –
 open a camera by tapping the camera or its name tag.

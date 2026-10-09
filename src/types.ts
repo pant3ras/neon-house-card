@@ -131,6 +131,8 @@ interface DeviceBase {
   /** facing, degrees clockwise from plan "up" (−y) */
   rot?: number;
   name?: string;
+  /** typical power while on, for the house's electricity estimate when nothing measures it (0 leaves it out) */
+  watts?: number;
 }
 
 export interface LightDevice extends DeviceBase {
@@ -219,6 +221,10 @@ export interface MeterDevice extends DeviceBase {
   unit?: string;
   /** drawn as a lid in the ground (a water meter pit) */
   underground?: boolean;
+  /** electricity: a whole-house power sensor; without one the card adds up the devices */
+  power?: string;
+  /** electricity: watts always drawn by things Home Assistant can't see (fridge, router, standby) */
+  base?: number;
 }
 
 export type Device =

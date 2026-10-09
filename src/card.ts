@@ -9,6 +9,8 @@ import { MotionTrail } from './scene/trail';
 import { STYLES } from './ui/styles';
 import { missingEntities, validatePlan } from './plan/validate';
 import { findIssues, type Issue } from './attention';
+import { electricityMeter, formatWatts, houseLoad, type HouseLoad, type LoadRow } from './energy';
+import { PowerFlow } from './scene/flow';
 import { TOGGLEABLE, cameraUrl, isOn, isUnavailable, moreInfo, nameOf, navigate, num, stateOf, toggle } from './ha';
 import type { CameraDevice, CardConfig, HassEntity, HomeAssistant, Plan, ThemeName, Vec2 } from './types';
 
@@ -45,6 +47,15 @@ const DEFAULT_PREFS: Prefs = {
   heatmap: 'none',
 };
 
+interface Panel {
+  title: string;
+  area?: string;
+  room?: RoomInfo;
+  attention?: boolean;
+  /** the house's power draw (the electricity meter) */
+  energy?: boolean;
+}
+
 interface RoomInfo {
   view: RoomView;
   lights: DeviceView[];
@@ -74,9 +85,13 @@ export class NeonHouseCard extends HTMLElement {
   private houseCenter = new THREE.Vector3();
   private houseRadius = 10;
   private selectedFloor: string | null = null;
-  private panelArea?: { title: string; area?: string; room?: RoomInfo; attention?: boolean };
+  private panelArea?: Panel;
   private issues: Issue[] = [];
   private attentionTimer = 0;
+  private load?: HouseLoad;
+  private energyTimer = 0;
+  private flow?: PowerFlow;
+  private flowAnim = (dt: number) => this.flow?.tick(dt) ?? false;
   private updateChecked = false;
   private cockpit?: DeviceView;
   private cockpitTimer = 0;
@@ -314,6 +329,8 @@ export class NeonHouseCard extends HTMLElement {
         this.devices.push(view);
         // a camera's name tag opens its live view
         if (d.type === 'camera' && view.badge) view.badge.el.onclick = () => this.openCockpit(view);
+        // and the electricity meter's label where the power goes
+        if (view.setLoad && view.badge) view.badge.el.onclick = () => this.toggleEnergy();
         for (const e of view.entities) {
           if (!this.byEntity.has(e)) this.byEntity.set(e, []);
           this.byEntity.get(e)!.push(view);
@@ -352,6 +369,9 @@ export class NeonHouseCard extends HTMLElement {
     this.trail = new MotionTrail(this.theme);
     scene.add(this.trail.group);
 
+    this.flow = new PowerFlow(0xffd23b);
+    scene.add(this.flow.group);
+
     this.built = true;
     this.seen.clear();
     this.showWarnings();
@@ -383,6 +403,11 @@ export class NeonHouseCard extends HTMLElement {
     if (this.trail) {
       this.trail.clear();
       scene.remove(this.trail.group);
+    }
+    if (this.flow) {
+      this.flow.clear();
+      scene.remove(this.flow.group);
+      this.flow = undefined;
     }
     this.floors = [];
     this.roof = undefined;
@@ -448,6 +473,7 @@ export class NeonHouseCard extends HTMLElement {
     }
     // batteries anywhere in the house count, not only the plan's entities
     this.scheduleAttention(full);
+    this.scheduleEnergy(full);
     const changed = new Set<string>();
     for (const id of this.watched()) {
       const s = hass.states[id];
@@ -830,6 +856,89 @@ export class NeonHouseCard extends HTMLElement {
     this.els.panel.querySelectorAll<HTMLElement>('[data-id]').forEach((row) => (row.onclick = () => moreInfo(this, row.dataset.id!)));
   }
 
+  // ---------- electricity now ----------
+
+  /** the house's power draw, recounted at most every 1.5 s, on the electricity meter and its panel */
+  private scheduleEnergy(now = false) {
+    if (!this._hass || !this.devices.some((d) => d.setLoad)) return;
+    if (this.energyTimer && !now) return;
+    clearTimeout(this.energyTimer);
+    this.energyTimer = window.setTimeout(() => {
+      this.energyTimer = 0;
+      if (!this._hass || !this.plan) return;
+      this.load = houseLoad(this._hass, this.plan);
+      for (const d of this.devices) d.setLoad?.(this.load);
+      if (this.panelArea?.energy) {
+        this.renderPanel();
+        this.updateFlow();
+      }
+      this.engine?.requestRender();
+    }, now ? 50 : 1500);
+  }
+
+  private toggleEnergy() {
+    if (this.panelArea?.energy) return this.closePanel();
+    this.openPanel({ title: 'Electricity now', energy: true });
+  }
+
+  /** wires from the meter to every device drawing power, while the electricity panel is open */
+  private updateFlow() {
+    const flow = this.flow;
+    if (!flow) return;
+    const meter = this.devices.find((d) => d.setLoad);
+    const fv = meter && this.floors.find((f) => f.floor === meter.floor);
+    if (!this.panelArea?.energy || !this.load || !meter || !fv) {
+      if (flow.active) {
+        flow.clear();
+        this.engine?.requestRender();
+      }
+      return;
+    }
+    const targets = this.load.rows.flatMap((r) => {
+      const v = r.device && r.watts >= 0.5 ? this.devices.find((d) => d.device === r.device) : undefined;
+      return v ? [{ key: r.device!.entity, to: v.focus(), watts: r.watts, measured: r.measured, label: `${r.measured ? '' : '~'}${formatWatts(r.watts)}` }] : [];
+    });
+    flow.set(meter.focus(), fv.group.position.y + fv.floor.height - 0.12, targets);
+    this.engine?.animate(this.flowAnim);
+  }
+
+  private renderEnergy() {
+    const hass = this._hass!;
+    const l = this.load;
+    const meter = electricityMeter(this.plan);
+    const max = Math.max(1, ...(l?.rows.map((r) => r.watts) ?? []));
+    const row = (r: LoadRow) => `<div class="nh-item nh-load ${r.measured ? 'on' : ''}" data-id="${escapeHtml(r.entity)}" style="--share:${((100 * r.watts) / max).toFixed(1)}%">
+        <span class="dot"></span><span class="name">${escapeHtml(r.name)}</span><span class="state">${r.measured ? '' : '~'}${formatWatts(r.watts)}</span>
+      </div>`;
+    const figure = (id: string, label: string) => {
+      const s = hass.states[id];
+      const unit = s?.attributes.unit_of_measurement ?? (id === meter?.entity ? meter?.unit : undefined);
+      return `<div class="nh-item" data-id="${escapeHtml(id)}"><span class="dot"></span><span class="name">${label}</span>
+        <span class="state">${escapeHtml(s && !isUnavailable(s) ? `${s.state}${unit ? ` ${unit}` : ''}` : '–')}</span></div>`;
+    };
+    const measured = l?.rows.filter((r) => r.measured && r.watts >= 0.5) ?? [];
+    const estimated = l?.rows.filter((r) => !r.measured && r.watts >= 0.5) ?? [];
+    const sections = [
+      measured.length ? `<div class="nh-section">Measured</div>${measured.map(row).join('')}` : '',
+      estimated.length ? `<div class="nh-section">Estimated – typical use</div>${estimated.map(row).join('')}` : '',
+      meter ? `<div class="nh-section">Meter</div>${figure(meter.entity, 'This month')}${meter.index ? figure(meter.index, 'Meter reading') : ''}` : '',
+    ];
+    const title = l ? `⚡ ${l.metered || !l.estimated ? '' : '≈ '}${formatWatts(l.total)} now` : '⚡ Electricity now';
+    const sub = !l ? 'Counting…' : l.metered ? 'From the house meter' : `${formatWatts(l.measured)} measured · ~${formatWatts(l.estimated)} estimated`;
+    const note =
+      l && !l.metered && l.estimated
+        ? `<div class="nh-note">"~" figures are typical wattages for what is switched on, not readings.${meter?.base ? '' : " The fridge, the boiler and anything Home Assistant can't see aren't counted."}</div>`
+        : '';
+    // it re-renders every few seconds: keep the list where it was scrolled to
+    const scroll = this.els.panel.querySelector('.nh-list')?.scrollTop ?? 0;
+    this.els.panel.innerHTML = `
+      <header><div style="flex:1"><h3>${title}</h3><div class="sub">${sub}</div></div><button class="nh-x" data-close>✕</button></header>
+      <div class="nh-list">${sections.join('')}${note}</div>`;
+    this.els.panel.querySelector('.nh-list')!.scrollTop = scroll;
+    this.els.panel.querySelector<HTMLElement>('[data-close]')!.onclick = () => this.closePanel();
+    this.els.panel.querySelectorAll<HTMLElement>('[data-id]').forEach((r) => (r.onclick = () => moreInfo(this, r.dataset.id!)));
+  }
+
   private renderRoomChips(active?: RoomInfo) {
     const el = this.els.rooms;
     const parts: string[] = [];
@@ -936,16 +1045,18 @@ export class NeonHouseCard extends HTMLElement {
     return out;
   }
 
-  private openPanel(p: { title: string; area?: string; room?: RoomInfo; attention?: boolean }) {
+  private openPanel(p: Panel) {
     this.panelArea = p;
     this.renderPanel();
     this.els.panel.classList.add('open');
+    this.updateFlow();
   }
 
   private closePanel() {
     this.panelArea = undefined;
     this.els.panel.classList.remove('open');
     this.renderRoomChips();
+    this.updateFlow();
   }
 
   private renderPanel() {
@@ -953,6 +1064,7 @@ export class NeonHouseCard extends HTMLElement {
     const hass = this._hass;
     if (!p || !hass) return;
     if (p.attention) return this.renderAttention();
+    if (p.energy) return this.renderEnergy();
     const ids = new Set<string>(p.area ? this.areaEntities(p.area) : []);
     // devices drawn in this room count too, even if their HA area differs
     if (p.room) for (const d of this.devices) if (d.floor === p.room.view.floor && insideRoom(d, p.room.view.room.polygon)) ids.add(d.device.entity);
@@ -1080,7 +1192,7 @@ export class NeonHouseCard extends HTMLElement {
     let pressTimer = 0;
     stage.addEventListener('pointerdown', (e) => {
       // clickable labels (a camera's name tag) handle their own clicks
-      if ((e.target as HTMLElement).closest?.('.nh-cam, .nh-floor')) return;
+      if ((e.target as HTMLElement).closest?.('.nh-cam, .nh-tap, .nh-floor')) return;
       down = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId };
       clearTimeout(pressTimer);
       pressTimer = window.setTimeout(() => {
@@ -1138,6 +1250,7 @@ export class NeonHouseCard extends HTMLElement {
       const v = data.view as DeviceView;
       const d = v.device;
       if (d.type === 'camera') return this.openCockpit(v);
+      if (v.setLoad) return this.toggleEnergy();
       // water valves open from HA's dialog, never by an accidental tap on the lawn
       if (d.type === 'sensor' || d.type === 'sprinkler') return moreInfo(this, d.entity);
       if (d.type === 'car') return moreInfo(this, d.presence ?? d.entity);

@@ -98,6 +98,7 @@ export interface MockHass {
 export function createMockHass(plan: Plan): MockHass {
   const states: Record<string, HassEntity> = {};
   const areaOf: Record<string, string | undefined> = {};
+  const deviceOf: Record<string, string> = {};
   let n = 0;
   const add = (id: string | undefined, role = '', area?: string) => {
     if (!id || states[id]) return;
@@ -130,6 +131,13 @@ export function createMockHass(plan: Plan): MockHass {
       add(d.entity, (d as any).kind, area);
       for (const k of ['power', 'presence', 'stream']) add((d as any)[k], k, area);
       for (const m of (d as any).motion ?? []) add(m, 'motion', area);
+      // a TV's smart plug measures what the TV draws, like a real one does
+      if (d.type === 'tv' && d.power?.startsWith('switch.')) {
+        const obj = d.power.split('.')[1];
+        const sid = `sensor.${obj}_current_consumption`;
+        states[sid] = entity(sid, '96.4', { friendly_name: `${titleOf(d.power)} Current consumption`, unit_of_measurement: 'W', device_class: 'power' });
+        deviceOf[d.power] = deviceOf[sid] = `plug_${obj}`;
+      }
       if (d.type === 'camera') cameras.push({ entity: d.entity, name: d.name ?? titleOf(d.entity), motion: d.motion ?? [] });
       if (d.type === 'vacuum') vacuum = d.entity;
       if (d.type === 'sprinkler' && !valves.includes(d.entity)) valves.push(d.entity);
@@ -154,7 +162,7 @@ export function createMockHass(plan: Plan): MockHass {
   });
 
   const entities: NonNullable<HomeAssistant['entities']> = {};
-  for (const id of Object.keys(states)) entities[id] = { entity_id: id, area_id: areaOf[id] };
+  for (const id of Object.keys(states)) entities[id] = { entity_id: id, area_id: areaOf[id], device_id: deviceOf[id] };
 
   const subs: ((h: HomeAssistant) => void)[] = [];
   let hass: HomeAssistant;

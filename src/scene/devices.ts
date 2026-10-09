@@ -17,6 +17,7 @@ import type {
   VacuumDevice,
 } from '../types';
 import { brightness, isOn, isUnavailable, lightColor, num, stateOf } from '../ha';
+import { formatWatts, type HouseLoad } from '../energy';
 import { LineBuilder, lineMaterial, w3 } from './geo';
 import type { Theme } from './theme';
 
@@ -46,6 +47,8 @@ export interface DeviceView {
   alarm?(): boolean;
   /** cameras: show or hide the view wedge on the floor */
   setExtras?(visible: boolean): void;
+  /** electricity meters: what the house draws right now */
+  setLoad?(load: HouseLoad | undefined): void;
   /** world position (for flying the view there) */
   focus(): THREE.Vector3;
 }
@@ -150,9 +153,29 @@ function meterView(d: MeterDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
     }
   }
 
-  const badge = makeBadge('nh-meter', true);
+  // the electricity meter's label opens the house's power draw
+  const live = d.kind === 'electricity';
+  const badge = makeBadge(live ? 'nh-meter nh-tap' : 'nh-meter', true);
   badge.obj.position.set(0, underground ? 0.45 : 0.45, 0);
   g.add(badge.obj);
+
+  let load: HouseLoad | undefined;
+  let hass: HomeAssistant | undefined;
+  const render = () => {
+    const s = stateOf(hass, d.entity);
+    const idx = stateOf(hass, d.index);
+    const fmt = (x?: HassEntity, unit?: string) => {
+      if (!x || isUnavailable(x)) return '–';
+      const u = unit ?? x.attributes.unit_of_measurement;
+      return `${round2(x.state)}${u ? ` ${u}` : ''}`;
+    };
+    const figures = [fmt(s, d.unit), ...(idx ? [fmt(idx)] : [])];
+    const ico = `<span class="ico">${METER_ICON[d.kind] ?? '◆'}</span>`;
+    badge.el.classList.toggle('off', isUnavailable(s) && !load);
+    badge.el.innerHTML = load
+      ? `${ico}${load.metered || !load.estimated ? '' : '≈ '}${escape(formatWatts(load.total))}<span class="sub"> · ${escape(figures.join(' · '))}</span>`
+      : `${ico}${escape(figures[0])}${figures[1] ? `<span class="sub"> · ${escape(figures[1])}</span>` : ''}`;
+  };
 
   const view: DeviceView = {
     device: d,
@@ -161,18 +184,19 @@ function meterView(d: MeterDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
     entities: [d.entity, ...(d.index ? [d.index] : [])],
     badge,
     update(c) {
-      const s = stateOf(c.hass, d.entity);
-      const idx = stateOf(c.hass, d.index);
-      const fmt = (x?: HassEntity, unit?: string) => {
-        if (!x || isUnavailable(x)) return '–';
-        const u = unit ?? x.attributes.unit_of_measurement;
-        return `${round2(x.state)}${u ? ` ${u}` : ''}`;
-      };
-      badge.el.classList.toggle('off', isUnavailable(s));
-      badge.el.innerHTML = `<span class="ico">${METER_ICON[d.kind] ?? '◆'}</span>${escape(fmt(s, d.unit))}${idx ? `<span class="sub"> · ${escape(fmt(idx))}</span>` : ''}`;
+      hass = c.hass;
+      render();
     },
     focus: () => g.getWorldPosition(new THREE.Vector3()),
   };
+  if (live)
+    view.setLoad = (l) => {
+      load = l;
+      // the display brightens with the load: dim at a few watts, full from about 3 kW
+      const k = l ? 0.35 + 0.65 * Math.min(1, Math.log10(1 + l.total) / 3.5) : 1;
+      glow.color.setHex(accent).multiplyScalar(k);
+      render();
+    };
   pickable(g, view);
   return view;
 }
