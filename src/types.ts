@@ -186,6 +186,12 @@ export interface ApplianceDevice extends DeviceBase {
 
 export interface VacuumDevice extends DeviceBase {
   type: 'vacuum';
+  /** robots built by Dreame (Dreame, Xiaomi X20+, …): the map-data sensor – the robot is drawn where it really is */
+  map?: string;
+  /** turns the robot's map on the plan, degrees clockwise, if it comes out rotated */
+  map_rot?: number;
+  /** an entity describing the robot's error (a text or a fault code); empty, 0, OK or none means no error */
+  error?: string;
 }
 
 export interface SensorDevice extends DeviceBase {

@@ -1,6 +1,6 @@
 import '../card';
 import type { Plan } from '../types';
-import { createMockHass, cameraPicture } from './mock-hass';
+import { createMockHass, cameraPicture, dreameFrame } from './mock-hass';
 
 // your own plan (plans/casa.json, kept out of git) wins over the bundled example;
 // ?plan=example forces the example
@@ -73,10 +73,40 @@ for (const id of mock.valves) {
 }
 if (mock.vacuum) {
   const id = mock.vacuum;
+  const map = mock.vacuumMap;
+  const err = mock.vacuumError;
+  // with a map entity the robot reports where it is: drive a loop in front of the dock, a new spot every 1.5 s
+  const loop = [[0, 400], [-1500, 900], [-3500, 1200], [-4200, 2300], [-2000, 2500], [-600, 1600]];
+  let step = 0;
+  let timer = 0;
   const b = document.createElement('button');
   b.textContent = 'Vacuum start/stop';
-  b.onclick = () => mock.set(id, mock.hass.states[id].state === 'cleaning' ? 'docked' : 'cleaning');
+  b.onclick = () => {
+    const start = mock.hass.states[id].state !== 'cleaning';
+    clearInterval(timer);
+    if (err) mock.set(err, 'OK');
+    mock.set(id, start ? 'cleaning' : 'docked');
+    if (map && !start) mock.set(map, dreameFrame(0, 0));
+    if (map && start)
+      timer = window.setInterval(() => {
+        const [dx, dy] = loop[step++ % loop.length];
+        mock.set(map, dreameFrame(dx, dy));
+      }, 1500);
+  };
   buttons.appendChild(b);
+  if (err) {
+    // stuck far from the dock
+    const s = document.createElement('button');
+    s.textContent = 'Vacuum stuck';
+    s.onclick = () => {
+      clearInterval(timer);
+      const stuck = mock.hass.states[err].state !== 'OK';
+      mock.set(err, stuck ? 'OK' : 'Stuck – cannot move forward');
+      mock.set(id, stuck ? 'docked' : 'paused');
+      if (map) mock.set(map, stuck ? dreameFrame(0, 0) : dreameFrame(-11970, -4640, 147));
+    };
+    buttons.appendChild(s);
+  }
 }
 // refresh the fake camera pictures now and then
 setInterval(() => {

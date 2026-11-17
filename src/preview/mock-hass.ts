@@ -1,9 +1,35 @@
 // A fake `hass` for developing without Home Assistant. Its entities are made up from the plan
 // itself (every entity a device, door or room names gets a plausible state), so any plan works.
 
+import { zlibSync } from 'three/examples/jsm/libs/fflate.module.js';
 import type { HassEntity, HomeAssistant, Plan, Vec2 } from '../types';
 
 type Attrs = Record<string, any>;
+
+let frameId = 0;
+/**
+ * A Dreame-style map-data state with just the header: the robot `dx`, `dy` millimetres from its dock
+ * on the robot's map (y up). The dock faces 90°, so with the plan dock's `rot` 0 the map lines up with
+ * the plan: +dx is plan right, +dy is plan up.
+ */
+export function dreameFrame(dx: number, dy: number, angle = 90): string {
+  const head = new DataView(new ArrayBuffer(27));
+  const i16 = (o: number, v: number) => head.setInt16(o, Math.round(v), true);
+  i16(0, 1); // map id
+  i16(2, ++frameId);
+  head.setUint8(4, 80); // 'P' – an update frame
+  i16(5, dx);
+  i16(7, dy);
+  i16(9, angle);
+  i16(11, 0); // dock x, y, angle
+  i16(13, 0);
+  i16(15, 90);
+  i16(17, 50); // grid size; width/height/left/top stay 0
+  const z = zlibSync(new Uint8Array(head.buffer));
+  let bin = '';
+  for (const b of z) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
 
 export function cameraPicture(name: string): string {
   const t = new Date().toLocaleTimeString();
@@ -92,6 +118,9 @@ export interface MockHass {
   subscribe(fn: (h: HomeAssistant) => void): void;
   cameras: { entity: string; name: string; motion: string[] }[];
   vacuum?: string;
+  /** the vacuum's map-data and error entities, when the plan names them */
+  vacuumMap?: string;
+  vacuumError?: string;
   valves: string[];
 }
 
@@ -119,6 +148,8 @@ export function createMockHass(plan: Plan): MockHass {
   const cameras: MockHass['cameras'] = [];
   const valves: string[] = [];
   let vacuum: string | undefined;
+  let vacuumMap: string | undefined;
+  let vacuumError: string | undefined;
   for (const f of plan.floors ?? []) {
     const roomArea = (p: Vec2) => f.rooms?.find((r) => r.area && Array.isArray(r.polygon) && inside(p, r.polygon))?.area;
     for (const d of f.devices ?? []) {
@@ -164,7 +195,18 @@ export function createMockHass(plan: Plan): MockHass {
           deviceOf[id] = dev;
         }
       }
-      if (d.type === 'vacuum') vacuum = d.entity;
+      if (d.type === 'vacuum') {
+        vacuum = d.entity;
+        if (d.map) {
+          vacuumMap = d.map;
+          states[d.map] = entity(d.map, dreameFrame(0, 0), { friendly_name: `${titleOf(d.entity)} map data` });
+          deviceOf[d.map] = deviceOf[d.entity] = `vac_${d.entity}`;
+        }
+        if (d.error) {
+          vacuumError = d.error;
+          states[d.error] = entity(d.error, 'OK', { friendly_name: `${titleOf(d.entity)} error` });
+        }
+      }
       if (d.type === 'sprinkler' && !valves.includes(d.entity)) valves.push(d.entity);
     }
     for (const o of f.openings ?? []) add(o.entity, 'contact');
@@ -262,6 +304,6 @@ export function createMockHass(plan: Plan): MockHass {
     callWS,
     hassUrl: (p = '') => p,
   };
-  const api: MockHass = { hass, set, subscribe: (fn) => subs.push(fn), cameras, vacuum, valves };
+  const api: MockHass = { hass, set, subscribe: (fn) => subs.push(fn), cameras, vacuum, vacuumMap, vacuumError, valves };
   return api;
 }

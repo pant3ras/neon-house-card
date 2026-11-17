@@ -26,6 +26,10 @@ Assistant: no cloud, no account, no licence key.
 - **Screens** – TVs show the artwork or app colour of their media player.
 - **Climate, appliances, vacuum, car** – airflow, glowing appliances above a power threshold, a robot
   that cleans in circles, a car on its bay while it's home.
+- **Robot vacuum where it really is** – robots built by Dreame (Dreame, Xiaomi X20+, many Mijia
+  models) send their position in the map-data property; the card reads it straight from the state,
+  draws the robot in the right room as it cleans, and when it gets stuck shows the error, the room and
+  a pulsing red ring – also in "needs attention" and the alert bar.
 - **Heatmap** – rooms coloured by temperature or humidity; room labels with values and lights on.
 - **Room panel** – tap a room for every entity of its Home Assistant area.
 - **Needs attention** – a chip counting low or dead batteries, problem sensors that are on (tank full,
@@ -151,7 +155,7 @@ on, for the electricity estimate when nothing measures it; `0` leaves it out).
 | `climate` | – |
 | `appliance` | `kind`: `purifier`, `dehumidifier`, `fan`, `plug`, `washer`; `power` + `active_watts` |
 | `sensor` | – (shows its value) |
-| `vacuum` | `pos` is the dock |
+| `vacuum` | `pos` is where the robot sits on its dock, `rot` the way it faces there (out of the dock). `map`: the map-data sensor of a robot built by Dreame (Xiaomi Home: `sensor.…_map_data_p_6_1`) – the robot is drawn where it really is; `map_rot` (degrees clockwise) if its map comes out turned. `error`: an entity describing the current error (a text sensor, or the fault code) – anything but empty, `0`, `OK` or `none` counts |
 | `car` | `presence` (drawn while on/home), `length`, `width` |
 | `sprinkler` | `entity` is a valve (or switch); `radius`, `arc` (degrees, centred on `rot`). Sprays while open; a tap opens HA's dialog rather than the water |
 | `meter` | `kind`: `electricity`, `gas`, `water`; `entity` = the figure on its label (e.g. this month), `index` = a second figure, `unit` to label a unitless sensor, `underground` (default for water: a lid in the ground). Electricity: `power` (a whole-house power sensor, if you have one), `base` (watts always drawn by things Home Assistant can't see – fridge, router, standby) |

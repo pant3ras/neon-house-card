@@ -62,7 +62,8 @@ export function planEntities(plan: Plan): Set<string> {
   for (const f of plan.floors ?? []) {
     for (const d of f.devices ?? []) {
       ids.add(d.entity);
-      for (const k of ['power', 'presence', 'stream', 'index']) if ((d as any)[k]) ids.add((d as any)[k]);
+      // (a vacuum's `map` is left out: map data is often unknown while the robot sleeps)
+      for (const k of ['power', 'presence', 'stream', 'index', 'error']) if ((d as any)[k]) ids.add((d as any)[k]);
       for (const m of (d as any).motion ?? []) ids.add(m);
     }
     for (const o of f.openings ?? []) if (o.entity) ids.add(o.entity);

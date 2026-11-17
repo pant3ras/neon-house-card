@@ -615,11 +615,30 @@ export class NeonHouseCard extends HTMLElement {
     }
   }
 
+  /** a device's name: the plan's, else its Home Assistant device's, else the entity's */
+  private deviceLabel(v: DeviceView): string {
+    if (v.device.name) return v.device.name;
+    const reg = this._hass?.entities?.[v.device.entity];
+    const dev = reg?.device_id ? this._hass?.devices?.[reg.device_id] : undefined;
+    return dev?.name_by_user || dev?.name || nameOf(this._hass, v.device.entity);
+  }
+
   private updateAlerts() {
     const alarms = this.devices.filter((d) => d.alarm?.());
     const el = this.els.alert;
     if (!alarms.length) {
-      el.classList.remove('show');
+      // no motion: a device in trouble (a stuck robot) gets the bar; a tap flies there
+      const trouble = this.devices.find((d) => d.problem?.());
+      if (!trouble) {
+        el.classList.remove('show');
+        return;
+      }
+      el.textContent = `⚠ ${this.deviceLabel(trouble)}: ${trouble.problem!()}`;
+      el.classList.add('show');
+      el.onclick = () => {
+        if (this.selectedFloor && this.selectedFloor !== trouble.floor.id) this.selectFloor(trouble.floor.id, false);
+        this.engine?.flyTo(trouble.focus(), 6, undefined, 50);
+      };
       return;
     }
     const cam = alarms[0];
@@ -821,10 +840,18 @@ export class NeonHouseCard extends HTMLElement {
     this.attentionTimer = window.setTimeout(() => {
       this.attentionTimer = 0;
       if (!this._hass) return;
-      this.issues = findIssues(this._hass, this.plan, {
-        excludeLabel: this.config?.attention_exclude_label ?? 'no_battery_alerts',
-        batteryLow: this.config?.battery_low ?? 20,
+      // devices that know they are in trouble (a stuck robot) come first
+      const own: Issue[] = this.devices.flatMap((v) => {
+        const detail = v.problem?.();
+        return detail ? [{ kind: 'problem' as const, entity: v.device.entity, name: this.deviceLabel(v), detail, severity: 4 }] : [];
       });
+      this.issues = [
+        ...own,
+        ...findIssues(this._hass, this.plan, {
+          excludeLabel: this.config?.attention_exclude_label ?? 'no_battery_alerts',
+          batteryLow: this.config?.battery_low ?? 20,
+        }),
+      ];
       const chip = this.els.floors.querySelector('[data-attn]');
       if (chip) {
         chip.outerHTML = this.attentionChip();

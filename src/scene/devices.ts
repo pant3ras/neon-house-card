@@ -15,10 +15,13 @@ import type {
   SprinklerDevice,
   TvDevice,
   VacuumDevice,
+  Vec2,
 } from '../types';
 import { brightness, isOn, isUnavailable, lightColor, num, stateOf } from '../ha';
 import { formatWatts, type HouseLoad } from '../energy';
-import { LineBuilder, lineMaterial, w3 } from './geo';
+import { projectOnSegment } from '../plan/walls';
+import { decodeDreamePose, dreameToPlan } from './dreame';
+import { LineBuilder, lineMaterial, pointInPolygon, w3 } from './geo';
 import type { Theme } from './theme';
 
 export interface DeviceCtx {
@@ -49,6 +52,8 @@ export interface DeviceView {
   setExtras?(visible: boolean): void;
   /** electricity meters: what the house draws right now */
   setLoad?(load: HouseLoad | undefined): void;
+  /** something wrong with the device right now (a stuck robot), for "needs attention" and the alert bar */
+  problem?(): string | null;
   /** world position (for flying the view there) */
   focus(): THREE.Vector3;
 }
@@ -871,42 +876,116 @@ function vacuumView(d: VacuumDevice, floor: Floor, ctx: DeviceCtx): DeviceView {
   const root = new THREE.Group();
   root.add(g, dock);
 
+  // a red ring pulsing on the floor round the robot while it reports an error
+  const haloMat = new THREE.MeshBasicMaterial({ color: t.alert, transparent: true, opacity: 0.85, toneMapped: false, depthWrite: false, side: THREE.DoubleSide });
+  const halo = new THREE.Mesh(new THREE.RingGeometry(0.22, 0.28, 40), haloMat);
+  halo.rotation.x = -Math.PI / 2;
+  halo.position.y = -0.045;
+  halo.visible = false;
+  g.add(halo);
+
   const badge = makeBadge('nh-vac', false);
   badge.obj.position.set(0, 0.3, 0);
   g.add(badge.obj);
   let cleaning = false;
   let phase = 0;
+  let pulse = 0;
+  let error = '';
+  let room = '';
+  /** where the robot's map says it is (null without a map) */
+  let target: THREE.Vector3 | null = null;
 
   const view: DeviceView = {
     device: d,
     floor,
     object: root,
-    entities: [d.entity],
+    entities: [d.entity, ...(d.map ? [d.map] : []), ...(d.error ? [d.error] : [])],
     badge,
     update(c) {
       const s = stateOf(c.hass, d.entity);
       const st = s?.state ?? 'unknown';
       cleaning = st === 'cleaning' || st === 'returning';
-      const err = st === 'error';
-      ringMat.color.set(err ? t.alert : cleaning ? t.ok : t.wallEdge);
-      mat.emissive.set(cleaning ? t.ok : 0x000000);
-      mat.emissiveIntensity = cleaning ? 0.25 : 0;
+      error = errorText(stateOf(c.hass, d.error)) || (st === 'error' ? 'error' : '');
+      const pose = d.map ? decodeDreamePose(stateOf(c.hass, d.map)?.state) : null;
+      if (pose) {
+        const p = dreameToPlan(pose, d.pos, d.rot ?? 0, d.map_rot ?? 0);
+        target = w3(p, home.y);
+        room = roomAt(floor, p);
+      } else {
+        target = null;
+        room = '';
+      }
+      ringMat.color.set(error ? t.alert : cleaning ? t.ok : t.wallEdge);
+      mat.emissive.set(error ? t.alert : cleaning ? t.ok : 0x000000);
+      mat.emissiveIntensity = error ? 0.35 : cleaning ? 0.25 : 0;
+      halo.visible = !!error;
       const bat = s?.attributes.battery_level;
-      badge.el.innerHTML = `<span class="ico">⬤</span>${escape(st)}${bat != null ? ` · ${bat}%` : ''}`;
-      badge.important = cleaning || err;
-      if (!cleaning) g.position.copy(home);
+      const where = room ? ` <span class="sub">· ${escape(room)}</span>` : '';
+      badge.el.classList.toggle('alarm', !!error);
+      badge.el.innerHTML = error
+        ? `<span class="ico">⚠</span>${escape(error)}${where}`
+        : `<span class="ico">⬤</span>${escape(st)}${bat != null ? ` · ${bat}%` : ''}${cleaning ? where : ''}`;
+      badge.important = cleaning || !!error;
+      if (target) {
+        // a big jump (first load, the robot carried elsewhere) is a jump, not a slide through walls
+        if (g.position.distanceTo(target) > 2.5) g.position.copy(target);
+      } else if (!cleaning) g.position.copy(home);
     },
     tick(dt) {
-      if (!cleaning) return false;
-      phase += dt * 0.35;
-      // a lazy figure-eight around the dock while cleaning
-      g.position.set(home.x + Math.sin(phase) * 1.4, home.y, home.z + Math.sin(phase * 2) * 0.8 + 0.9);
-      return true;
+      let busy = false;
+      if (target) {
+        // the map updates every few seconds: glide to each new spot
+        if (g.position.distanceTo(target) > 0.005) {
+          g.position.lerp(target, Math.min(1, dt * 2.5));
+          busy = true;
+        }
+      } else if (cleaning) {
+        phase += dt * 0.35;
+        // no map: a lazy figure-eight in front of the dock while cleaning
+        g.position.set(home.x + Math.sin(phase) * 1.4, home.y, home.z + Math.sin(phase * 2) * 0.8 + 0.9);
+        busy = true;
+      }
+      if (error) {
+        pulse += dt;
+        const k = 0.5 + 0.5 * Math.sin(pulse * 4);
+        halo.scale.setScalar(1 + 0.45 * k);
+        haloMat.opacity = 0.9 - 0.55 * k;
+        busy = true;
+      }
+      return busy;
     },
+    problem: () => (error ? `${error}${room ? ` · ${room}` : ''}` : null),
     focus: () => g.getWorldPosition(new THREE.Vector3()),
   };
   pickable(root, view);
   return view;
+}
+
+const NO_ERROR = new Set(['', '0', 'ok', 'none', 'no_error', 'no error', 'false', 'off', 'unknown', 'unavailable']);
+
+/** the robot's error from its error entity: '' when there is none */
+function errorText(s?: HassEntity): string {
+  const v = (s?.state ?? '').trim();
+  if (NO_ERROR.has(v.toLowerCase())) return '';
+  return /^\d+$/.test(v) ? `error ${v}` : v;
+}
+
+/** the room a plan point is in – or right next to, since a robot hugging a wall can read a few cm outside */
+function roomAt(floor: Floor, p: Vec2): string {
+  const rooms = (floor.rooms ?? []).filter((r) => Array.isArray(r.polygon) && r.polygon.length >= 3);
+  const inside = rooms.find((r) => pointInPolygon(p, r.polygon));
+  if (inside) return inside.name;
+  let best = '';
+  let bestDist = 0.6;
+  for (const r of rooms)
+    for (let i = 0; i < r.polygon.length; i++) {
+      const { dist } = projectOnSegment(p, r.polygon[i], r.polygon[(i + 1) % r.polygon.length]);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = r.name;
+      }
+    }
+  return best;
 }
 
 // ---------- sensors ----------

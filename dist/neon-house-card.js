@@ -15360,15 +15360,334 @@ function Yp(e) {
 	return e >= 1e3 ? `${(e / 1e3).toFixed(e >= 1e4 ? 1 : 2)} kW` : `${Math.round(e)} W`;
 }
 //#endregion
+//#region node_modules/three/examples/jsm/libs/fflate.module.js
+var Xp = Uint8Array, Zp = Uint16Array, Qp = Int32Array, $p = new Xp([
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	1,
+	1,
+	1,
+	1,
+	2,
+	2,
+	2,
+	2,
+	3,
+	3,
+	3,
+	3,
+	4,
+	4,
+	4,
+	4,
+	5,
+	5,
+	5,
+	5,
+	0,
+	0,
+	0,
+	0
+]), em = new Xp([
+	0,
+	0,
+	0,
+	0,
+	1,
+	1,
+	2,
+	2,
+	3,
+	3,
+	4,
+	4,
+	5,
+	5,
+	6,
+	6,
+	7,
+	7,
+	8,
+	8,
+	9,
+	9,
+	10,
+	10,
+	11,
+	11,
+	12,
+	12,
+	13,
+	13,
+	0,
+	0
+]), tm = new Xp([
+	16,
+	17,
+	18,
+	0,
+	8,
+	7,
+	9,
+	6,
+	10,
+	5,
+	11,
+	4,
+	12,
+	3,
+	13,
+	2,
+	14,
+	1,
+	15
+]), nm = function(e, t) {
+	for (var n = new Zp(31), r = 0; r < 31; ++r) n[r] = t += 1 << e[r - 1];
+	for (var i = new Qp(n[30]), r = 1; r < 30; ++r) for (var a = n[r]; a < n[r + 1]; ++a) i[a] = a - n[r] << 5 | r;
+	return {
+		b: n,
+		r: i
+	};
+}, rm = nm($p, 2), im = rm.b, am = rm.r;
+im[28] = 258, am[258] = 28;
+var om = nm(em, 0), sm = om.b;
+om.r;
+for (var cm = new Zp(32768), lm = 0; lm < 32768; ++lm) {
+	var um = (lm & 43690) >> 1 | (lm & 21845) << 1;
+	um = (um & 52428) >> 2 | (um & 13107) << 2, um = (um & 61680) >> 4 | (um & 3855) << 4, cm[lm] = ((um & 65280) >> 8 | (um & 255) << 8) >> 1;
+}
+for (var dm = (function(e, t, n) {
+	for (var r = e.length, i = 0, a = new Zp(t); i < r; ++i) e[i] && ++a[e[i] - 1];
+	var o = new Zp(t);
+	for (i = 1; i < t; ++i) o[i] = o[i - 1] + a[i - 1] << 1;
+	var s;
+	if (n) {
+		s = new Zp(1 << t);
+		var c = 15 - t;
+		for (i = 0; i < r; ++i) if (e[i]) for (var l = i << 4 | e[i], u = t - e[i], d = o[e[i] - 1]++ << u, f = d | (1 << u) - 1; d <= f; ++d) s[cm[d] >> c] = l;
+	} else for (s = new Zp(r), i = 0; i < r; ++i) e[i] && (s[i] = cm[o[e[i] - 1]++] >> 15 - e[i]);
+	return s;
+}), fm = new Xp(288), lm = 0; lm < 144; ++lm) fm[lm] = 8;
+for (var lm = 144; lm < 256; ++lm) fm[lm] = 9;
+for (var lm = 256; lm < 280; ++lm) fm[lm] = 7;
+for (var lm = 280; lm < 288; ++lm) fm[lm] = 8;
+for (var pm = new Xp(32), lm = 0; lm < 32; ++lm) pm[lm] = 5;
+var mm = /*#__PURE__*/ dm(fm, 9, 1), hm = /*#__PURE__*/ dm(pm, 5, 1), gm = function(e) {
+	for (var t = e[0], n = 1; n < e.length; ++n) e[n] > t && (t = e[n]);
+	return t;
+}, _m = function(e, t, n) {
+	var r = t / 8 | 0;
+	return (e[r] | e[r + 1] << 8) >> (t & 7) & n;
+}, vm = function(e, t) {
+	var n = t / 8 | 0;
+	return (e[n] | e[n + 1] << 8 | e[n + 2] << 16) >> (t & 7);
+}, ym = function(e) {
+	return (e + 7) / 8 | 0;
+}, bm = function(e, t, n) {
+	return (t == null || t < 0) && (t = 0), (n == null || n > e.length) && (n = e.length), new Xp(e.subarray(t, n));
+}, xm = [
+	"unexpected EOF",
+	"invalid block type",
+	"invalid length/literal",
+	"invalid distance",
+	"stream finished",
+	"no stream handler",
+	,
+	"no callback",
+	"invalid UTF-8 data",
+	"extra field too long",
+	"date not in range 1980-2099",
+	"filename too long",
+	"stream finishing",
+	"invalid zip data"
+], Sm = function(e, t, n) {
+	var r = Error(t || xm[e]);
+	if (r.code = e, Error.captureStackTrace && Error.captureStackTrace(r, Sm), !n) throw r;
+	return r;
+}, Cm = function(e, t, n, r) {
+	var i = e.length, a = r ? r.length : 0;
+	if (!i || t.f && !t.l) return n || new Xp(0);
+	var o = !n, s = o || t.i != 2, c = t.i;
+	o && (n = new Xp(i * 3));
+	var l = function(e) {
+		var t = n.length;
+		if (e > t) {
+			var r = new Xp(Math.max(t * 2, e));
+			r.set(n), n = r;
+		}
+	}, u = t.f || 0, d = t.p || 0, f = t.b || 0, p = t.l, m = t.d, h = t.m, g = t.n, _ = i * 8;
+	do {
+		if (!p) {
+			u = _m(e, d, 1);
+			var v = _m(e, d + 1, 3);
+			if (d += 3, !v) {
+				var y = ym(d) + 4, b = e[y - 4] | e[y - 3] << 8, x = y + b;
+				if (x > i) {
+					c && Sm(0);
+					break;
+				}
+				s && l(f + b), n.set(e.subarray(y, x), f), t.b = f += b, t.p = d = x * 8, t.f = u;
+				continue;
+			}
+			if (v == 1) p = mm, m = hm, h = 9, g = 5;
+			else if (v == 2) {
+				var S = _m(e, d, 31) + 257, C = _m(e, d + 10, 15) + 4, w = S + _m(e, d + 5, 31) + 1;
+				d += 14;
+				for (var T = new Xp(w), E = new Xp(19), D = 0; D < C; ++D) E[tm[D]] = _m(e, d + D * 3, 7);
+				d += C * 3;
+				for (var O = gm(E), k = (1 << O) - 1, A = dm(E, O, 1), D = 0; D < w;) {
+					var j = A[_m(e, d, k)];
+					d += j & 15;
+					var y = j >> 4;
+					if (y < 16) T[D++] = y;
+					else {
+						var ee = 0, te = 0;
+						for (y == 16 ? (te = 3 + _m(e, d, 3), d += 2, ee = T[D - 1]) : y == 17 ? (te = 3 + _m(e, d, 7), d += 3) : y == 18 && (te = 11 + _m(e, d, 127), d += 7); te--;) T[D++] = ee;
+					}
+				}
+				var M = T.subarray(0, S), N = T.subarray(S);
+				h = gm(M), g = gm(N), p = dm(M, h, 1), m = dm(N, g, 1);
+			} else Sm(1);
+			if (d > _) {
+				c && Sm(0);
+				break;
+			}
+		}
+		s && l(f + 131072);
+		for (var P = (1 << h) - 1, ne = (1 << g) - 1, F = d;; F = d) {
+			var ee = p[vm(e, d) & P], re = ee >> 4;
+			if (d += ee & 15, d > _) {
+				c && Sm(0);
+				break;
+			}
+			if (ee || Sm(2), re < 256) n[f++] = re;
+			else if (re == 256) {
+				F = d, p = null;
+				break;
+			} else {
+				var ie = re - 254;
+				if (re > 264) {
+					var D = re - 257, ae = $p[D];
+					ie = _m(e, d, (1 << ae) - 1) + im[D], d += ae;
+				}
+				var oe = m[vm(e, d) & ne], se = oe >> 4;
+				oe || Sm(3), d += oe & 15;
+				var N = sm[se];
+				if (se > 3) {
+					var ae = em[se];
+					N += vm(e, d) & (1 << ae) - 1, d += ae;
+				}
+				if (d > _) {
+					c && Sm(0);
+					break;
+				}
+				s && l(f + 131072);
+				var I = f + ie;
+				if (f < N) {
+					var L = a - N, ce = Math.min(N, I);
+					for (L + f < 0 && Sm(3); f < ce; ++f) n[f] = r[L + f];
+				}
+				for (; f < I; ++f) n[f] = n[f - N];
+			}
+		}
+		t.l = p, t.p = F, t.b = f, t.f = u, p && (u = 1, t.m = h, t.d = m, t.n = g);
+	} while (!u);
+	return f != n.length && o ? bm(n, 0, f) : n.subarray(0, f);
+}, wm = /*#__PURE__*/ new Xp(0), Tm = function(e, t) {
+	return ((e[0] & 15) != 8 || e[0] >> 4 > 7 || (e[0] << 8 | e[1]) % 31) && Sm(6, "invalid zlib data"), (e[1] >> 5 & 1) == +!t && Sm(6, "invalid zlib data: " + (e[1] & 32 ? "need" : "unexpected") + " dictionary"), (e[1] >> 3 & 4) + 2;
+}, Em = /* @__PURE__ */ function() {
+	function e(e, t) {
+		typeof e == "function" && (t = e, e = {}), this.ondata = t;
+		var n = e && e.dictionary && e.dictionary.subarray(-32768);
+		this.s = {
+			i: 0,
+			b: n ? n.length : 0
+		}, this.o = new Xp(32768), this.p = new Xp(0), n && this.o.set(n);
+	}
+	return e.prototype.e = function(e) {
+		if (this.ondata || Sm(5), this.d && Sm(4), !this.p.length) this.p = e;
+		else if (e.length) {
+			var t = new Xp(this.p.length + e.length);
+			t.set(this.p), t.set(e, this.p.length), this.p = t;
+		}
+	}, e.prototype.c = function(e) {
+		this.s.i = +(this.d = e || !1);
+		var t = this.s.b, n = Cm(this.p, this.s, this.o);
+		this.ondata(bm(n, t, this.s.b), this.d), this.o = bm(n, this.s.b - 32768), this.s.b = this.o.length, this.p = bm(this.p, this.s.p / 8 | 0), this.s.p &= 7;
+	}, e.prototype.push = function(e, t) {
+		this.e(e), this.c(t);
+	}, e;
+}(), Dm = /* @__PURE__ */ function() {
+	function e(e, t) {
+		Em.call(this, e, t), this.v = e && e.dictionary ? 2 : 1;
+	}
+	return e.prototype.push = function(e, t) {
+		if (Em.prototype.e.call(this, e), this.v) {
+			if (this.p.length < 6 && !t) return;
+			this.p = this.p.subarray(Tm(this.p, this.v - 1)), this.v = 0;
+		}
+		t && (this.p.length < 4 && Sm(6, "invalid zlib data"), this.p = this.p.subarray(0, -4)), Em.prototype.c.call(this, t);
+	}, e;
+}(), Om = typeof TextDecoder < "u" && /*#__PURE__*/ new TextDecoder();
+try {
+	Om.decode(wm, { stream: !0 });
+} catch {}
+//#endregion
+//#region src/scene/dreame.ts
+var km = 27, Am = /* @__PURE__ */ new Map();
+function jm(e) {
+	let t = e.replace(/-/g, "+").replace(/_/g, "/"), n = atob(t.slice(0, t.length - t.length % 4)), r = new Uint8Array(n.length);
+	for (let e = 0; e < n.length; e++) r[e] = n.charCodeAt(e);
+	return r;
+}
+function Mm(e) {
+	if (!e || e.length < 24 || !/^[A-Za-z0-9_\-+/=]+$/.test(e)) return null;
+	if (Am.has(e)) return Am.get(e);
+	let t = null;
+	try {
+		let n = new Uint8Array(km), r = 0;
+		new Dm((e) => {
+			if (r >= km) return;
+			let t = Math.min(e.length, km - r);
+			n.set(e.subarray(0, t), r), r += t;
+		}).push(jm(e), !1);
+		let i = n[4];
+		if (r >= km && (i === 73 || i === 80)) {
+			let e = new DataView(n.buffer);
+			t = {
+				x: e.getInt16(5, !0),
+				y: e.getInt16(7, !0),
+				angle: e.getInt16(9, !0),
+				dockX: e.getInt16(11, !0),
+				dockY: e.getInt16(13, !0),
+				dockAngle: e.getInt16(15, !0)
+			};
+		}
+	} catch {
+		t = null;
+	}
+	return Am.size > 64 && Am.clear(), Am.set(e, t), t;
+}
+function Nm(e, t, n = 0, r = 0) {
+	let i = (e.x - e.dockX) / 1e3, a = -(e.y - e.dockY) / 1e3, o = (n - 90 + e.dockAngle + r) * Math.PI / 180, s = Math.cos(o), c = Math.sin(o);
+	return [t[0] + i * s - a * c, t[1] + i * c + a * s];
+}
+//#endregion
 //#region src/scene/devices.ts
-var Xp = Math.PI / 180, Zp = (e = 0) => -e * Xp, Qp = (e = 0) => [Math.sin(e * Xp), -Math.cos(e * Xp)];
-function $p(e, t) {
+var Pm = Math.PI / 180, Fm = (e = 0) => -e * Pm, Im = (e = 0) => [Math.sin(e * Pm), -Math.cos(e * Pm)];
+function Lm(e, t) {
 	e.traverse((e) => e.userData.pick = {
 		kind: "device",
 		view: t
 	});
 }
-function em(e, t) {
+function Rm(e, t) {
 	let n = document.createElement("div");
 	return n.className = `nh-badge ${e}`, {
 		obj: new pf(n),
@@ -15376,38 +15695,38 @@ function em(e, t) {
 		important: t
 	};
 }
-function tm(e, t, n, r, i = 1.2) {
+function zm(e, t, n, r, i = 1.2) {
 	let a = new Gf(), o = new ea(new qi(e, t, n)), s = o.getAttribute("position");
 	for (let e = 0; e < s.count; e += 2) a.seg(new K().fromBufferAttribute(s, e), new K().fromBufferAttribute(s, e + 1));
 	return o.dispose(), a.build(Jf(r, i));
 }
-function nm(e, t, n) {
+function Bm(e, t, n) {
 	if (!e?.entity || !Array.isArray(e.pos) && !Array.isArray(e.path)) return null;
 	switch (e.type) {
-		case "light": return cm(e, t, n);
-		case "camera": return fm(e, t, n);
-		case "tv": return gm(e, t, n);
-		case "climate": return vm(e, t, n);
-		case "appliance": return ym(e, t, n);
-		case "vacuum": return bm(e, t, n);
-		case "sensor": return xm(e, t, n);
-		case "car": return Sm(e, t, n);
-		case "sprinkler": return sm(e, t, n);
-		case "meter": return am(e, t, n);
+		case "light": return Km(e, t, n);
+		case "camera": return Xm(e, t, n);
+		case "tv": return eh(e, t, n);
+		case "climate": return nh(e, t, n);
+		case "appliance": return rh(e, t, n);
+		case "vacuum": return ih(e, t, n);
+		case "sensor": return ch(e, t, n);
+		case "car": return lh(e, t, n);
+		case "sprinkler": return Gm(e, t, n);
+		case "meter": return Um(e, t, n);
 		default: return null;
 	}
 }
-var rm = {
+var Vm = {
 	electricity: "⚡",
 	gas: "🔥",
 	water: "💧"
-}, im = {
+}, Hm = {
 	electricity: 16765499,
 	gas: 16747069,
 	water: 4172287
 };
-function am(e, t, n) {
-	let r = n.theme, i = im[e.kind] ?? r.wallEdge, a = e.underground ?? e.kind === "water", o = new wn(), s = new Fo({
+function Um(e, t, n) {
+	let r = n.theme, i = Hm[e.kind] ?? r.wallEdge, a = e.underground ?? e.kind === "water", o = new wn(), s = new Fo({
 		color: r.name === "day" ? 15330802 : r.device,
 		roughness: .5
 	}), c = new ri({
@@ -15421,7 +15740,7 @@ function am(e, t, n) {
 		let n = new Z(new So(.3, .015, 6, 40), c);
 		n.rotation.x = Math.PI / 2, n.position.y = .025, o.add(n);
 	} else {
-		o.position.copy(Uf(e.pos, e.z ?? (e.kind === "electricity" ? 1.8 : .6))), o.rotation.y = Zp(e.rot);
+		o.position.copy(Uf(e.pos, e.z ?? (e.kind === "electricity" ? 1.8 : .6))), o.rotation.y = Fm(e.rot);
 		let [t, n, i] = e.kind === "electricity" ? [
 			.4,
 			.55,
@@ -15431,7 +15750,7 @@ function am(e, t, n) {
 			.26,
 			.2
 		];
-		o.add(new Z(new qi(t, n, i), s)), o.add(tm(t, n, i, r.deviceEdge, 1));
+		o.add(new Z(new qi(t, n, i), s)), o.add(zm(t, n, i, r.deviceEdge, 1));
 		let a = new Z(new yo(t * .55, n * .18), c);
 		if (a.position.set(0, n * .18, -i / 2 - .002), a.rotation.y = Math.PI, o.add(a), e.kind === "gas") {
 			let e = new Fo({
@@ -15445,15 +15764,15 @@ function am(e, t, n) {
 			}
 		}
 	}
-	let l = e.kind === "electricity", u = em(l ? "nh-meter nh-tap" : "nh-meter", !0);
+	let l = e.kind === "electricity", u = Rm(l ? "nh-meter nh-tap" : "nh-meter", !0);
 	u.obj.position.set(0, .45, 0), o.add(u.obj);
 	let d, f, p = () => {
 		let t = Dp(f, e.entity), n = Dp(f, e.index), r = (e, t) => {
 			if (!e || kp(e)) return "–";
 			let n = t ?? e.attributes.unit_of_measurement;
-			return `${om(e.state)}${n ? ` ${n}` : ""}`;
-		}, i = [r(t, e.unit), ...n ? [r(n)] : []], a = `<span class="ico">${rm[e.kind] ?? "◆"}</span>`;
-		u.el.classList.toggle("off", kp(t) && !d), u.el.innerHTML = d ? `${a}${d.metered || !d.estimated ? "" : "≈ "}${Cm(Yp(d.total))}<span class="sub"> · ${Cm(i.join(" · "))}</span>` : `${a}${Cm(i[0])}${i[1] ? `<span class="sub"> · ${Cm(i[1])}</span>` : ""}`;
+			return `${Wm(e.state)}${n ? ` ${n}` : ""}`;
+		}, i = [r(t, e.unit), ...n ? [r(n)] : []], a = `<span class="ico">${Vm[e.kind] ?? "◆"}</span>`;
+		u.el.classList.toggle("off", kp(t) && !d), u.el.innerHTML = d ? `${a}${d.metered || !d.estimated ? "" : "≈ "}${uh(Yp(d.total))}<span class="sub"> · ${uh(i.join(" · "))}</span>` : `${a}${uh(i[0])}${i[1] ? `<span class="sub"> · ${uh(i[1])}</span>` : ""}`;
 	}, m = {
 		device: e,
 		floor: t,
@@ -15469,14 +15788,14 @@ function am(e, t, n) {
 		d = e;
 		let t = e ? .35 + .65 * Math.min(1, Math.log10(1 + e.total) / 3.5) : 1;
 		c.color.setHex(i).multiplyScalar(t), p();
-	}), $p(o, m), m;
+	}), Lm(o, m), m;
 }
-var om = (e) => {
+var Wm = (e) => {
 	let t = Number(e);
 	return Number.isFinite(t) ? String(Math.round(t * 100) / 100) : e;
 };
-function sm(e, t, n) {
-	let r = n.theme, i = e.radius ?? 4, a = Math.min(360, Math.max(10, e.arc ?? 360)) * Xp, o = new wn();
+function Gm(e, t, n) {
+	let r = n.theme, i = e.radius ?? 4, a = Math.min(360, Math.max(10, e.arc ?? 360)) * Pm, o = new wn();
 	o.position.copy(Uf(e.pos, e.z ?? .02));
 	let s = new Z(new Yi(.05, .06, .1, 14), new Fo({
 		color: r.name === "day" ? 4016732 : 1715276,
@@ -15492,7 +15811,7 @@ function sm(e, t, n) {
 		depthWrite: !1,
 		side: 2
 	}), u = new Z(c, l);
-	u.rotation.y = Math.PI / 2 - a / 2 - (e.rot ?? 0) * Xp, u.position.y = .01, o.add(u);
+	u.rotation.y = Math.PI / 2 - a / 2 - (e.rot ?? 0) * Pm, u.position.y = .01, o.add(u);
 	let d = n.high ? 220 : 120, f = new Float32Array(d * 3), p = Array.from({ length: d }, () => [
 		Math.random(),
 		Math.random(),
@@ -15508,9 +15827,9 @@ function sm(e, t, n) {
 		blending: r.name === "day" ? 1 : 2
 	}), g = new Bi(m, h);
 	g.frustumCulled = !1, o.add(g);
-	let _ = em("nh-water", !1);
+	let _ = Rm("nh-water", !1);
 	_.obj.position.set(0, .6, 0), o.add(_.obj);
-	let v = !1, y = 0, b = 0, x = (e.rot ?? 0) * Xp, S = {
+	let v = !1, y = 0, b = 0, x = (e.rot ?? 0) * Pm, S = {
 		device: e,
 		floor: t,
 		object: o,
@@ -15518,7 +15837,7 @@ function sm(e, t, n) {
 		badge: _,
 		update(t) {
 			let n = Dp(t.hass, e.entity);
-			v = Op(n), _.important = v, _.el.classList.toggle("active", v), _.el.classList.toggle("off", kp(n)), _.el.innerHTML = `<span class="ico">💧</span>${Cm(e.name ?? n?.attributes.friendly_name ?? e.entity)}${v ? " · watering" : ""}`;
+			v = Op(n), _.important = v, _.el.classList.toggle("active", v), _.el.classList.toggle("off", kp(n)), _.el.innerHTML = `<span class="ico">💧</span>${uh(e.name ?? n?.attributes.friendly_name ?? e.entity)}${v ? " · watering" : ""}`;
 		},
 		tick(e) {
 			let t = +!!v;
@@ -15533,13 +15852,13 @@ function sm(e, t, n) {
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
-	return $p(s, S), S;
+	return Lm(s, S), S;
 }
-function cm(e, t, n) {
+function Km(e, t, n) {
 	let r = e.kind ?? "bulb";
-	if (r === "string" && Array.isArray(e.path) && e.path.length >= 2) return lm(e, t, n);
+	if (r === "string" && Array.isArray(e.path) && e.path.length >= 2) return qm(e, t, n);
 	let i = new wn(), a = e.z ?? (r === "strip" ? .9 : r === "flood" ? 2.6 : r === "lamp" ? 1.3 : r === "desk" ? 1.15 : t.height - .15);
-	i.position.copy(Uf(e.pos, a)), i.rotation.y = Zp(e.rot);
+	i.position.copy(Uf(e.pos, a)), i.rotation.y = Fm(e.rot);
 	let o = new Fo({
 		color: 2238515,
 		emissive: 0,
@@ -15560,7 +15879,7 @@ function cm(e, t, n) {
 	let l = new Ts(16777215, 0, r === "flood" ? 9 : r === "strip" ? 4.5 : r === "desk" ? 3.5 : 6.5, 1.6);
 	l.position.y = r === "strip" ? .15 : -.05, r === "flood" && l.position.set(0, -.3, -.6), i.add(l);
 	let u = new Xr(new Ir({
-		map: dm(),
+		map: Ym(),
 		color: 16777215,
 		transparent: !0,
 		opacity: 0,
@@ -15589,9 +15908,9 @@ function cm(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return $p(i, m), m;
+	return Lm(i, m), m;
 }
-function lm(e, t, n) {
+function qm(e, t, n) {
 	let r = e.path, i = e.closed ?? !0, a = e.z ?? t.height - .05, o = Math.max(.1, e.spacing ?? .3), s = new wn(), c = i ? [...r, r[0]] : r, l = new Gf(), u = [];
 	for (let e = 0; e < c.length - 1; e++) {
 		let t = Uf(c[e], a), n = Uf(c[e + 1], a);
@@ -15612,7 +15931,7 @@ function lm(e, t, n) {
 	h.setAttribute("position", new fr(f, 3)), h.setAttribute("color", new fr(p, 3));
 	let g = new Bi(h, new Fi({
 		size: .32,
-		map: dm(),
+		map: Ym(),
 		vertexColors: !0,
 		transparent: !0,
 		depthWrite: !1,
@@ -15646,21 +15965,21 @@ function lm(e, t, n) {
 		},
 		focus: () => u[0].clone().add(s.getWorldPosition(new K()))
 	};
-	return $p(g, x), x;
+	return Lm(g, x), x;
 }
-var um = null;
-function dm() {
-	if (um) return um;
+var Jm = null;
+function Ym() {
+	if (Jm) return Jm;
 	let e = document.createElement("canvas");
 	e.width = e.height = 64;
 	let t = e.getContext("2d"), n = t.createRadialGradient(32, 32, 0, 32, 32, 32);
-	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.25, "rgba(255,255,255,.55)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), um = new Ui(e), um;
+	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.25, "rgba(255,255,255,.55)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), Jm = new Ui(e), Jm;
 }
-function fm(e, t, n) {
+function Xm(e, t, n) {
 	let r = n.theme, i = new wn(), a = e.z ?? 2.5;
 	i.position.copy(Uf(e.pos, a));
 	let o = new wn();
-	o.rotation.y = Zp(e.rot), i.add(o);
+	o.rotation.y = Fm(e.rot), i.add(o);
 	let s = new Fo({
 		color: r.name === "day" ? 15922423 : 1714762,
 		emissive: 0
@@ -15671,8 +15990,8 @@ function fm(e, t, n) {
 		emissive: 1731839,
 		emissiveIntensity: .6
 	}));
-	l.rotation.x = Math.PI / 2, l.position.z = -.11, o.add(l), o.add(tm(.14, .12, .2, r.deviceEdge, 1));
-	let u = (e.fov ?? 100) * Xp, d = e.range ?? 7, f = [];
+	l.rotation.x = Math.PI / 2, l.position.z = -.11, o.add(l), o.add(zm(.14, .12, .2, r.deviceEdge, 1));
+	let u = (e.fov ?? 100) * Pm, d = e.range ?? 7, f = [];
 	for (let e = 0; e <= 24; e++) {
 		let t = -u / 2 + u * e / 24;
 		f.push(new K(Math.sin(t) * d, 0, -Math.cos(t) * d));
@@ -15688,21 +16007,21 @@ function fm(e, t, n) {
 		opacity: .09,
 		depthWrite: !1,
 		side: 2,
-		...pm
+		...Zm
 	}), _ = new Z(h, g);
-	_.position.y = -a + .035, _.rotation.y = Zp(e.rot), _.renderOrder = 4, i.add(_);
+	_.position.y = -a + .035, _.rotation.y = Fm(e.rot), _.renderOrder = 4, i.add(_);
 	let v = new Gf();
 	v.seg(new K(), f[0]), v.seg(new K(), f[24]);
 	for (let e = 0; e < 24; e++) v.seg(f[e], f[e + 1]);
 	let y = Jf(r.wallEdge, 1, .3);
-	Object.assign(y, pm);
+	Object.assign(y, Zm);
 	let b = v.build(y);
-	b.position.y = -a + .04, b.rotation.y = Zp(e.rot), i.add(b);
+	b.position.y = -a + .04, b.rotation.y = Fm(e.rot), i.add(b);
 	let x = new Gf();
 	x.seg(new K(0, 0, 0), new K(0, -a + .04, 0));
 	let S = x.build(Jf(r.wallEdge, 1, .35));
 	i.add(S);
-	let C = e.motion ?? [], w = !1, T = 0, E = em("nh-cam", !0);
+	let C = e.motion ?? [], w = !1, T = 0, E = Rm("nh-cam", !0);
 	E.obj.position.set(0, .32, 0), i.add(E.obj);
 	let D = {
 		device: e,
@@ -15715,8 +16034,8 @@ function fm(e, t, n) {
 			w = n.length > 0;
 			let i = Dp(t.hass, e.entity), a = e.name ?? i?.attributes.friendly_name?.replace(/ (live view|hd stream|sd stream)$/i, "") ?? e.entity;
 			E.el.classList.toggle("alarm", w), E.el.classList.toggle("off", kp(i));
-			let o = n.map((e) => hm(e, t.hass));
-			E.el.innerHTML = `<span class="ico">◉</span>${Cm(a)}${w ? ` · <b>${Cm([...new Set(o)].join(", ") || "motion")}</b>` : ""}`;
+			let o = n.map((e) => $m(e, t.hass));
+			E.el.innerHTML = `<span class="ico">◉</span>${uh(a)}${w ? ` · <b>${uh([...new Set(o)].join(", ") || "motion")}</b>` : ""}`;
 			let c = w ? r.alert : r.wallEdge;
 			g.color.set(c), y.color.set(c), s.emissive.set(w ? r.alert : 0), w || (g.opacity = .09, s.emissiveIntensity = 0);
 		},
@@ -15732,26 +16051,26 @@ function fm(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return $p(o, D), _.userData.pick = {
+	return Lm(o, D), _.userData.pick = {
 		kind: "device",
 		view: D,
 		wedge: !0
 	}, D;
 }
-var pm = {
+var Zm = {
 	stencilWrite: !0,
 	stencilRef: 1,
 	stencilFunc: 517,
 	stencilFail: Be,
 	stencilZFail: Be,
 	stencilZPass: Be
-}, mm = {
+}, Qm = {
 	stencilWrite: !0,
 	stencilRef: 1,
 	stencilFunc: 519,
 	stencilZPass: Ve
 };
-function hm(e, t) {
+function $m(e, t) {
 	for (let n of [t?.states[e]?.attributes.friendly_name, e]) {
 		let e = String(n ?? "").toLowerCase();
 		if (/person|people|human/.test(e)) return "person";
@@ -15761,9 +16080,9 @@ function hm(e, t) {
 	}
 	return "motion";
 }
-function gm(e, t, n) {
+function eh(e, t, n) {
 	let r = n.theme, i = e.width ?? 1.23, a = 9 / 16 * i, o = new wn();
-	o.position.copy(Uf(e.pos, e.z ?? 1.25)), o.rotation.y = Zp(e.rot);
+	o.position.copy(Uf(e.pos, e.z ?? 1.25)), o.rotation.y = Fm(e.rot);
 	let s = new Fo({
 		color: 724242,
 		roughness: .3,
@@ -15774,7 +16093,7 @@ function gm(e, t, n) {
 		color: 329224,
 		toneMapped: !1
 	}), u = new Z(new yo(i, a), l);
-	u.position.z = -.027, u.rotation.y = Math.PI, o.add(u), o.add(tm(i + .04, a + .04, .05, r.deviceEdge, 1));
+	u.position.z = -.027, u.rotation.y = Math.PI, o.add(u), o.add(zm(i + .04, a + .04, .05, r.deviceEdge, 1));
 	let d = new Ts(5213183, 0, 4, 1.8);
 	d.position.z = -.6, o.add(d);
 	let f, p = !1, m = new ls();
@@ -15801,24 +16120,24 @@ function gm(e, t, n) {
 					e.colorSpace = Ie, l.map?.dispose(), l.map = e, l.color.set(16777215), l.needsUpdate = !0, t.requestRender();
 				});
 			}
-			(!p || !r) && (f = void 0, l.map && (l.map.dispose(), l.map = null, l.needsUpdate = !0)), l.map || l.color.set(p ? _m(n?.attributes.app_name ?? n?.attributes.source) : 329224), d.intensity = p ? 2.2 : 0, d.color.set(p ? _m(n?.attributes.app_name ?? n?.attributes.source) : 0);
+			(!p || !r) && (f = void 0, l.map && (l.map.dispose(), l.map = null, l.needsUpdate = !0)), l.map || l.color.set(p ? th(n?.attributes.app_name ?? n?.attributes.source) : 329224), d.intensity = p ? 2.2 : 0, d.color.set(p ? th(n?.attributes.app_name ?? n?.attributes.source) : 0);
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
-	return $p(o, h), h;
+	return Lm(o, h), h;
 }
-function _m(e) {
+function th(e) {
 	let t = (e ?? "").toLowerCase();
 	return t.includes("netflix") ? 15010068 : t.includes("youtube") ? 16722474 : t.includes("disney") ? 2052056 : t.includes("prime") ? 43233 : t.includes("hbo") || t.includes("max") ? 7023871 : t.includes("spotify") ? 1947988 : t.includes("tv") || t.includes("hdmi") ? 3112447 : 3829247;
 }
-function vm(e, t, n) {
+function nh(e, t, n) {
 	let r = n.theme, i = new wn();
-	i.position.copy(Uf(e.pos, e.z ?? t.height - .4)), i.rotation.y = Zp(e.rot);
+	i.position.copy(Uf(e.pos, e.z ?? t.height - .4)), i.rotation.y = Fm(e.rot);
 	let a = new Fo({
 		color: r.name === "day" ? 16777215 : 1846348,
 		emissive: 0
 	});
-	i.add(new Z(new qi(.9, .28, .22), a)), i.add(tm(.9, .28, .22, r.deviceEdge, 1));
+	i.add(new Z(new qi(.9, .28, .22), a)), i.add(zm(.9, .28, .22, r.deviceEdge, 1));
 	let o = new Er(), s = /* @__PURE__ */ new Float32Array(108), c = Array.from({ length: 36 }, () => Math.random());
 	o.setAttribute("position", new fr(s, 3));
 	let l = new Fi({
@@ -15830,7 +16149,7 @@ function vm(e, t, n) {
 		blending: 2
 	}), u = new Bi(o, l);
 	i.add(u);
-	let d = em("nh-climate", !0);
+	let d = Rm("nh-climate", !0);
 	d.obj.position.set(0, .35, 0), i.add(d.obj);
 	let f = !1, p = 0, m = {
 		device: e,
@@ -15857,9 +16176,9 @@ function vm(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return $p(i, m), m;
+	return Lm(i, m), m;
 }
-function ym(e, t, n) {
+function rh(e, t, n) {
 	let r = n.theme, i = e.kind ?? "plug", [a, o, s] = {
 		purifier: [
 			.32,
@@ -15887,13 +16206,13 @@ function ym(e, t, n) {
 			.6
 		]
 	}[i], c = new wn();
-	c.position.copy(Uf(e.pos, e.z ?? (i === "plug" ? .3 : o / 2))), c.rotation.y = Zp(e.rot);
+	c.position.copy(Uf(e.pos, e.z ?? (i === "plug" ? .3 : o / 2))), c.rotation.y = Fm(e.rot);
 	let l = new Fo({
 		color: r.name === "day" ? 16054008 : r.device,
 		emissive: 0,
 		roughness: .5
 	});
-	c.add(new Z(new qi(a, o, s), l)), c.add(tm(a, o, s, r.deviceEdge, 1));
+	c.add(new Z(new qi(a, o, s), l)), c.add(zm(a, o, s, r.deviceEdge, 1));
 	let u = new Z(new So(Math.min(a, s) * .38, .012, 6, 28), new ri({
 		color: r.ok,
 		transparent: !0,
@@ -15914,9 +16233,9 @@ function ym(e, t, n) {
 		},
 		focus: () => c.getWorldPosition(new K())
 	};
-	return $p(c, f), f;
+	return Lm(c, f), f;
 }
-function bm(e, t, n) {
+function ih(e, t, n) {
 	let r = n.theme, i = new wn(), a = Uf(e.pos, .06);
 	i.position.copy(a);
 	let o = new Fo({
@@ -15930,34 +16249,84 @@ function bm(e, t, n) {
 		opacity: .9
 	}), l = new Z(new So(.17, .008, 6, 36), c);
 	l.rotation.x = Math.PI / 2, l.position.y = .046, i.add(l);
-	let u = new Z(new qi(.3, .12, .08), new Fo({ color: r.device })), [d, f] = Qp(e.rot);
-	u.position.copy(Uf([e.pos[0] - d * .24, e.pos[1] - f * .24], .06)), u.rotation.y = Zp(e.rot);
+	let u = new Z(new qi(.3, .12, .08), new Fo({ color: r.device })), [d, f] = Im(e.rot);
+	u.position.copy(Uf([e.pos[0] - d * .24, e.pos[1] - f * .24], .06)), u.rotation.y = Fm(e.rot);
 	let p = new wn();
 	p.add(i, u);
-	let m = em("nh-vac", !1);
-	m.obj.position.set(0, .3, 0), i.add(m.obj);
-	let h = !1, g = 0, _ = {
+	let m = new ri({
+		color: r.alert,
+		transparent: !0,
+		opacity: .85,
+		toneMapped: !1,
+		depthWrite: !1,
+		side: 2
+	}), h = new Z(new bo(.22, .28, 40), m);
+	h.rotation.x = -Math.PI / 2, h.position.y = -.045, h.visible = !1, i.add(h);
+	let g = Rm("nh-vac", !1);
+	g.obj.position.set(0, .3, 0), i.add(g.obj);
+	let _ = !1, v = 0, y = 0, b = "", x = "", S = null, C = {
 		device: e,
 		floor: t,
 		object: p,
-		entities: [e.entity],
-		badge: m,
-		update(t) {
-			let n = Dp(t.hass, e.entity), s = n?.state ?? "unknown";
-			h = s === "cleaning" || s === "returning";
-			let l = s === "error";
-			c.color.set(l ? r.alert : h ? r.ok : r.wallEdge), o.emissive.set(h ? r.ok : 0), o.emissiveIntensity = h ? .25 : 0;
-			let u = n?.attributes.battery_level;
-			m.el.innerHTML = `<span class="ico">⬤</span>${Cm(s)}${u == null ? "" : ` · ${u}%`}`, m.important = h || l, h || i.position.copy(a);
+		entities: [
+			e.entity,
+			...e.map ? [e.map] : [],
+			...e.error ? [e.error] : []
+		],
+		badge: g,
+		update(n) {
+			let s = Dp(n.hass, e.entity), l = s?.state ?? "unknown";
+			_ = l === "cleaning" || l === "returning", b = oh(Dp(n.hass, e.error)) || (l === "error" ? "error" : "");
+			let u = e.map ? Mm(Dp(n.hass, e.map)?.state) : null;
+			if (u) {
+				let n = Nm(u, e.pos, e.rot ?? 0, e.map_rot ?? 0);
+				S = Uf(n, a.y), x = sh(t, n);
+			} else S = null, x = "";
+			c.color.set(b ? r.alert : _ ? r.ok : r.wallEdge), o.emissive.set(b ? r.alert : _ ? r.ok : 0), o.emissiveIntensity = b ? .35 : _ ? .25 : 0, h.visible = !!b;
+			let d = s?.attributes.battery_level, f = x ? ` <span class="sub">· ${uh(x)}</span>` : "";
+			g.el.classList.toggle("alarm", !!b), g.el.innerHTML = b ? `<span class="ico">⚠</span>${uh(b)}${f}` : `<span class="ico">⬤</span>${uh(l)}${d == null ? "" : ` · ${d}%`}${_ ? f : ""}`, g.important = _ || !!b, S ? i.position.distanceTo(S) > 2.5 && i.position.copy(S) : _ || i.position.copy(a);
 		},
 		tick(e) {
-			return h ? (g += e * .35, i.position.set(a.x + Math.sin(g) * 1.4, a.y, a.z + Math.sin(g * 2) * .8 + .9), !0) : !1;
+			let t = !1;
+			if (S ? i.position.distanceTo(S) > .005 && (i.position.lerp(S, Math.min(1, e * 2.5)), t = !0) : _ && (v += e * .35, i.position.set(a.x + Math.sin(v) * 1.4, a.y, a.z + Math.sin(v * 2) * .8 + .9), t = !0), b) {
+				y += e;
+				let n = .5 + .5 * Math.sin(y * 4);
+				h.scale.setScalar(1 + .45 * n), m.opacity = .9 - .55 * n, t = !0;
+			}
+			return t;
 		},
+		problem: () => b ? `${b}${x ? ` · ${x}` : ""}` : null,
 		focus: () => i.getWorldPosition(new K())
 	};
-	return $p(p, _), _;
+	return Lm(p, C), C;
 }
-function xm(e, t, n) {
+var ah = /* @__PURE__ */ new Set([
+	"",
+	"0",
+	"ok",
+	"none",
+	"no_error",
+	"no error",
+	"false",
+	"off",
+	"unknown",
+	"unavailable"
+]);
+function oh(e) {
+	let t = (e?.state ?? "").trim();
+	return ah.has(t.toLowerCase()) ? "" : /^\d+$/.test(t) ? `error ${t}` : t;
+}
+function sh(e, t) {
+	let n = (e.rooms ?? []).filter((e) => Array.isArray(e.polygon) && e.polygon.length >= 3), r = n.find((e) => Xf(t, e.polygon));
+	if (r) return r.name;
+	let i = "", a = .6;
+	for (let e of n) for (let n = 0; n < e.polygon.length; n++) {
+		let { dist: r } = fp(t, e.polygon[n], e.polygon[(n + 1) % e.polygon.length]);
+		r < a && (a = r, i = e.name);
+	}
+	return i;
+}
+function ch(e, t, n) {
 	let r = n.theme, i = new wn();
 	i.position.copy(Uf(e.pos, e.z ?? 1.5));
 	let a = new Z(new Yi(.05, .05, .03, 16), new Fo({
@@ -15966,7 +16335,7 @@ function xm(e, t, n) {
 		emissiveIntensity: .15
 	}));
 	a.rotation.x = Math.PI / 2, i.add(a);
-	let o = em("nh-sensor", !1);
+	let o = Rm("nh-sensor", !1);
 	o.obj.position.set(0, .18, 0), i.add(o.obj);
 	let s = {
 		device: e,
@@ -15980,11 +16349,11 @@ function xm(e, t, n) {
 		},
 		focus: () => i.getWorldPosition(new K())
 	};
-	return $p(i, s), s;
+	return Lm(i, s), s;
 }
-function Sm(e, t, n) {
+function lh(e, t, n) {
 	let r = n.theme, i = e.length ?? 4.6, a = e.width ?? 1.85, o = new wn();
-	o.position.copy(Uf(e.pos, 0)), o.rotation.y = Zp(e.rot);
+	o.position.copy(Uf(e.pos, 0)), o.rotation.y = Fm(e.rot);
 	let s = new wn(), c = new Fo({
 		color: r.name === "day" ? 4016732 : 1780820,
 		metalness: .6,
@@ -16000,7 +16369,7 @@ function Sm(e, t, n) {
 	u.position.y = .55;
 	let d = new Z(new qi(a * .86, .45, i * .5), l);
 	d.position.set(0, 1.03, i * .04), s.add(u, d);
-	let f = tm(a, .55, i, r.deviceEdge, 1.2);
+	let f = zm(a, .55, i, r.deviceEdge, 1.2);
 	f.position.y = .55, s.add(f);
 	let p = new Fo({ color: 461069 });
 	for (let e of [-1, 1]) for (let t of [-1, 1]) {
@@ -16033,9 +16402,9 @@ function Sm(e, t, n) {
 		},
 		focus: () => o.getWorldPosition(new K())
 	};
-	return $p(o, b), b;
+	return Lm(o, b), b;
 }
-function Cm(e) {
+function uh(e) {
 	return e.replace(/[&<>"]/g, (e) => ({
 		"&": "&amp;",
 		"<": "&lt;",
@@ -16045,12 +16414,12 @@ function Cm(e) {
 }
 //#endregion
 //#region src/scene/builder.ts
-var wm = 1.05, Tm = .18;
-function Em(e, t) {
+var dh = 1.05, fh = .18;
+function ph(e, t) {
 	let n = document.createElement("div");
 	return n.className = e, n.innerHTML = t, [new pf(n), n];
 }
-function Dm(e, t, n) {
+function mh(e, t, n) {
 	let r = new wn();
 	r.name = `floor:${e.id}`, r.position.y = e.elevation;
 	let i = new Fo({
@@ -16069,14 +16438,14 @@ function Dm(e, t, n) {
 			roughness: .85,
 			metalness: .05,
 			emissive: 0,
-			...mm
-		}), a = new Z(Qf(n.polygon, 0, Tm), i);
+			...Qm
+		}), a = new Z(Qf(n.polygon, 0, fh), i);
 		a.receiveShadow = !0, a.userData.pick = {
 			kind: "room",
 			floor: e.id,
 			room: n.id
 		}, r.add(a), c.loop(n.polygon.map((e) => Uf(e, .012)));
-		let o = Yf(n.polygon), [l, u] = Em("nh-room", `<b>${Rm(n.name)}</b><span class="nh-room-sub"></span>`);
+		let o = Yf(n.polygon), [l, u] = ph("nh-room", `<b>${Th(n.name)}</b><span class="nh-room-sub"></span>`);
 		l.position.copy(Uf(o, .25)), r.add(l), s.push({
 			room: n,
 			floor: e,
@@ -16094,7 +16463,7 @@ function Dm(e, t, n) {
 	u.name = "devices", r.add(u);
 	let d = new wn();
 	d.name = "furniture", r.add(d);
-	let f = e.rooms.flatMap((e) => e.polygon), p = Zf(f.length ? f : [[0, 0]]), m = new K((p.minX + p.maxX) / 2, e.elevation + e.height / 2, (p.minY + p.maxY) / 2), h = Math.hypot(p.maxX - p.minX, p.maxY - p.minY) / 2 + 1, [g, _] = Em("nh-floor", `<b>${Rm(e.name)}</b><span class="nh-floor-sub"></span>`);
+	let f = e.rooms.flatMap((e) => e.polygon), p = Zf(f.length ? f : [[0, 0]]), m = new K((p.minX + p.maxX) / 2, e.elevation + e.height / 2, (p.minY + p.maxY) / 2), h = Math.hypot(p.maxX - p.minX, p.maxY - p.minY) / 2 + 1, [g, _] = ph("nh-floor", `<b>${Th(e.name)}</b><span class="nh-floor-sub"></span>`);
 	g.position.set(p.minX - .6, e.height * .6, (p.minY + p.maxY) / 2), r.add(g);
 	let v = {
 		floor: e,
@@ -16113,13 +16482,13 @@ function Dm(e, t, n) {
 		devices: u,
 		furniture: d
 	};
-	return Om(v, t, n), v;
+	return hh(v, t, n), v;
 }
-function Om(e, t, n) {
+function hh(e, t, n) {
 	let { floor: r, walls: i } = e;
-	km(i, e), km(e.furniture, e), e.openings = [];
-	let a = n ? Math.min(wm, r.height) : r.height, o = gp(r, n ? wm : void 0);
-	e.furniture.add(wp(r, o, t, n ? wm : Infinity));
+	gh(i, e), gh(e.furniture, e), e.openings = [];
+	let a = n ? Math.min(dh, r.height) : r.height, o = gp(r, n ? dh : void 0);
+	e.furniture.add(wp(r, o, t, n ? dh : Infinity));
 	let s = new Wf(), c = new Gf(), l = new Wf();
 	for (let n of o) {
 		let o = Math.min(n.height ?? r.height, a);
@@ -16132,13 +16501,13 @@ function Om(e, t, n) {
 				yp(n, i, -o)
 			], e.y0, e.y1);
 		}
-		Am(n, o, c);
+		_h(n, o, c);
 		for (let r of n.openings) {
 			if (r.opening.type === "window" && r.top > r.bottom + .05) {
 				let e = yp(n, r.s, 0), t = yp(n, r.e, 0);
 				l.quad(Uf(e, r.bottom), Uf(t, r.bottom), Uf(t, r.top), Uf(e, r.top));
 			}
-			let a = jm(n, r, t);
+			let a = vh(n, r, t);
 			a && (i.add(a.pivot), e.openings.push(a));
 		}
 	}
@@ -16161,7 +16530,7 @@ function Om(e, t, n) {
 		n.renderOrder = 3, i.add(n);
 	}
 }
-function km(e, t) {
+function gh(e, t) {
 	for (let n of [...e.children]) e.remove(n), n.traverse((e) => {
 		let n = e;
 		n.geometry?.dispose?.();
@@ -16169,7 +16538,7 @@ function km(e, t) {
 		for (let e of r) e !== t.wallMaterial && e !== t.edgeMaterial && e.dispose();
 	});
 }
-function Am(e, t, n) {
+function _h(e, t, n) {
 	let r = e.t / 2, i = (t, n, r) => Uf(yp(e, t, n), r);
 	for (let a of ["l", "r"]) {
 		let o = a === "l" ? r : -r, s = 0, c = [], l = [];
@@ -16193,7 +16562,7 @@ function Am(e, t, n) {
 		n.seg(i(e, r, 0), i(e, r, t)), n.seg(i(e, -r, 0), i(e, -r, t)), n.seg(i(e, r, t), i(e, -r, t));
 	}
 }
-function jm(e, t, n) {
+function vh(e, t, n) {
 	let r = t.opening.type;
 	if (r !== "door" && r !== "garage" || !t.opening.entity) return null;
 	let i = t.e - t.s, a = t.top - t.bottom, o = new Fo({
@@ -16233,7 +16602,7 @@ function jm(e, t, n) {
 		}
 	};
 }
-function Mm(e, t) {
+function yh(e, t) {
 	let n = new wn();
 	n.name = "ground";
 	let r = e.floors.flatMap((e) => e.rooms.flatMap((e) => e.polygon)).concat((e.outdoor ?? []).flatMap((e) => e.polygon)), i = Zf(r.length ? r : [[0, 0]]), a = (i.minX + i.maxX) / 2, o = (i.minY + i.maxY) / 2, s = Math.max(i.maxX - i.minX, i.maxY - i.minY) * 3 + 30, c = new Z(new yo(s, s), new Fo({
@@ -16245,14 +16614,14 @@ function Mm(e, t) {
 	u.position.set(Math.round(a), -.01, Math.round(o));
 	let d = u.material;
 	d.transparent = !0, d.opacity = t.name === "day" ? .35 : .55, n.add(u);
-	for (let r of e.outdoor ?? []) n.add(Pm(r, t));
+	for (let r of e.outdoor ?? []) n.add(xh(r, t));
 	let f = new wn();
 	f.name = "covers";
 	let p = e.floors.filter((e) => Math.abs(e.elevation) < .5).flatMap((e) => e.rooms.map((e) => e.polygon));
-	for (let n of e.outdoor ?? []) n.roof && n.polygon?.length >= 3 && f.add(Nm(n, t, p));
+	for (let n of e.outdoor ?? []) n.roof && n.polygon?.length >= 3 && f.add(bh(n, t, p));
 	return n.add(f), n;
 }
-function Nm(e, t, n) {
+function bh(e, t, n) {
 	let r = new wn(), i = e.roof_height ?? 2.6, a = e.polygon, o = (e) => n.some((t) => t.some((n, r) => fp(e, n, t[(r + 1) % t.length]).dist < .35)), s = new Fo({
 		color: t.device,
 		roughness: .6,
@@ -16278,7 +16647,7 @@ function Nm(e, t, n) {
 	}), d = new Z(Qf(a, i + .1, .1), u);
 	return d.castShadow = !0, r.add(d), c.loop(a.map((e) => Uf(e, i + .1))), c.loop(a.map((e) => Uf(e, i))), r.add(c.build(Jf(t.roofEdge, 1.3))), r;
 }
-function Pm(e, t) {
+function xh(e, t) {
 	let n = new wn(), r = {
 		grass: .012,
 		water: .008,
@@ -16303,7 +16672,7 @@ function Pm(e, t) {
 	}
 	return n;
 }
-function Fm(e, t, n) {
+function Sh(e, t, n) {
 	let r = new wn();
 	r.name = "roof";
 	let i = e.rooms.flatMap((e) => e.polygon);
@@ -16358,7 +16727,7 @@ function Fm(e, t, n) {
 				[f, o]
 			]) v.seg(e, i);
 		}
-		t.solar && Im(r, t, n, {
+		t.solar && Ch(r, t, n, {
 			x0: s,
 			x1: c,
 			z0: l,
@@ -16379,7 +16748,7 @@ function Fm(e, t, n) {
 	}), S = new Z(_.geometry(), x);
 	return S.castShadow = !0, S.userData.pick = { kind: "roof" }, r.add(S), r.add(v.build(Jf(n.roofEdge, 1.4))), r;
 }
-function Im(e, t, n, r) {
+function Ch(e, t, n, r) {
 	let i = t.solar, a = new Fo({
 		color: 662074,
 		emissive: n.name === "neon" ? 666202 : 0,
@@ -16427,10 +16796,10 @@ function Im(e, t, n, r) {
 		entity: i.power
 	}, e.add(g);
 }
-function Lm(e) {
+function wh(e) {
 	$f(e.group);
 }
-function Rm(e) {
+function Th(e) {
 	return e.replace(/[&<>"]/g, (e) => ({
 		"&": "&amp;",
 		"<": "&lt;",
@@ -16440,13 +16809,13 @@ function Rm(e) {
 }
 //#endregion
 //#region src/scene/weather.ts
-var zm = /* @__PURE__ */ new Set([
+var Eh = /* @__PURE__ */ new Set([
 	"rainy",
 	"pouring",
 	"lightning-rainy",
 	"snowy-rainy",
 	"hail"
-]), Bm = /* @__PURE__ */ new Set(["snowy", "snowy-rainy"]), Vm = {
+]), Dh = /* @__PURE__ */ new Set(["snowy", "snowy-rainy"]), Oh = {
 	cloudy: .9,
 	partlycloudy: .45,
 	rainy: .9,
@@ -16460,7 +16829,7 @@ var zm = /* @__PURE__ */ new Set([
 	windy: .3,
 	"windy-variant": .6,
 	exceptional: .8
-}, Hm = class {
+}, kh = class {
 	area;
 	theme;
 	group = new wn();
@@ -16501,7 +16870,7 @@ var zm = /* @__PURE__ */ new Set([
 		let a = new Er();
 		a.setAttribute("position", new fr(this.snowPos, 3)), this.snow = new Bi(a, new Fi({
 			size: .09,
-			map: Gm(),
+			map: Mh(),
 			color: 16777215,
 			transparent: !0,
 			opacity: .9,
@@ -16509,7 +16878,7 @@ var zm = /* @__PURE__ */ new Set([
 		})), this.snow.frustumCulled = !1;
 		for (let t = 0; t < n; t++) this.snowPos[t * 3] = e.center.x + (Math.random() - .5) * r, this.snowPos[t * 3 + 1] = Math.random() * 14, this.snowPos[t * 3 + 2] = e.center.z + (Math.random() - .5) * r;
 		this.group.add(this.snow);
-		let o = qm();
+		let o = Ph();
 		for (let n = 0; n < 12; n++) {
 			let r = new Xr(new Ir({
 				map: o,
@@ -16521,13 +16890,13 @@ var zm = /* @__PURE__ */ new Set([
 			r.scale.set(i, i * .5, 1), r.userData.angle = n / 12 * Math.PI * 2 + Math.random() * .4, r.userData.dist = e.radius * 1.6 + 6 + Math.random() * 10, r.userData.height = 16 + Math.random() * 6, r.userData.speed = .01 + Math.random() * .015, this.placeCloud(r), this.clouds.push(r), this.group.add(r);
 		}
 		this.sunSprite = new Xr(new Ir({
-			map: Gm(),
+			map: Mh(),
 			color: 16765562,
 			transparent: !0,
 			depthWrite: !1,
 			blending: 2
 		})), this.sunSprite.scale.setScalar(6), this.moonSprite = new Xr(new Ir({
-			map: Gm(),
+			map: Mh(),
 			color: 12375295,
 			transparent: !0,
 			depthWrite: !1,
@@ -16557,14 +16926,14 @@ var zm = /* @__PURE__ */ new Set([
 	}
 	update(e) {
 		let t = e.weather;
-		this.condition = t?.state ?? "sunny", this.rainAmount = this.enabled && zm.has(this.condition) ? this.condition === "pouring" ? 1 : .6 : 0, this.snowAmount = this.enabled && Bm.has(this.condition) ? 1 : 0, this.cloudAmount = this.enabled ? Vm[this.condition] ?? .1 : 0;
+		this.condition = t?.state ?? "sunny", this.rainAmount = this.enabled && Eh.has(this.condition) ? this.condition === "pouring" ? 1 : .6 : 0, this.snowAmount = this.enabled && Dh.has(this.condition) ? 1 : 0, this.cloudAmount = this.enabled ? Oh[this.condition] ?? .1 : 0;
 		let n = Number(t?.attributes.wind_speed ?? 0), r = (Number(t?.attributes.wind_bearing ?? 0) + 180 - e.north) * Math.PI / 180, i = Math.min(1, n / 50);
 		this.wind.set(Math.sin(r) * i * 4, 0, -Math.cos(r) * i * 4);
 		let a = e.sun, o = Number(a?.attributes.elevation ?? 35), s = Number(a?.attributes.azimuth ?? 180);
 		this.night = a ? a.state === "below_horizon" : !1;
-		let c = Um(s - e.north, Math.max(o, 4));
+		let c = Ah(s - e.north, Math.max(o, 4));
 		this.sunSprite.position.copy(this.area.center).addScaledVector(c, 55);
-		let l = Um(s + 180 - e.north, 35);
+		let l = Ah(s + 180 - e.north, 35);
 		this.moonSprite.position.copy(this.area.center).addScaledVector(l, 55);
 		let u = this.night ? l : c;
 		this.sunLight.position.copy(this.area.center).addScaledVector(u, 30);
@@ -16640,21 +17009,21 @@ var zm = /* @__PURE__ */ new Set([
 		});
 	}
 };
-function Um(e, t) {
+function Ah(e, t) {
 	let n = e * Math.PI / 180, r = t * Math.PI / 180;
 	return new K(Math.sin(n) * Math.cos(r), Math.sin(r), -Math.cos(n) * Math.cos(r));
 }
-var Wm = null;
-function Gm() {
-	if (Wm) return Wm;
+var jh = null;
+function Mh() {
+	if (jh) return jh;
 	let e = document.createElement("canvas");
 	e.width = e.height = 64;
 	let t = e.getContext("2d"), n = t.createRadialGradient(32, 32, 0, 32, 32, 32);
-	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.35, "rgba(255,255,255,.7)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), Wm = new Ui(e), Wm;
+	return n.addColorStop(0, "rgba(255,255,255,1)"), n.addColorStop(.35, "rgba(255,255,255,.7)"), n.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = n, t.fillRect(0, 0, 64, 64), jh = new Ui(e), jh;
 }
-var Km = null;
-function qm() {
-	if (Km) return Km;
+var Nh = null;
+function Ph() {
+	if (Nh) return Nh;
 	let e = document.createElement("canvas");
 	e.width = 256, e.height = 128;
 	let t = e.getContext("2d");
@@ -16662,11 +17031,11 @@ function qm() {
 		let e = 40 + Math.random() * 176, n = 50 + Math.random() * 40, r = 18 + Math.random() * 30, i = t.createRadialGradient(e, n, 0, e, n, r);
 		i.addColorStop(0, "rgba(255,255,255,.35)"), i.addColorStop(1, "rgba(255,255,255,0)"), t.fillStyle = i, t.beginPath(), t.arc(e, n, r, 0, Math.PI * 2), t.fill();
 	}
-	return Km = new Ui(e), Km;
+	return Nh = new Ui(e), Nh;
 }
 //#endregion
 //#region src/scene/trail.ts
-var Jm = class {
+var Fh = class {
 	theme;
 	group = new wn();
 	minutes = 30;
@@ -16703,7 +17072,7 @@ var Jm = class {
 					time: r,
 					entity: t,
 					camera: i,
-					kind: hm(t, e)
+					kind: $m(t, e)
 				}), s = n.s;
 			}
 		}
@@ -16715,7 +17084,7 @@ var Jm = class {
 		for (let a of e) {
 			let e = i.get(a.camera) ?? 0;
 			i.set(a.camera, e + 1);
-			let o = Ym(a.camera, e);
+			let o = Ih(a.camera, e);
 			r.push(o);
 			let s = (n - a.time) / (this.minutes * 6e4), c = 1 - Math.min(.85, s), l = new wn();
 			l.position.copy(o);
@@ -16755,18 +17124,18 @@ var Jm = class {
 		this.markers = [], this.count = 0;
 	}
 };
-function Ym(e, t) {
+function Ih(e, t) {
 	let n = e.device, r = (n.rot ?? 0) * Math.PI / 180, i = (n.range ?? 7) * .45, a = r + (t % 5 - 2) * .22, o = n.z ?? 2.5, s = new K(Math.sin(a) * i, -o + .05, -Math.cos(a) * i);
 	return e.object.updateWorldMatrix(!0, !1), e.object.localToWorld(s);
 }
 //#endregion
 //#region src/ui/styles.ts
-var Xm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n/* its own stacking context: 3D labels (z-indexed by depth) stay under panels and chips */\n.nh-stage { position: absolute; inset: 0; isolation: isolate; z-index: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-labels > .nh-badge.nh-cam { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-cam:hover { border-color: var(--nh-accent); }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-badge .sub { color: var(--nh-muted); font-weight: 500; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-attn { font-weight: 800; }\n.nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }\n.nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }\n.nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }\n.nh-labels > .nh-badge.nh-tap { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-tap:hover { border-color: #ffd23b; }\n.nh-badge.nh-watt { font-size: 10px; padding: 1px 6px; border-color: #ffd23b; box-shadow: 0 0 10px -3px #ffd23b; }\n.nh-badge.nh-watt.est { border-style: dashed; box-shadow: none; }\n.nh-item.nh-load { position: relative; }\n.nh-item.nh-load::after {\n  content: \"\"; position: absolute; left: 28px; right: 8px; bottom: 3px; height: 2px; border-radius: 2px; opacity: .6;\n  background: linear-gradient(90deg, #ffd23b var(--share), transparent var(--share));\n}\n.nh-item.nh-load .dot { background: transparent; border: 1px dashed #ffd23b; box-sizing: border-box; }\n.nh-item.nh-load.on .dot { background: #ffd23b; border: 0; box-shadow: 0 0 10px #ffd23b; }\n.nh-note { color: var(--nh-muted); font-size: 11px; line-height: 1.45; padding: 10px 8px 2px; }\n.nh-item.attn .name { white-space: normal; }\n.nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }\n.nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }\n.nh-item.attn.sev3 .dot, .nh-item.attn.sev4 .dot { background: #ff5a3c; box-shadow: 0 0 10px #ff5a3c; }\n.nh-item.attn.sev1 .dot { background: var(--nh-muted); box-shadow: none; }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n.nh-cockpit { max-height: calc(100% - 70px); }\n.nh-cockpit .body { overflow-y: auto; min-height: 0; }\n.nh-cockpit .live .ptz, .nh-cockpit .live .snap {\n  position: absolute; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35);\n  background: rgba(4,10,24,.45); color: #fff; font-size: 13px; cursor: pointer; backdrop-filter: blur(4px);\n  display: grid; place-items: center; padding: 0;\n}\n.nh-cockpit .live .ptz:hover, .nh-cockpit .live .snap:hover { border-color: var(--nh-accent); box-shadow: 0 0 10px -2px var(--nh-accent); }\n.nh-cockpit .live .ptz.up { top: 8px; left: 50%; transform: translateX(-50%); }\n.nh-cockpit .live .ptz.down { bottom: 8px; left: 50%; transform: translateX(-50%); }\n.nh-cockpit .live .ptz.left { left: 8px; top: 50%; transform: translateY(-50%); }\n.nh-cockpit .live .ptz.right { right: 8px; top: 50%; transform: translateY(-50%); }\n.nh-cockpit .live .snap { right: 8px; top: 8px; font-size: 16px; }\n.nh-cockpit .live .priv {\n  position: absolute; inset: 0; display: none; place-items: center; color: #fff; font-weight: 700; font-size: 13px;\n  background: rgba(4,10,24,.88);\n}\n.nh-cockpit .live.private .priv { display: grid; }\n.nh-cockpit .live.private .ptz { display: none; }\n.nh-cockpit .quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 6px; padding: 8px 10px 0; }\n.nh-cbtn {\n  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 4px; border-radius: 12px;\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text); font: inherit; font-size: 11px; font-weight: 600;\n  cursor: pointer; white-space: nowrap;\n}\n.nh-cbtn .i { font-size: 16px; line-height: 1; }\n.nh-cbtn:disabled { opacity: .4; cursor: default; }\n.nh-cbtn.on { border-color: var(--nh-accent); background: color-mix(in srgb, var(--nh-accent) 18%, var(--nh-pill)); box-shadow: 0 0 12px -3px var(--nh-accent); }\n.nh-cbtn.armed { border-color: #ffb13d; color: #ffd28a; background: rgba(255,177,61,.15); }\n.nh-cbtn.danger { border-color: #ff8095; color: #fff; background: rgba(255,51,85,.85); animation: nh-pulse 1.2s ease-in-out infinite; }\n.nh-cockpit .presets { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 8px 10px 0; }\n.nh-cockpit .presets .lbl, .nh-cockpit details.more summary {\n  font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted);\n}\n.nh-cockpit details.more { padding: 8px 10px 0; }\n.nh-cockpit details.more summary { cursor: pointer; padding: 2px 0; }\n.nh-cockpit .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px 14px; padding: 8px 0 2px; }\n.nh-cockpit .grid label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }\n.nh-cockpit select {\n  background: var(--nh-pill); color: var(--nh-text); border: 1px solid var(--nh-border); border-radius: 8px;\n  padding: 3px 6px; font: inherit; font-size: 12px; max-width: 110px;\n}\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-update {\n  position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  border: 0; font: inherit; font-weight: 700; cursor: pointer; background: var(--nh-accent); color: var(--nh-on-accent);\n  box-shadow: 0 0 24px -4px var(--nh-accent); white-space: nowrap;\n}\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", Zm = [
+var Lh = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflow: hidden; border-radius: var(--ha-card-border-radius, 16px);\n  background: var(--nh-bg); color: var(--nh-text);\n  font-family: \"Figtree\", \"Inter\", system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif;\n  font-size: 13px; user-select: none; -webkit-user-select: none; touch-action: none;\n}\n/* its own stacking context: 3D labels (z-indexed by depth) stay under panels and chips */\n.nh-stage { position: absolute; inset: 0; isolation: isolate; z-index: 0; }\n.nh-canvas { position: absolute; inset: 0; display: block; outline: none; }\n.nh-labels { position: absolute; inset: 0; pointer-events: none; }\n.nh-labels > div { pointer-events: none; }\n\n/* bars */\n.nh-top { position: absolute; left: 0; right: 0; top: 0; padding: 10px 12px 0; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }\n.nh-row { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; pointer-events: auto; padding-bottom: 2px; }\n.nh-row::-webkit-scrollbar { display: none; }\n.nh-spacer { flex: 1; }\n.nh-title { font-weight: 800; letter-spacing: .02em; font-size: 15px; margin-right: 6px; white-space: nowrap; }\n.nh-title i { font-style: normal; color: var(--nh-accent); }\n.nh-chip {\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text);\n  border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap;\n  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); transition: background .15s, color .15s, box-shadow .15s;\n}\n.nh-chip:hover { border-color: var(--nh-accent); }\n.nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); border-color: var(--nh-accent); box-shadow: 0 0 16px -2px var(--nh-accent); }\n.nh-chip small { opacity: .7; font-weight: 500; margin-left: 4px; }\n.nh-seg { display: inline-flex; border: 1px solid var(--nh-border); border-radius: 999px; background: var(--nh-pill); padding: 2px; backdrop-filter: blur(8px); }\n.nh-seg .nh-chip { border: 0; background: transparent; padding: 4px 10px; box-shadow: none; }\n.nh-seg .nh-chip.on { background: var(--nh-accent); color: var(--nh-on-accent); }\n.nh-group-label { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); margin: 0 2px 0 6px; white-space: nowrap; }\n\n.nh-bottom { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 12px 10px; display: flex; justify-content: center; pointer-events: none; }\n.nh-bottom .nh-row { justify-content: center; flex-wrap: wrap; }\n\n/* labels in the 3D view */\n.nh-room {\n  display: flex; flex-direction: column; align-items: center; gap: 1px;\n  padding: 4px 10px; border-radius: 10px; background: var(--nh-pill); border: 1px solid var(--nh-border);\n  color: var(--nh-text); font-size: 12px; white-space: nowrap; backdrop-filter: blur(6px);\n  transform: translateY(-50%);\n}\n.nh-room b { font-weight: 700; }\n.nh-room-sub, .nh-floor-sub { font-size: 10.5px; color: var(--nh-muted); }\n.nh-room-sub:empty, .nh-floor-sub:empty { display: none; }\n.nh-floor {\n  display: flex; flex-direction: column; padding: 8px 14px; border-radius: 12px;\n  background: color-mix(in srgb, var(--nh-accent) 22%, var(--nh-panel)); border: 1px solid var(--nh-accent);\n  color: var(--nh-text); font-size: 14px; white-space: nowrap; box-shadow: 0 0 22px -6px var(--nh-accent);\n  pointer-events: auto !important; cursor: pointer;\n}\n.nh-badge {\n  display: flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-text); font-size: 11px; font-weight: 600;\n  backdrop-filter: blur(6px);\n}\n.nh-badge .ico { color: var(--nh-accent); font-size: 10px; }\n.nh-labels > .nh-badge.nh-cam { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-cam:hover { border-color: var(--nh-accent); }\n.nh-badge.alarm { background: rgba(255,51,85,.88); border-color: #ff8095; color: #fff; box-shadow: 0 0 18px #ff3355; }\n.nh-badge.alarm .ico { color: #fff; }\n.nh-badge.alarm .sub { color: rgba(255,255,255,.9); font-weight: 600; }\n.nh-badge.active { border-color: var(--nh-accent); box-shadow: 0 0 12px -2px var(--nh-accent); }\n.nh-badge.off { opacity: .55; }\n.nh-badge .sub { color: var(--nh-muted); font-weight: 500; }\n.nh-trail {\n  padding: 2px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 700; white-space: nowrap;\n  background: rgba(255,90,60,.85); color: #fff;\n}\n.nh-hidden-labels .nh-room { display: none; }\n\n/* room panel and camera cockpit */\n.nh-panel {\n  position: absolute; top: 58px; right: 12px; bottom: 58px; width: min(320px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px;\n  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);\n  display: flex; flex-direction: column; overflow: hidden; transform: translateX(110%);\n  visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s;\n  box-shadow: 0 10px 40px rgba(0,0,0,.35);\n}\n.nh-panel.open { transform: none; visibility: visible; transition: transform .25s ease; }\n.nh-panel header { display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; }\n.nh-panel header h3 { margin: 0; font-size: 16px; flex: 1; }\n.nh-panel header .sub { color: var(--nh-muted); font-size: 12px; }\n.nh-x { border: 0; background: transparent; color: var(--nh-muted); font-size: 18px; cursor: pointer; padding: 2px 6px; }\n.nh-list { overflow-y: auto; padding: 0 8px 10px; }\n.nh-item {\n  display: flex; align-items: center; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;\n}\n.nh-item:hover { background: color-mix(in srgb, var(--nh-accent) 10%, transparent); }\n.nh-item .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--nh-muted); flex: none; }\n.nh-item.on .dot { background: var(--nh-accent); box-shadow: 0 0 10px var(--nh-accent); }\n.nh-item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }\n.nh-item .state { color: var(--nh-muted); font-size: 12px; white-space: nowrap; }\n.nh-toggle {\n  width: 38px; height: 22px; border-radius: 999px; border: 1px solid var(--nh-border); background: var(--nh-pill);\n  position: relative; cursor: pointer; flex: none;\n}\n.nh-toggle::after { content: \"\"; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--nh-muted); transition: left .15s; }\n.nh-toggle.on { background: var(--nh-accent); border-color: var(--nh-accent); }\n.nh-toggle.on::after { left: 18px; background: var(--nh-on-accent); }\n.nh-attn { font-weight: 800; }\n.nh-attn.warn { background: rgba(255,177,61,.18); border-color: #ffb13d; color: #ffd28a; }\n.nh-attn.urgent { background: rgba(255,90,60,.25); border-color: #ff6b4a; color: #ffd0c4; box-shadow: 0 0 14px -2px #ff6b4a; }\n.nh-attn.ok { color: var(--nh-ok, #35f0a0); opacity: .75; }\n.nh-labels > .nh-badge.nh-tap { pointer-events: auto; cursor: pointer; }\n.nh-badge.nh-tap:hover { border-color: #ffd23b; }\n.nh-badge.nh-watt { font-size: 10px; padding: 1px 6px; border-color: #ffd23b; box-shadow: 0 0 10px -3px #ffd23b; }\n.nh-badge.nh-watt.est { border-style: dashed; box-shadow: none; }\n.nh-item.nh-load { position: relative; }\n.nh-item.nh-load::after {\n  content: \"\"; position: absolute; left: 28px; right: 8px; bottom: 3px; height: 2px; border-radius: 2px; opacity: .6;\n  background: linear-gradient(90deg, #ffd23b var(--share), transparent var(--share));\n}\n.nh-item.nh-load .dot { background: transparent; border: 1px dashed #ffd23b; box-sizing: border-box; }\n.nh-item.nh-load.on .dot { background: #ffd23b; border: 0; box-shadow: 0 0 10px #ffd23b; }\n.nh-note { color: var(--nh-muted); font-size: 11px; line-height: 1.45; padding: 10px 8px 2px; }\n.nh-item.attn .name { white-space: normal; }\n.nh-item.attn small { display: block; color: var(--nh-muted); font-size: 11px; margin-top: 1px; }\n.nh-item.attn .dot { background: #ffb13d; box-shadow: 0 0 8px #ffb13d; }\n.nh-item.attn.sev3 .dot, .nh-item.attn.sev4 .dot { background: #ff5a3c; box-shadow: 0 0 10px #ff5a3c; }\n.nh-item.attn.sev1 .dot { background: var(--nh-muted); box-shadow: none; }\n.nh-section { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted); padding: 10px 8px 4px; }\n\n.nh-cockpit {\n  position: absolute; left: 12px; bottom: 58px; width: min(440px, calc(100% - 24px));\n  background: var(--nh-panel); border: 1px solid var(--nh-border); border-radius: 16px; overflow: hidden;\n  display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,.4);\n}\n.nh-cockpit.open { display: flex; }\n.nh-cockpit.alarm { border-color: #ff3355; box-shadow: 0 0 30px -4px #ff3355; }\n.nh-cockpit header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }\n.nh-cockpit header b { flex: 1; }\n.nh-cockpit .live { position: relative; aspect-ratio: 16/9; background: #000; }\n.nh-cockpit img { width: 100%; height: 100%; object-fit: cover; display: block; }\n.nh-cockpit .rec { position: absolute; left: 8px; top: 8px; font-size: 10px; font-weight: 800; color: #fff; background: rgba(255,51,85,.85); padding: 2px 6px; border-radius: 4px; }\n.nh-cockpit .acts { display: flex; gap: 6px; padding: 8px 10px; flex-wrap: wrap; }\n.nh-cockpit { max-height: calc(100% - 70px); }\n.nh-cockpit .body { overflow-y: auto; min-height: 0; }\n.nh-cockpit .live .ptz, .nh-cockpit .live .snap {\n  position: absolute; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35);\n  background: rgba(4,10,24,.45); color: #fff; font-size: 13px; cursor: pointer; backdrop-filter: blur(4px);\n  display: grid; place-items: center; padding: 0;\n}\n.nh-cockpit .live .ptz:hover, .nh-cockpit .live .snap:hover { border-color: var(--nh-accent); box-shadow: 0 0 10px -2px var(--nh-accent); }\n.nh-cockpit .live .ptz.up { top: 8px; left: 50%; transform: translateX(-50%); }\n.nh-cockpit .live .ptz.down { bottom: 8px; left: 50%; transform: translateX(-50%); }\n.nh-cockpit .live .ptz.left { left: 8px; top: 50%; transform: translateY(-50%); }\n.nh-cockpit .live .ptz.right { right: 8px; top: 50%; transform: translateY(-50%); }\n.nh-cockpit .live .snap { right: 8px; top: 8px; font-size: 16px; }\n.nh-cockpit .live .priv {\n  position: absolute; inset: 0; display: none; place-items: center; color: #fff; font-weight: 700; font-size: 13px;\n  background: rgba(4,10,24,.88);\n}\n.nh-cockpit .live.private .priv { display: grid; }\n.nh-cockpit .live.private .ptz { display: none; }\n.nh-cockpit .quick { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px, 1fr)); gap: 6px; padding: 8px 10px 0; }\n.nh-cbtn {\n  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 4px; border-radius: 12px;\n  border: 1px solid var(--nh-border); background: var(--nh-pill); color: var(--nh-text); font: inherit; font-size: 11px; font-weight: 600;\n  cursor: pointer; white-space: nowrap;\n}\n.nh-cbtn .i { font-size: 16px; line-height: 1; }\n.nh-cbtn:disabled { opacity: .4; cursor: default; }\n.nh-cbtn.on { border-color: var(--nh-accent); background: color-mix(in srgb, var(--nh-accent) 18%, var(--nh-pill)); box-shadow: 0 0 12px -3px var(--nh-accent); }\n.nh-cbtn.armed { border-color: #ffb13d; color: #ffd28a; background: rgba(255,177,61,.15); }\n.nh-cbtn.danger { border-color: #ff8095; color: #fff; background: rgba(255,51,85,.85); animation: nh-pulse 1.2s ease-in-out infinite; }\n.nh-cockpit .presets { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; padding: 8px 10px 0; }\n.nh-cockpit .presets .lbl, .nh-cockpit details.more summary {\n  font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--nh-muted);\n}\n.nh-cockpit details.more { padding: 8px 10px 0; }\n.nh-cockpit details.more summary { cursor: pointer; padding: 2px 0; }\n.nh-cockpit .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 6px 14px; padding: 8px 0 2px; }\n.nh-cockpit .grid label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }\n.nh-cockpit select {\n  background: var(--nh-pill); color: var(--nh-text); border: 1px solid var(--nh-border); border-radius: 8px;\n  padding: 3px 6px; font: inherit; font-size: 12px; max-width: 110px;\n}\n\n.nh-toast {\n  position: absolute; left: 50%; top: 64px; transform: translateX(-50%); padding: 6px 12px; border-radius: 10px;\n  background: var(--nh-panel); border: 1px solid var(--nh-border); font-size: 12px; opacity: 0; transition: opacity .2s; pointer-events: none;\n}\n.nh-toast.show { opacity: 1; }\n.nh-alert {\n  position: absolute; left: 50%; top: 92px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  background: rgba(255,51,85,.92); color: #fff; font-weight: 700; display: none; box-shadow: 0 0 30px #ff3355; cursor: pointer;\n  animation: nh-pulse 1.2s ease-in-out infinite; white-space: nowrap;\n}\n.nh-alert.show { display: block; }\n@keyframes nh-pulse { 50% { box-shadow: 0 0 6px #ff3355; } }\n.nh-update {\n  position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;\n  border: 0; font: inherit; font-weight: 700; cursor: pointer; background: var(--nh-accent); color: var(--nh-on-accent);\n  box-shadow: 0 0 24px -4px var(--nh-accent); white-space: nowrap;\n}\n.nh-fps { position: absolute; right: 12px; bottom: 12px; font-size: 10px; color: var(--nh-muted); pointer-events: none; }\n.nh-coords {\n  position: absolute; right: 12px; bottom: 30px; padding: 4px 9px; border-radius: 8px; font: 600 12px ui-monospace, Consolas, monospace;\n  background: var(--nh-pill); border: 1px solid var(--nh-border); color: var(--nh-accent); pointer-events: none; display: none;\n}\n.nh-coords.show { display: block; }\n.nh-warn {\n  position: absolute; left: 12px; top: 96px; max-width: min(520px, calc(100% - 24px)); max-height: 45%; overflow: auto;\n  background: rgba(60,30,0,.88); border: 1px solid #ffb13d; color: #ffe2b0; border-radius: 12px; font-size: 12px; display: none;\n}\n.nh-warn.show { display: block; }\n.nh-warn summary { cursor: pointer; padding: 7px 12px; font-weight: 700; color: #ffc861; }\n.nh-warn ul { margin: 0; padding: 0 14px 10px 30px; }\n.nh-warn li { margin: 3px 0; }\n.nh-error { padding: 24px; color: #ff8095; font-family: monospace; white-space: pre-wrap; }\n\n@media (max-width: 560px) {\n  .nh-title { display: none; }\n  .nh-chip { padding: 5px 10px; }\n  .nh-panel { top: auto; height: 55%; bottom: 0; right: 0; width: 100%; border-radius: 16px 16px 0 0; transform: translateY(110%); }\n}\n", Rh = [
 	"door",
 	"window",
 	"garage",
 	"gap"
-], Qm = [
+], zh = [
 	"light",
 	"camera",
 	"tv",
@@ -16777,13 +17146,13 @@ var Xm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflo
 	"car",
 	"sprinkler",
 	"meter"
-], $m = [
+], Bh = [
 	"grass",
 	"paving",
 	"terrace",
 	"parking",
 	"water"
-], eh = [
+], Vh = [
 	"bed",
 	"wardrobe",
 	"dresser",
@@ -16799,13 +17168,13 @@ var Xm = "\n:host { display: block; }\n.nh-root {\n  position: relative; overflo
 	"shower",
 	"stove",
 	"box"
-], th = [
+], Hh = [
 	"up",
 	"down",
 	"left",
 	"right"
-], nh = (e) => Array.isArray(e) && e.length === 2 && e.every((e) => typeof e == "number" && Number.isFinite(e)), rh = (e) => `[${e[0]}, ${e[1]}]`;
-function ih(e) {
+], Uh = (e) => Array.isArray(e) && e.length === 2 && e.every((e) => typeof e == "number" && Number.isFinite(e)), Wh = (e) => `[${e[0]}, ${e[1]}]`;
+function Gh(e) {
 	let t = 0;
 	for (let n = 0; n < e.length; n++) {
 		let [r, i] = e[n], [a, o] = e[(n + 1) % e.length];
@@ -16813,7 +17182,7 @@ function ih(e) {
 	}
 	return Math.abs(t / 2);
 }
-function ah(e) {
+function Kh(e) {
 	let t = [];
 	if (!e || !Array.isArray(e.floors) || !e.floors.length) return ["The plan has no \"floors\"."];
 	let n = /* @__PURE__ */ new Set();
@@ -16827,13 +17196,13 @@ function ah(e) {
 				t.push(`${r}: "polygon" needs at least 3 corner points.`), o = !1;
 				return;
 			}
-			let s = e.polygon.findIndex((e) => !nh(e));
-			s >= 0 ? (t.push(`${r}: corner #${s + 1} is not a [x, y] pair of numbers.`), o = !1) : ih(e.polygon) < .3 && t.push(`${r}: the polygon has (almost) no area – are two corners swapped?`);
+			let s = e.polygon.findIndex((e) => !Uh(e));
+			s >= 0 ? (t.push(`${r}: corner #${s + 1} is not a [x, y] pair of numbers.`), o = !1) : Gh(e.polygon) < .3 && t.push(`${r}: the polygon has (almost) no area – are two corners swapped?`);
 		}), e.rooms?.length || t.push(`${i}: has no rooms.`), o) {
 			let n = gp(e);
 			(e.openings ?? []).forEach((e, r) => {
-				let a = `${i}, opening #${r + 1} (${e.type ?? "?"}${nh(e.at) ? ` at ${rh(e.at)}` : ""})`;
-				if (Zm.includes(e.type) || t.push(`${a}: "type" must be one of ${Zm.join(", ")}.`), !nh(e.at)) return t.push(`${a}: "at" must be a [x, y] point on a wall.`);
+				let a = `${i}, opening #${r + 1} (${e.type ?? "?"}${Uh(e.at) ? ` at ${Wh(e.at)}` : ""})`;
+				if (Rh.includes(e.type) || t.push(`${a}: "type" must be one of ${Rh.join(", ")}.`), !Uh(e.at)) return t.push(`${a}: "at" must be a [x, y] point on a wall.`);
 				(typeof e.width != "number" || e.width <= 0) && t.push(`${a}: "width" in metres is missing.`);
 				let o = Infinity, s = 0;
 				for (let t of n) {
@@ -16842,25 +17211,25 @@ function ah(e) {
 				}
 				o > .6 ? t.push(`${a}: not on a wall (nearest wall is ${o.toFixed(2)} m away) – it is left out.`) : e.width > s && t.push(`${a}: ${e.width} m wide but the wall is only ${s.toFixed(2)} m long.`);
 			}), (e.walls ?? []).forEach((e, n) => {
-				(!nh(e.a) || !nh(e.b)) && t.push(`${i}, wall #${n + 1}: "a" and "b" must be [x, y] points.`);
+				(!Uh(e.a) || !Uh(e.b)) && t.push(`${i}, wall #${n + 1}: "a" and "b" must be [x, y] points.`);
 			});
 		}
 		(e.furniture ?? []).forEach((e, n) => {
 			let r = `${i}, furniture #${n + 1} (${e.type ?? "?"})`;
-			if (eh.includes(e.type) || t.push(`${r}: "type" must be one of ${eh.join(", ")}.`), !nh(e.from) || !nh(e.to)) return t.push(`${r}: "from" and "to" must be [x, y] corners.`);
-			(Math.abs(e.from[0] - e.to[0]) < .05 || Math.abs(e.from[1] - e.to[1]) < .05) && t.push(`${r}: "from" ${rh(e.from)} and "to" ${rh(e.to)} must be opposite corners (different x and y).`), e.back && !th.includes(e.back) && t.push(`${r}: "back" must be one of ${th.join(", ")}.`);
+			if (Vh.includes(e.type) || t.push(`${r}: "type" must be one of ${Vh.join(", ")}.`), !Uh(e.from) || !Uh(e.to)) return t.push(`${r}: "from" and "to" must be [x, y] corners.`);
+			(Math.abs(e.from[0] - e.to[0]) < .05 || Math.abs(e.from[1] - e.to[1]) < .05) && t.push(`${r}: "from" ${Wh(e.from)} and "to" ${Wh(e.to)} must be opposite corners (different x and y).`), e.back && !Hh.includes(e.back) && t.push(`${r}: "back" must be one of ${Hh.join(", ")}.`);
 		}), (e.devices ?? []).forEach((e, n) => {
 			let r = `${i}, device #${n + 1} (${e.type ?? "?"} ${e.entity ?? ""})`;
-			Qm.includes(e.type) || t.push(`${r}: "type" must be one of ${Qm.join(", ")}.`), e.entity || t.push(`${r}: needs an "entity".`);
+			zh.includes(e.type) || t.push(`${r}: "type" must be one of ${zh.join(", ")}.`), e.entity || t.push(`${r}: needs an "entity".`);
 			let a = e.path;
-			a !== void 0 && (!Array.isArray(a) || a.length < 2 || !a.every(nh)) ? t.push(`${r}: "path" needs at least 2 [x, y] corners.`) : a === void 0 && !nh(e.pos) && t.push(`${r}: "pos" must be a [x, y] point.`);
+			a !== void 0 && (!Array.isArray(a) || a.length < 2 || !a.every(Uh)) ? t.push(`${r}: "path" needs at least 2 [x, y] corners.`) : a === void 0 && !Uh(e.pos) && t.push(`${r}: "pos" must be a [x, y] point.`);
 		});
 	}), (e.outdoor ?? []).forEach((e, n) => {
 		let r = `Outdoor area "${e.name ?? `#${n + 1}`}"`;
-		$m.includes(e.kind) || t.push(`${r}: "kind" must be one of ${$m.join(", ")}.`), (!Array.isArray(e.polygon) || e.polygon.length < 3 || !e.polygon.every(nh)) && t.push(`${r}: "polygon" needs at least 3 [x, y] points.`);
+		Bh.includes(e.kind) || t.push(`${r}: "kind" must be one of ${Bh.join(", ")}.`), (!Array.isArray(e.polygon) || e.polygon.length < 3 || !e.polygon.every(Uh)) && t.push(`${r}: "polygon" needs at least 3 [x, y] points.`);
 	}), t;
 }
-function oh(e, t) {
+function qh(e, t) {
 	let n = /* @__PURE__ */ new Set();
 	for (let t of e.floors ?? []) {
 		for (let e of t.devices ?? []) {
@@ -16869,7 +17238,9 @@ function oh(e, t) {
 				"power",
 				"presence",
 				"stream",
-				"index"
+				"index",
+				"map",
+				"error"
 			]) e[t] && n.add(e[t]);
 			for (let t of e.motion ?? []) n.add(t);
 		}
@@ -16882,7 +17253,7 @@ function oh(e, t) {
 }
 //#endregion
 //#region src/attention.ts
-var sh = /* @__PURE__ */ new Set([
+var Jh = /* @__PURE__ */ new Set([
 	"problem",
 	"safety",
 	"smoke",
@@ -16893,19 +17264,19 @@ var sh = /* @__PURE__ */ new Set([
 	"battery",
 	"heat",
 	"cold"
-]), ch = (e) => e.state === "unavailable" || e.state === "unknown", lh = 36e5;
-function uh(e) {
+]), Yh = (e) => e.state === "unavailable" || e.state === "unknown", Xh = 36e5;
+function Zh(e) {
 	let t = Date.now() - Date.parse(e.last_changed);
-	return Number.isFinite(t) ? t < lh ? `${Math.max(1, Math.round(t / 6e4))} min` : t < 48 * lh ? `${Math.round(t / lh)} h` : `${Math.round(t / (24 * lh))} days` : "";
+	return Number.isFinite(t) ? t < Xh ? `${Math.max(1, Math.round(t / 6e4))} min` : t < 48 * Xh ? `${Math.round(t / Xh)} h` : `${Math.round(t / (24 * Xh))} days` : "";
 }
-function dh(e) {
+function Qh(e) {
 	if (typeof e == "number") return e;
 	let t = String(e ?? "").replace(/[^0-9,.\-]/g, "");
 	t = t.includes(",") && t.includes(".") ? t.replace(/\./g, "").replace(",", ".") : t.replace(",", ".");
 	let n = parseFloat(t);
 	return Number.isFinite(n) ? n : NaN;
 }
-function fh(e, t, n) {
+function $h(e, t, n) {
 	if (!n) return null;
 	let r = /^[a-z_]+\.[a-z0-9_]+$/.test(n) ? e.states[n]?.state : t.attributes[n];
 	if (r == null || r === "" || r === "unknown" || r === "unavailable") return null;
@@ -16933,7 +17304,7 @@ function fh(e, t, n) {
 	}
 	return { text: i };
 }
-function ph(e) {
+function eg(e) {
 	let t = /* @__PURE__ */ new Set();
 	for (let n of e.floors ?? []) {
 		for (let e of n.devices ?? []) {
@@ -16942,7 +17313,8 @@ function ph(e) {
 				"power",
 				"presence",
 				"stream",
-				"index"
+				"index",
+				"error"
 			]) e[n] && t.add(e[n]);
 			for (let n of e.motion ?? []) t.add(n);
 		}
@@ -16950,7 +17322,7 @@ function ph(e) {
 	}
 	return t;
 }
-function mh(e, t, n) {
+function tg(e, t, n) {
 	let r = [], i = e.entities ?? {}, a = (t) => {
 		let n = i[t]?.device_id ? e.devices?.[i[t].device_id] : void 0;
 		return n?.name_by_user || n?.name || e.states[t]?.attributes.friendly_name || t;
@@ -16966,19 +17338,19 @@ function mh(e, t, n) {
 		let e = t.entity_id, r = i[e];
 		if (r?.hidden) continue;
 		let a = e.split(".")[0], s = t.attributes.device_class;
-		a === "sensor" && (s === "battery" || e.endsWith("_battery_state") || e.endsWith("_battery_level")) && !(r?.labels ?? []).includes(n.excludeLabel) ? ch(t) ? Date.now() - Date.parse(t.last_changed) > 12 * lh && o(e, "battery", `offline for ${uh(t)} – battery dead?`, 3) : t.state === "low" ? o(e, "battery", "battery low", 2) : s === "battery" && Number(t.state) < n.batteryLow && o(e, "battery", `battery ${Math.round(Number(t.state))}%`, 2) : a === "binary_sensor" && sh.has(s) && t.state === "on" && o(e, "problem", t.attributes.friendly_name ?? e, 4);
+		a === "sensor" && (s === "battery" || e.endsWith("_battery_state") || e.endsWith("_battery_level")) && !(r?.labels ?? []).includes(n.excludeLabel) ? Yh(t) ? Date.now() - Date.parse(t.last_changed) > 12 * Xh && o(e, "battery", `offline for ${Zh(t)} – battery dead?`, 3) : t.state === "low" ? o(e, "battery", "battery low", 2) : s === "battery" && Number(t.state) < n.batteryLow && o(e, "battery", `battery ${Math.round(Number(t.state))}%`, 2) : a === "binary_sensor" && Jh.has(s) && t.state === "on" && o(e, "problem", t.attributes.friendly_name ?? e, 4);
 	}
 	for (let n of t?.bills ?? []) {
 		let t = e.states[n.entity];
-		if (!t || ch(t) || [
+		if (!t || Yh(t) || [
 			"nu",
 			"no",
 			"off",
 			"false"
 		].includes(t.state.toLowerCase())) continue;
-		let i = n.attribute ? t.attributes[n.attribute] : t.state, a = dh(i);
+		let i = n.attribute ? t.attributes[n.attribute] : t.state, a = Qh(i);
 		if (!(a > .005)) continue;
-		let o = t.attributes.unit_of_measurement ?? (/lei|ron/i.test(String(i)) ? "lei" : ""), s = fh(e, t, n.due), c = s && s.date && s.date.getTime() < Date.now() - 24 * lh;
+		let o = t.attributes.unit_of_measurement ?? (/lei|ron/i.test(String(i)) ? "lei" : ""), s = $h(e, t, n.due), c = s && s.date && s.date.getTime() < Date.now() - 24 * Xh;
 		r.push({
 			kind: "bill",
 			entity: n.entity,
@@ -16988,9 +17360,9 @@ function mh(e, t, n) {
 			device: `bill:${n.name}`
 		});
 	}
-	if (t) for (let n of ph(t)) {
+	if (t) for (let n of eg(t)) {
 		let t = e.states[n];
-		t ? ch(t) && Date.now() - Date.parse(t.last_changed) > 6e5 && o(n, "offline", `unavailable for ${uh(t)}`, 1) : o(n, "offline", "missing from Home Assistant (renamed?)", 1);
+		t ? Yh(t) && Date.now() - Date.parse(t.last_changed) > 6e5 && o(n, "offline", `unavailable for ${Zh(t)}`, 1) : o(n, "offline", "missing from Home Assistant (renamed?)", 1);
 	}
 	let s = /* @__PURE__ */ new Map();
 	for (let e of r) s.has(e.device) || s.set(e.device, []), s.get(e.device).push(e);
@@ -17010,7 +17382,7 @@ function mh(e, t, n) {
 }
 //#endregion
 //#region node_modules/three/examples/jsm/lines/LineGeometry.js
-var hh = class extends Sf {
+var ng = class extends Sf {
 	constructor() {
 		super(), this.isLineGeometry = !0, this.type = "LineGeometry";
 	}
@@ -17033,11 +17405,11 @@ var hh = class extends Sf {
 		let t = e.geometry;
 		return this.setPositions(t.attributes.position.array), this;
 	}
-}, gh = class extends Hf {
-	constructor(e = new hh(), t = new Cf({ color: Math.random() * 16777215 })) {
+}, rg = class extends Hf {
+	constructor(e = new ng(), t = new Cf({ color: Math.random() * 16777215 })) {
 		super(e, t), this.isLine2 = !0, this.type = "Line2";
 	}
-}, _h = class {
+}, ig = class {
 	color;
 	group = new wn();
 	wires = /* @__PURE__ */ new Map();
@@ -17082,7 +17454,7 @@ var hh = class extends Sf {
 			n.x,
 			n.y,
 			n.z
-		], a = new hh();
+		], a = new ng();
 		a.setPositions(i);
 		let o = new Cf({
 			color: this.color,
@@ -17096,7 +17468,7 @@ var hh = class extends Sf {
 			worldUnits: !1
 		});
 		o.toneMapped = !1, o.resolution.copy(qf), Kf.add(o);
-		let s = new gh(a, o);
+		let s = new rg(a, o);
 		s.computeLineDistances(), s.renderOrder = 5, s.raycast = () => {}, this.group.add(s);
 		let c = document.createElement("div");
 		c.className = "nh-badge nh-watt";
@@ -17114,13 +17486,13 @@ var hh = class extends Sf {
 		let t = this.wires.get(e);
 		t && (this.group.remove(t.line, t.label), $f(t.line), this.wires.delete(e));
 	}
-}, vh = [
+}, ag = [
 	["Person", /\b(person|people|human)[ _-]?detection\b/],
 	["Vehicle", /\b(vehicle|car)[ _-]?detection\b/],
 	["Pet", /\b(pet|animal)[ _-]?detection\b/],
 	["Motion", /\bmotion[ _-]?detection\b/]
 ];
-function yh(e, t) {
+function og(e, t) {
 	let n = {
 		ptz: {},
 		detection: []
@@ -17136,18 +17508,18 @@ function yh(e, t) {
 			t && (n.ptz[t[1]] ??= e);
 		} else t === "select" ? /preset/.test(r) && !/patrol/.test(r) ? n.presets ??= e : /night[ _-]?vision/.test(r) && !/switching/.test(r) && (n.nightVision ??= e) : t === "switch" && (/privacy/.test(r) && !/zone/.test(r) ? n.privacy ??= e : /auto[ _-]?track/.test(r) ? n.track ??= e : /record(ing)?[ _-]?to[ _-]?sd|\brecord(ing)?$/.test(r) && !/audio/.test(r) ? n.record ??= e : /\bnotifications?\b/.test(r) && !/rich/.test(r) && (n.notifications ??= e));
 		if ((t === "select" || t === "switch") && !/trigger|alarm|sensitivity|digital/.test(r)) {
-			for (let [n, i] of vh) if (i.test(r)) {
+			for (let [n, i] of ag) if (i.test(r)) {
 				(!o.has(n) || t === "select") && o.set(n, e);
 				break;
 			}
 		}
 	}
-	return n.detection = vh.filter(([e]) => o.has(e)).map(([e]) => ({
+	return n.detection = ag.filter(([e]) => o.has(e)).map(([e]) => ({
 		label: e,
 		entity: o.get(e)
 	})), n;
 }
-function bh(e) {
+function sg(e) {
 	return [
 		e.light,
 		e.siren,
@@ -17162,7 +17534,7 @@ function bh(e) {
 }
 //#endregion
 //#region src/card.ts
-var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = {
+var cg = "0.2.0", lg = import.meta.url, ug = 3.2, dg = "neon-house-prefs", fg = {
 	theme: "neon",
 	markers: "important",
 	cut: !1,
@@ -17172,7 +17544,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 	weather: !0,
 	trail: !1,
 	heatmap: "none"
-}, Eh = class extends HTMLElement {
+}, pg = class extends HTMLElement {
 	config;
 	_hass;
 	plan;
@@ -17180,7 +17552,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 	shadow;
 	engine;
 	theme = np.neon;
-	prefs = { ...Th };
+	prefs = { ...fg };
 	floors = [];
 	devices = [];
 	byEntity = /* @__PURE__ */ new Map();
@@ -17218,7 +17590,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		requestRender: () => this.engine?.requestRender()
 	};
 	constructor() {
-		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = Nh();
+		super(), this.shadow = this.attachShadow({ mode: "open" }), this.prefs = bg();
 	}
 	static getStubConfig() {
 		return {
@@ -17229,7 +17601,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 	setConfig(e) {
 		if (!e.plan && !e.plan_url) throw Error("neon-house-card: set `plan` or `plan_url`");
 		let t = JSON.stringify(e) !== JSON.stringify(this.config);
-		this.config = e, e.theme && !Mh() && (this.prefs.theme = e.theme), e.heatmap && !Mh() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
+		this.config = e, e.theme && !yg() && (this.prefs.theme = e.theme), e.heatmap && !yg() && (this.prefs.heatmap = e.heatmap), e.weather === !1 && (this.prefs.weather = !1), e.trail && (this.prefs.trail = !0), this.ensureDom(), t && (this.plan = e.plan, this.planError = void 0, this.built = !1, this.plan ? this.maybeBuild() : this.loadPlan());
 	}
 	set hass(e) {
 		this._hass = e, this.ctx.hass = e, this.updateChecked || (this.updateChecked = !0, this.checkForUpdate()), this.built ? this.applyHass(this.seen.size === 0) : this.maybeBuild();
@@ -17266,7 +17638,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 	ensureDom() {
 		if (this.els) return;
 		this.shadow.innerHTML = `
-      <style>${Xm}</style>
+      <style>${Lh}</style>
       <div class="nh-root">
         <div class="nh-stage"></div>
         <div class="nh-top">
@@ -17304,14 +17676,14 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		this.els.root.style.height = this.hasAttribute("fill") ? "100%" : this.config?.fill ? "calc(100vh - var(--header-height, 56px) - env(safe-area-inset-top, 0px))" : `${e ?? 560}px`;
 	}
 	showError(e) {
-		this.els.stage.innerHTML = `<div class="nh-error">${Rm(e)}</div>`;
+		this.els.stage.innerHTML = `<div class="nh-error">${Th(e)}</div>`;
 	}
 	maybeBuild() {
 		if (!this.built && this.plan && this.config && this.isConnected) try {
 			this.build();
 		} catch (e) {
 			console.error(e);
-			let t = ah(this.plan);
+			let t = Kh(this.plan);
 			this.showError(`neon-house: ${e.message}${t.length ? `\n\nProblems in the plan:\n• ${t.join("\n• ")}` : ""}`);
 		}
 	}
@@ -17332,9 +17704,9 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		let i = this.engine;
 		i.applyTheme(this.theme);
 		let a = i.scene;
-		this.hemi = new ds(this.theme.ambient, this.theme.background, this.theme.ambientIntensity), a.add(this.hemi), this.ground = Mm(e, this.theme), a.add(this.ground);
+		this.hemi = new ds(this.theme.ambient, this.theme.background, this.theme.ambientIntensity), a.add(this.hemi), this.ground = yh(e, this.theme), a.add(this.ground);
 		let o = [...e.floors].sort((e, t) => e.elevation - t.elevation);
-		this.floors = o.map((e) => Dm(e, this.theme, this.prefs.cut));
+		this.floors = o.map((e) => mh(e, this.theme, this.prefs.cut));
 		for (let e of this.floors) a.add(e.group), e.labelEl.onclick = () => this.selectFloor(e.floor.id);
 		let s = o.flatMap((e) => e.rooms.flatMap((e) => e.polygon));
 		if (s.length) {
@@ -17343,7 +17715,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		}
 		this.devices = [], this.byEntity.clear();
 		for (let e of this.floors) for (let t of e.floor.devices ?? []) {
-			let n = nm(t, e.floor, this.ctx);
+			let n = Bm(t, e.floor, this.ctx);
 			if (n) {
 				e.devices.add(n.object), this.devices.push(n), t.type === "camera" && n.badge && (n.badge.el.onclick = () => this.openCockpit(n)), n.setLoad && n.badge && (n.badge.el.onclick = () => this.toggleEnergy());
 				for (let e of n.entities) this.byEntity.has(e) || this.byEntity.set(e, []), this.byEntity.get(e).push(n);
@@ -17351,10 +17723,10 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		}
 		if (this.indexOpenings(), this.rooms = this.floors.flatMap((e) => e.rooms.map((t) => ({
 			view: t,
-			lights: this.devices.filter((n) => n.floor === e.floor && n.device.type === "light" && Dh(n, t.room.polygon)),
+			lights: this.devices.filter((n) => n.floor === e.floor && n.device.type === "light" && mg(n, t.room.polygon)),
 			temperature: t.room.temperature,
 			humidity: t.room.humidity
-		}))), e.roof && o.length && (this.roof = Fm(o.at(-1), e.roof, this.theme), a.add(this.roof)), this.weather = new Hm({
+		}))), e.roof && o.length && (this.roof = Sh(o.at(-1), e.roof, this.theme), a.add(this.roof)), this.weather = new kh({
 			center: this.houseCenter.clone().setY(0),
 			radius: this.houseRadius
 		}, this.theme, n ? 1400 : 600), this.weather.setEnabled(this.prefs.weather), n) {
@@ -17370,14 +17742,14 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 				far: 90
 			}), e.shadow.bias = -5e-4;
 		}
-		a.add(this.weather.group), this.trail = new Jm(this.theme), a.add(this.trail.group), this.flow = new _h(16765499), a.add(this.flow.group), this.built = !0, this.seen.clear(), this.showWarnings(), this.renderModes(), this.applyHass(!0);
+		a.add(this.weather.group), this.trail = new Fh(this.theme), a.add(this.trail.group), this.flow = new ig(16765499), a.add(this.flow.group), this.built = !0, this.seen.clear(), this.showWarnings(), this.renderModes(), this.applyHass(!0);
 		let c = this.config?.floor ?? this.mainFloor()?.floor.id ?? null;
 		this.selectFloor(r ? c : this.selectedFloor, !1), r && this.frameView(.01, 35), this.prefs.trail && this.reloadTrail();
 	}
 	teardownScene() {
 		let e = this.engine?.scene;
 		if (e) {
-			for (let t of this.floors) e.remove(t.group), Lm(t);
+			for (let t of this.floors) e.remove(t.group), wh(t);
 			for (let t of [
 				this.ground,
 				this.roof,
@@ -17395,11 +17767,11 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 	}
 	showWarnings() {
 		if (!this.plan) return;
-		let e = ah(this.plan);
-		this._hass && e.push(...oh(this.plan, this._hass));
+		let e = Kh(this.plan);
+		this._hass && e.push(...qh(this.plan, this._hass));
 		let t = this.els.warn;
 		if (t.classList.toggle("show", e.length > 0), e.length) {
-			t.querySelector("summary").textContent = `⚠ ${e.length} plan warning${e.length > 1 ? "s" : ""}`, t.querySelector("ul").innerHTML = e.map((e) => `<li>${Rm(e)}</li>`).join("");
+			t.querySelector("summary").textContent = `⚠ ${e.length} plan warning${e.length > 1 ? "s" : ""}`, t.querySelector("ul").innerHTML = e.map((e) => `<li>${Th(e)}</li>`).join("");
 			for (let t of e) console.warn(`neon-house: ${t}`);
 		}
 	}
@@ -17464,7 +17836,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 			}
 			let a = n.view.material, o = new Y(t.floorFill), s = this.prefs.heatmap, c = Ap(Dp(e, s === "temperature" ? n.temperature : s === "humidity" ? n.humidity : void 0));
 			if (s !== "none" && c !== void 0) {
-				let e = s === "temperature" ? Oh(c) : kh(c);
+				let e = s === "temperature" ? hg(c) : gg(c);
 				a.color.copy(o.lerp(e, .55)), a.emissive.copy(e).multiplyScalar(t.name === "day" ? .05 : .22);
 			} else {
 				a.color.set(t.floorFill);
@@ -17472,7 +17844,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 				a.emissive.copy(r.multiplyScalar(n / e));
 			}
 			let l = [], u = Dp(e, n.temperature), d = Dp(e, n.humidity);
-			u && !kp(u) && l.push(`${jh(u.state)}°`), d && !kp(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
+			u && !kp(u) && l.push(`${vg(u.state)}°`), d && !kp(d) && l.push(`${Math.round(Number(d.state))}%`), i && l.push(`${i} light${i > 1 ? "s" : ""} on`);
 			let f = n.view.labelEl.querySelector(".nh-room-sub");
 			f && (f.textContent = l.join(" · "));
 		}
@@ -17493,10 +17865,22 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 			t.badge.obj.visible = e === "all" || e === "important" && n;
 		}
 	}
+	deviceLabel(e) {
+		if (e.device.name) return e.device.name;
+		let t = this._hass?.entities?.[e.device.entity], n = t?.device_id ? this._hass?.devices?.[t.device_id] : void 0;
+		return n?.name_by_user || n?.name || jp(this._hass, e.device.entity);
+	}
 	updateAlerts() {
 		let e = this.devices.filter((e) => e.alarm?.()), t = this.els.alert;
 		if (!e.length) {
-			t.classList.remove("show");
+			let e = this.devices.find((e) => e.problem?.());
+			if (!e) {
+				t.classList.remove("show");
+				return;
+			}
+			t.textContent = `⚠ ${this.deviceLabel(e)}: ${e.problem()}`, t.classList.add("show"), t.onclick = () => {
+				this.selectedFloor && this.selectedFloor !== e.floor.id && this.selectFloor(e.floor.id, !1), this.engine?.flyTo(e.focus(), 6, void 0, 50);
+			};
 			return;
 		}
 		let n = e[0];
@@ -17511,11 +17895,11 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		e && !this.floors.some((t) => t.floor.id === e) && (e = null), this.selectedFloor = e;
 		let n = e ? this.floors.findIndex((t) => t.floor.id === e) : -1, r = n < 0 && this.canPullApart() && this.prefs.apart, i = this.groundIndex();
 		this.floors.forEach((e, t) => {
-			e.group.position.y = e.floor.elevation + (r ? (t - i) * Ch : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
+			e.group.position.y = e.floor.elevation + (r ? (t - i) * ug : 0), n < 0 ? (e.group.visible = !0, this.dimFloor(e, !1)) : (e.group.visible = t <= n, this.dimFloor(e, t < n)), e.label.visible = n < 0 && this.prefs.names;
 			for (let r of e.rooms) r.label.visible = this.prefs.names && (n === t || n < 0 && e === this.mainFloor());
 		}), this.ground && (this.ground.visible = n < 0 || this.floors[n].floor.elevation > -.5);
 		let a = this.ground?.getObjectByName("covers");
-		a && (a.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = r ? (this.floors.length - 1 - i) * Ch : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
+		a && (a.visible = n < 0 && !this.prefs.cut), this.roof && (this.roof.visible = n < 0 && !this.prefs.cut, this.roof.position.y = r ? (this.floors.length - 1 - i) * ug : 0), this.renderFloorChips(), this.renderRoomChips(), t && this.frameView(.9), this.engine?.requestRender();
 	}
 	mainFloor() {
 		let e = this.floors.filter((e) => e.floor.elevation > -.5);
@@ -17557,9 +17941,9 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 	renderFloorChips() {
 		let e = this.els.floors, t = ["<span class=\"nh-title\">Neon<i>House</i></span>"];
 		t.push(`<button class="nh-chip ${this.selectedFloor === null ? "on" : ""}" data-floor="">${this.mainFloor() ? "House" : "All floors"}</button>`);
-		for (let e of [...this.floors].reverse()) t.push(`<button class="nh-chip ${this.selectedFloor === e.floor.id ? "on" : ""}" data-floor="${e.floor.id}">${Rm(e.floor.name)}</button>`);
+		for (let e of [...this.floors].reverse()) t.push(`<button class="nh-chip ${this.selectedFloor === e.floor.id ? "on" : ""}" data-floor="${e.floor.id}">${Th(e.floor.name)}</button>`);
 		t.push("<span class=\"nh-spacer\"></span>");
-		for (let e of this.config?.links ?? []) t.push(`<button class="nh-chip nh-link" data-link="${Rm(e.path)}">${Rm(e.name)} ↗</button>`);
+		for (let e of this.config?.links ?? []) t.push(`<button class="nh-chip nh-link" data-link="${Th(e.path)}">${Th(e.name)} ↗</button>`);
 		this.config?.attention !== !1 && t.push(this.attentionChip()), t.push(`<span class="nh-seg">${[
 			"neon",
 			"blueprint",
@@ -17569,16 +17953,16 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 			"important",
 			"all"
 		].map((e) => `<button class="nh-chip ${this.prefs.markers === e ? "on" : ""}" data-markers="${e}">${e[0].toUpperCase() + e.slice(1)}</button>`).join("")}</span>`), e.innerHTML = t.join(""), e.querySelectorAll("[data-floor]").forEach((e) => e.onclick = () => this.selectFloor(e.dataset.floor || null)), e.querySelectorAll("[data-link]").forEach((e) => e.onclick = () => Fp(e.dataset.link)), e.querySelectorAll("[data-theme]").forEach((e) => e.onclick = () => {
-			this.prefs.theme = e.dataset.theme, Ph(this.prefs), this.built = !1, this.build();
+			this.prefs.theme = e.dataset.theme, xg(this.prefs), this.built = !1, this.build();
 		}), e.querySelectorAll("[data-markers]").forEach((e) => e.onclick = () => {
-			this.prefs.markers = e.dataset.markers, Ph(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
+			this.prefs.markers = e.dataset.markers, xg(this.prefs), this.applyMarkers(), this.renderFloorChips(), this.engine?.requestRender();
 		}), this.bindAttentionChip();
 	}
 	async checkForUpdate() {
 		try {
 			let e = (await this._hass.callWS({ type: "lovelace/resources" })).find((e) => e.url.includes("neon-house-card.js"));
 			if (!e) return;
-			let t = new URL(e.url, location.origin), n = new URL(Sh);
+			let t = new URL(e.url, location.origin), n = new URL(lg);
 			if (t.pathname !== n.pathname || t.search === n.search) return;
 			let r = document.createElement("button");
 			r.className = "nh-update", r.textContent = "⟳ Neon House was updated – tap to reload", r.onclick = () => location.reload(), this.els.root.appendChild(r);
@@ -17598,12 +17982,22 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 	scheduleAttention(e = !1) {
 		this.config?.attention !== !1 && this._hass && (!this.attentionTimer || e) && (clearTimeout(this.attentionTimer), this.attentionTimer = window.setTimeout(() => {
 			if (this.attentionTimer = 0, !this._hass) return;
-			this.issues = mh(this._hass, this.plan, {
+			let e = this.devices.flatMap((e) => {
+				let t = e.problem?.();
+				return t ? [{
+					kind: "problem",
+					entity: e.device.entity,
+					name: this.deviceLabel(e),
+					detail: t,
+					severity: 4
+				}] : [];
+			});
+			this.issues = [...e, ...tg(this._hass, this.plan, {
 				excludeLabel: this.config?.attention_exclude_label ?? "no_battery_alerts",
 				batteryLow: this.config?.battery_low ?? 20
-			});
-			let e = this.els.floors.querySelector("[data-attn]");
-			e && (e.outerHTML = this.attentionChip(), this.bindAttentionChip()), this.panelArea?.attention && this.renderPanel();
+			})];
+			let t = this.els.floors.querySelector("[data-attn]");
+			t && (t.outerHTML = this.attentionChip(), this.bindAttentionChip()), this.panelArea?.attention && this.renderPanel();
 		}, e ? 50 : 1500));
 	}
 	renderAttention() {
@@ -17614,8 +18008,8 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 			["Unavailable on the plan", "offline"]
 		].map(([e, t]) => {
 			let n = this.issues.filter((e) => e.kind === t);
-			return n.length ? `<div class="nh-section">${e}</div>${n.map((e) => `<div class="nh-item attn sev${e.severity}" data-id="${Rm(e.entity)}">
-              <span class="dot"></span><span class="name">${Rm(e.name)}<small>${Rm(e.detail)}</small></span>
+			return n.length ? `<div class="nh-section">${e}</div>${n.map((e) => `<div class="nh-item attn sev${e.severity}" data-id="${Th(e.entity)}">
+              <span class="dot"></span><span class="name">${Th(e.name)}<small>${Th(e.detail)}</small></span>
             </div>`).join("")}` : "";
 		}).join("");
 		this.els.panel.innerHTML = `
@@ -17659,12 +18053,12 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		e.set(t.focus(), n.group.position.y + n.floor.height - .12, r), this.engine?.animate(this.flowAnim);
 	}
 	renderEnergy() {
-		let e = this._hass, t = this.load, n = Vp(this.plan), r = Math.max(1, ...t?.rows.map((e) => e.watts) ?? []), i = (e) => `<div class="nh-item nh-load ${e.measured ? "on" : ""}" data-id="${Rm(e.entity)}" style="--share:${(100 * e.watts / r).toFixed(1)}%">
-        <span class="dot"></span><span class="name">${Rm(e.name)}</span><span class="state">${e.measured ? "" : "~"}${Yp(e.watts)}</span>
+		let e = this._hass, t = this.load, n = Vp(this.plan), r = Math.max(1, ...t?.rows.map((e) => e.watts) ?? []), i = (e) => `<div class="nh-item nh-load ${e.measured ? "on" : ""}" data-id="${Th(e.entity)}" style="--share:${(100 * e.watts / r).toFixed(1)}%">
+        <span class="dot"></span><span class="name">${Th(e.name)}</span><span class="state">${e.measured ? "" : "~"}${Yp(e.watts)}</span>
       </div>`, a = (t, r) => {
 			let i = e.states[t], a = i?.attributes.unit_of_measurement ?? (t === n?.entity ? n?.unit : void 0);
-			return `<div class="nh-item" data-id="${Rm(t)}"><span class="dot"></span><span class="name">${r}</span>
-        <span class="state">${Rm(i && !kp(i) ? `${i.state}${a ? ` ${a}` : ""}` : "–")}</span></div>`;
+			return `<div class="nh-item" data-id="${Th(t)}"><span class="dot"></span><span class="name">${r}</span>
+        <span class="state">${Th(i && !kp(i) ? `${i.state}${a ? ` ${a}` : ""}` : "–")}</span></div>`;
 		}, o = t?.rows.filter((e) => e.measured && e.watts >= .5) ?? [], s = t?.rows.filter((e) => !e.measured && e.watts >= .5) ?? [], c = [
 			o.length ? `<div class="nh-section">Measured</div>${o.map(i).join("")}` : "",
 			s.length ? `<div class="nh-section">Estimated – typical use</div>${s.map(i).join("")}` : "",
@@ -17677,10 +18071,10 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 	renderRoomChips(e) {
 		let t = this.els.rooms, n = [], r = this.selectedFloor ? this.floors.filter((e) => e.floor.id === this.selectedFloor) : [...this.floors].reverse();
 		for (let t of r) {
-			!this.selectedFloor && this.floors.length > 1 && n.push(`<span class="nh-group-label">${Rm(t.floor.name)}</span>`);
+			!this.selectedFloor && this.floors.length > 1 && n.push(`<span class="nh-group-label">${Th(t.floor.name)}</span>`);
 			for (let r of this.rooms.filter((e) => e.view.floor === t.floor)) {
 				let i = `${t.floor.id}/${r.view.room.id}`;
-				n.push(`<button class="nh-chip ${e === r ? "on" : ""}" data-room="${i}">${Rm(r.view.room.name)}</button>`);
+				n.push(`<button class="nh-chip ${e === r ? "on" : ""}" data-room="${i}">${Th(r.view.room.name)}</button>`);
 			}
 		}
 		t.innerHTML = n.join(""), t.querySelectorAll("[data-room]").forEach((e) => {
@@ -17715,7 +18109,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 			case "tall":
 			case "cut":
 				t.cut = e === "cut";
-				for (let e of this.floors) Om(e, this.theme, t.cut);
+				for (let e of this.floors) hh(e, this.theme, t.cut);
 				this.indexOpenings(), this.seen.clear(), this.applyHass(!0);
 				break;
 			case "apart":
@@ -17743,7 +18137,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 				this.engine?.animate((t) => e.tick(t));
 			}
 		}
-		Ph(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
+		xg(t), this.renderModes(), this.selectFloor(this.selectedFloor, e === "apart" || e === "cut" || e === "tall");
 	}
 	toast(e) {
 		let t = this.els.toast;
@@ -17768,7 +18162,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		if (e.attention) return this.renderAttention();
 		if (e.energy) return this.renderEnergy();
 		let n = new Set(e.area ? this.areaEntities(e.area) : []);
-		if (e.room) for (let t of this.devices) t.floor === e.room.view.floor && Dh(t, e.room.view.room.polygon) && n.add(t.device.entity);
+		if (e.room) for (let t of this.devices) t.floor === e.room.view.floor && mg(t, e.room.view.room.polygon) && n.add(t.device.entity);
 		let r = {
 			Controls: [],
 			Cameras: [],
@@ -17787,15 +18181,15 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 				"image"
 			].includes(t) || r.Other.push(e);
 		}
-		let i = Dp(t, e.room?.temperature), a = Dp(t, e.room?.humidity), o = [i && !kp(i) ? `${jh(i.state)}°C` : "", a && !kp(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
+		let i = Dp(t, e.room?.temperature), a = Dp(t, e.room?.humidity), o = [i && !kp(i) ? `${vg(i.state)}°C` : "", a && !kp(a) ? `${Math.round(Number(a.state))}%` : ""].filter(Boolean).join(" · "), s = (e) => {
 			let n = t.states[e], r = e.split(".")[0], i = Op(n) && r !== "sensor", a = Rp.has(r) && !kp(n), o = n?.attributes.unit_of_measurement ? ` ${n.attributes.unit_of_measurement}` : "";
 			return `<div class="nh-item ${i ? "on" : ""}" data-id="${e}">
-        <span class="dot"></span><span class="name">${Rm(jp(t, e))}</span>
-        ${a ? `<span class="nh-toggle ${i ? "on" : ""}" data-toggle="${e}"></span>` : `<span class="state">${Rm(n ? n.state + o : "–")}</span>`}
+        <span class="dot"></span><span class="name">${Th(jp(t, e))}</span>
+        ${a ? `<span class="nh-toggle ${i ? "on" : ""}" data-toggle="${e}"></span>` : `<span class="state">${Th(n ? n.state + o : "–")}</span>`}
       </div>`;
 		}, c = Object.entries(r).filter(([, e]) => e.length).map(([e, n]) => `<div class="nh-section">${e}</div>${n.sort((e, n) => jp(t, e).localeCompare(jp(t, n))).map(s).join("")}`).join("");
 		this.els.panel.innerHTML = `
-      <header><div style="flex:1"><h3>${Rm(e.title)}</h3>${o ? `<div class="sub">${o}</div>` : ""}</div><button class="nh-x" data-close>✕</button></header>
+      <header><div style="flex:1"><h3>${Th(e.title)}</h3>${o ? `<div class="sub">${o}</div>` : ""}</div><button class="nh-x" data-close>✕</button></header>
       <div class="nh-list">${c || `<div class="nh-section">No entities${e.area ? "" : " – set an HA area for this room"}</div>`}</div>`, this.els.panel.querySelector("[data-close]").onclick = () => this.closePanel(), this.els.panel.querySelectorAll("[data-id]").forEach((e) => {
 			e.onclick = (n) => {
 				let r = n.target;
@@ -17813,7 +18207,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		if (!t || !this.engine) return;
 		let n = e.device;
 		this.closeCockpit(!1), this.cockpit = e, this.selectedFloor && this.selectedFloor !== e.floor.id && this.selectFloor(e.floor.id, !1);
-		let r = n.stream ?? n.entity, i = n.name ?? jp(t, n.entity).replace(/ (live view|hd stream|sd stream)$/i, ""), a = yh(t, n.entity);
+		let r = n.stream ?? n.entity, i = n.name ?? jp(t, n.entity).replace(/ (live view|hd stream|sd stream)$/i, ""), a = og(t, n.entity);
 		this.cam = {
 			controls: a,
 			stream: r,
@@ -17834,7 +18228,7 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 			"right"
 		].filter((e) => a.ptz[e]).map((e) => `<button class="ptz ${e}" data-ptz="${e}" title="Turn ${e}">${o[e]}</button>`).join(""), c = this.els.cockpit;
 		c.innerHTML = `
-      <header><b>◉ ${Rm(i)}</b><button class="nh-x" data-close>✕</button></header>
+      <header><b>◉ ${Th(i)}</b><button class="nh-x" data-close>✕</button></header>
       <div class="body">
         <div class="live"><img alt=""><span class="rec">LIVE</span>${s}
           <button class="snap" data-snap title="Save a picture">⤓</button>
@@ -17857,21 +18251,21 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 	renderCameraControls(e = !1) {
 		let t = this._hass, n = this.cam, r = this.els.cockpit.querySelector(".ctl");
 		if (!t || !n || !r) return;
-		let i = n.controls, a = bh(i).map((e) => t.states[e]?.state).join("|") + n.sirenArmed;
+		let i = n.controls, a = sg(i).map((e) => t.states[e]?.state).join("|") + n.sirenArmed;
 		if (!e && a === n.sig || !e && this.shadow.activeElement?.tagName === "SELECT") return;
 		n.sig = a;
 		let o = (e) => Op(Dp(t, e)), s = (e) => kp(Dp(t, e)), c = (e, t, n, r, i) => `<button class="nh-cbtn ${t}" data-cact="${e}" ${s(i) ? "disabled" : ""}><span class="i">${n}</span>${r}</button>`, l = [];
 		i.light && l.push(c("light", o(i.light) ? "on" : "", "💡", "Light", i.light)), i.siren && l.push(o(i.siren) ? c("siren", "danger", "🚨", "Stop siren", i.siren) : c("siren", n.sirenArmed ? "armed" : "", "🚨", n.sirenArmed ? "Tap again" : "Siren", i.siren)), i.privacy && l.push(c("privacy", o(i.privacy) ? "on" : "", "🙈", o(i.privacy) ? "Camera off" : "Privacy", i.privacy)), i.record && l.push(c("record", o(i.record) ? "on" : "", "⏺", "Recording", i.record)), i.track && l.push(c("track", o(i.track) ? "on" : "", "🎯", "Auto-track", i.track));
 		let u = Dp(t, i.presets)?.attributes.options ?? [], d = (e) => {
-			let n = t.states[e], r = (n?.attributes.options ?? []).map((e) => `<option value="${Rm(e)}" ${e === n?.state ? "selected" : ""}>${Rm(e.replace(/ mode$/i, ""))}</option>`).join("");
-			return `<select data-select="${Rm(e)}" ${s(e) ? "disabled" : ""}>${r}</select>`;
-		}, f = (e, t) => `<label><span>${e}</span>${t.startsWith("select.") ? d(t) : `<span class="nh-toggle ${o(t) ? "on" : ""}" data-toggle="${Rm(t)}"></span>`}</label>`, p = [
+			let n = t.states[e], r = (n?.attributes.options ?? []).map((e) => `<option value="${Th(e)}" ${e === n?.state ? "selected" : ""}>${Th(e.replace(/ mode$/i, ""))}</option>`).join("");
+			return `<select data-select="${Th(e)}" ${s(e) ? "disabled" : ""}>${r}</select>`;
+		}, f = (e, t) => `<label><span>${e}</span>${t.startsWith("select.") ? d(t) : `<span class="nh-toggle ${o(t) ? "on" : ""}" data-toggle="${Th(t)}"></span>`}</label>`, p = [
 			...i.detection.map((e) => f(e.label, e.entity)),
 			...i.nightVision ? [f("Night vision", i.nightVision)] : [],
 			...i.notifications ? [f("Notifications", i.notifications)] : []
 		];
 		this.els.cockpit.querySelector(".live")?.classList.toggle("private", o(i.privacy));
-		let m = u.length ? `<div class="presets"><span class="lbl">Go to</span>${u.map((e) => `<button class="nh-chip" data-preset="${Rm(e)}">${Rm(e)}</button>`).join("")}</div>` : "";
+		let m = u.length ? `<div class="presets"><span class="lbl">Go to</span>${u.map((e) => `<button class="nh-chip" data-preset="${Th(e)}">${Th(e)}</button>`).join("")}</div>` : "";
 		r.innerHTML = `
       ${l.length ? `<div class="quick">${l.join("")}</div>` : ""}
       ${m}
@@ -17988,9 +18382,9 @@ var xh = "0.2.0", Sh = import.meta.url, Ch = 3.2, wh = "neon-house-prefs", Th = 
 		let n = this.engine?.pick(e, t);
 		n?.data.kind === "device" && Ip(this, n.data.view.device.entity);
 	}
-}, Dh = (e, t) => Array.isArray(e.device.pos) && Xf(e.device.pos, t);
-function Oh(e) {
-	return Ah([
+}, mg = (e, t) => Array.isArray(e.device.pos) && Xf(e.device.pos, t);
+function hg(e) {
+	return _g([
 		[16, 3107839],
 		[19, 2541274],
 		[21, 3073674],
@@ -17998,15 +18392,15 @@ function Oh(e) {
 		[28, 16727383]
 	], e);
 }
-function kh(e) {
-	return Ah([
+function gg(e) {
+	return _g([
 		[25, 16757053],
 		[40, 3073674],
 		[55, 2541274],
 		[70, 3107839]
 	], e);
 }
-function Ah(e, t) {
+function _g(e, t) {
 	if (t <= e[0][0]) return new Y(e[0][1]);
 	for (let n = 0; n < e.length - 1; n++) {
 		let [r, i] = e[n], [a, o] = e[n + 1];
@@ -18014,41 +18408,41 @@ function Ah(e, t) {
 	}
 	return new Y(e.at(-1)[1]);
 }
-var jh = (e) => {
+var vg = (e) => {
 	let t = Number(e);
 	return Number.isFinite(t) ? (Math.round(t * 10) / 10).toString() : e;
 };
-function Mh() {
+function yg() {
 	try {
-		return !!localStorage.getItem(wh);
+		return !!localStorage.getItem(dg);
 	} catch {
 		return !1;
 	}
 }
-function Nh() {
+function bg() {
 	try {
-		let e = localStorage.getItem(wh);
+		let e = localStorage.getItem(dg);
 		if (e) return {
-			...Th,
+			...fg,
 			...JSON.parse(e)
 		};
 	} catch {}
-	return { ...Th };
+	return { ...fg };
 }
-function Ph(e) {
+function xg(e) {
 	try {
-		localStorage.setItem(wh, JSON.stringify(e));
+		localStorage.setItem(dg, JSON.stringify(e));
 	} catch {}
 }
 if (!customElements.get("neon-house-card")) {
-	customElements.define("neon-house-card", Eh);
+	customElements.define("neon-house-card", pg);
 	let e = window;
 	e.customCards = e.customCards || [], e.customCards.push({
 		type: "neon-house-card",
 		name: "Neon House",
 		description: "Your home as a neon 3D plan: lights, cameras, climate, weather – all local.",
 		preview: !1
-	}), console.info(`%c NEON-HOUSE %c ${xh} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
+	}), console.info(`%c NEON-HOUSE %c ${cg} `, "background:#38e8ff;color:#04121f;font-weight:700", "background:#0c1c3d;color:#38e8ff");
 }
 //#endregion
-export { Eh as NeonHouseCard };
+export { pg as NeonHouseCard };

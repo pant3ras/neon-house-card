@@ -119,7 +119,7 @@ export function missingEntities(plan: Plan, hass: HomeAssistant): string[] {
   for (const f of plan.floors ?? []) {
     for (const d of f.devices ?? []) {
       ids.add(d.entity);
-      for (const k of ['power', 'presence', 'stream', 'index'] as const) if ((d as any)[k]) ids.add((d as any)[k]);
+      for (const k of ['power', 'presence', 'stream', 'index', 'map', 'error'] as const) if ((d as any)[k]) ids.add((d as any)[k]);
       for (const m of (d as any).motion ?? []) ids.add(m);
     }
     for (const o of f.openings ?? []) if (o.entity) ids.add(o.entity);
